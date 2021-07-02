@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./node_modules/.bin/parcel build src/index.html --out-dir dist",
     "dev": "npm run build && node index.js",
-    "build": "./node_modules/.bin/parcel build src/index.html --out-dir dist"
+    "start": "npm run dev"
   },
   "repository": {
     "type": "git",
