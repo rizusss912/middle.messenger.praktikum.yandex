@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch client/* index.js",
-    "start": " node index.js"
+    "dev": "./node_modules/.bin/parcel index.html",
+    "build": "./node_modules/.bin/parcel build index.html"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,6 @@
   "homepage": "https://github.com/rizusss912/middle.messenger.praktikum.yandex#readme",
   "dependencies": {
     "express": "^4.17.1",
-    "nodemon": "^2.0.9"
+    "parcel-bundler": "^1.12.5"
   }
 }
