@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "./node_modules/.bin/parcel index.html",
-    "build": "./node_modules/.bin/parcel build index.html"
+    "dev": "npm run build && node index.js",
+    "build": "./node_modules/.bin/parcel build src/index.html --out-dir dist"
   },
   "repository": {
     "type": "git",
@@ -20,6 +20,10 @@
   "homepage": "https://github.com/rizusss912/middle.messenger.praktikum.yandex#readme",
   "dependencies": {
     "express": "^4.17.1",
-    "parcel": "^2.0.0-beta.2"
+    "parcel": "^2.0.0-beta.2",
+    "parcel-bundler": "^1.12.5"
+  },
+  "devDependencies": {
+    "parcel-plugin-nuke-dist": "^1.0.1"
   }
 }
