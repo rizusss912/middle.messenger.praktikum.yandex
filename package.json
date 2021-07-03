@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "./node_modules/.bin/parcel build src/index.html --out-dir dist",
-    "dev": "npm run build && node index.js",
-    "start": "npm run dev"
+    "dev": "./node_modules/.bin/parcel src/index.html --out-dir dist",
+    "start": "npm run build && node index.js"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
     "serverless-http": "^2.7.0"
   },
   "devDependencies": {
+    "less": "^4.1.1",
     "parcel-plugin-nuke-dist": "^1.0.1"
   }
 }
