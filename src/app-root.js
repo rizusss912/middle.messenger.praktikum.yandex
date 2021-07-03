@@ -1,20 +1,26 @@
 import {CustomElement} from './utils/custom-element.js';
 import {template} from './app-root.tmpl.js';
+import RouterService from './service/router.service.js';
+
 import './app-root.less';
 
-CustomElement({
+export default CustomElement({
     name: 'app-root',
     template, 
 })(
     class AppRoot extends HTMLElement {
+        router;
+        text = 'text';
+
         constructor() {
             super();
-            this.text = 'fff';
+
+            this.router = new RouterService();
         }
 
         connectedCallback() {
-            //this.attachShadow({mode: 'open'});
-            this.render();
+            const Page = this.router.getPageByPath(this.router.urlParams.pathname);
+            this.render({content: [new Page()]});
         }
     }
 )

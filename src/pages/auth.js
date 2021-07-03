@@ -1,1 +1,0 @@
-document.body.querySelector('div').style.background = 'blue';

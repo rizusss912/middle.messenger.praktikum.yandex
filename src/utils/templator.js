@@ -2,6 +2,8 @@
 export class Templator {
     isAppend = false;
     bindTextNodesMap = new Map();
+    bindEventsMap = new Map();
+    contentElement;
 
     constructor(template = '') {
         if (typeof template !== 'string') throw Error('Templator: template is not string');
@@ -30,7 +32,8 @@ export class Templator {
                 const tagStr = str.match(/^\<.*?\>/)[0];
                 const content = str.split(tagStr)[1];
                 // разбиваем тег на массив из имени тега и атрибутов (также элементы могут быть в {} и [])
-                const tagArray = tagStr.match(/([(<|<\/)\w\-|\{\[]+(?:=)?(?:"|')?[\w\-|\}|\]]+(?:"|')?)/gim);
+                //TODO: нужно переписать логику на что-нибудь менее страшное
+                const tagArray = tagStr.match(/([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)]+(?:"|'|\{\{|\}\})?)/gim);
                 const tag = {
                     isOpen: !(/^\<\//.test(tagStr)),
                     name: tagArray[0].match(/[^</ ]+/)[0],
@@ -47,12 +50,18 @@ export class Templator {
                 const element = document.createElement(item.tag.name);
 
                 for (var attribute of item.tag.attributes) {
-                    if (!/\{\{.*\}\}/.test(attribute)) {
+                    if (!/[A-z]+[ ]*\=[ ]*\{\{.*\}\}/.test(attribute)) {
                         const atr = /.*=.*/.test(attribute) ? attribute.split('=') : [attribute, ''];
                         atr[1] = atr[1].match(/[^"']/) || '';
                         element.setAttribute(...atr);
                     } else {
-                        //TODO: тут мы динамически привязываем кастомные атрибуты к классу
+                        const customAttribute = attribute.split('=');
+                        const name = customAttribute[0];
+                        const value = customAttribute[1].replace(/[^A-z]*/g, '');
+
+                        this.bindEventsMap.has(element)
+                            ? this.bindEventsMap.get(element).push({name, value})
+                            : this.bindEventsMap.set(element, [{name, value}]);
                     }
                 }
 
@@ -60,6 +69,8 @@ export class Templator {
                     element.appendChild(this.initBindTextNode(item.content));
                     htmlElements.push(element);
                 } else {
+                    if (this.isContentElement(element)) this.contentElement = element;
+
                     addToChain(element, item.content);
                 }
             } else {
@@ -101,11 +112,42 @@ export class Templator {
         return node;
     }
 
-    render(context) {
-        this.setContent(context);
+    render(context, options = {}) {
+        if (options.content && this.contentElement) this.setContent(options.content);
+
+        this.setContext(context);
+        this.setAttributesAndEventListeners(context);
     }
 
-    setContent(context) {
+    setContent(content = []) {
+        for (var node of content) {
+            this.contentElement.appendChild(node);
+        }
+    }
+
+    setAttributesAndEventListeners(context) {
+        for (var element of this.getMapKeys(this.bindEventsMap)) {
+            for (var config of this.bindEventsMap.get(element)) {
+                const contextPoint = context[config.value];
+
+                if (!contextPoint) break;
+
+                switch(typeof contextPoint) {
+                    case "function":
+                        element.addEventListener(config.name, (e) => contextPoint.call(context, e));
+                        break;
+                    case "string":
+                        element.setAttribute(config.name, contextPoint);
+                        break;
+                    default:
+                        element.setAttribute(config.name, contextPoint.toSting());
+                        break;
+                  }
+            }
+        }
+    }
+
+    setContext(context) {
         for (var varieble of this.getMapKeys(this.bindTextNodesMap)) {
             if (varieble in context) {
                 const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
@@ -123,7 +165,11 @@ export class Templator {
 
     isSolloTag(element) {
         const solloTags = ['area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed', 'hr', 'img',
-            'input', 'isindex', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+            'input', 'isindex', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr', 'content'];
         return solloTags.includes(element.tagName.toLowerCase());
+    }
+
+    isContentElement(element) {
+        return element.tagName.toLowerCase() === 'content';
     }
 }
