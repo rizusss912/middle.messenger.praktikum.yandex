@@ -1,5 +1,5 @@
 export const template = `
-    <p>страничка 404</p>
+    <p>страничка с чатами</p>
     <button click={{navigateToAuth()}}>
         Перейти к страничке авторизации
     </button>

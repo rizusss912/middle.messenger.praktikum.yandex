@@ -1,5 +1,5 @@
 import {CustomElement} from '../../utils/custom-element.js';
-import RouterService from '../../service/router.service.js';
+import RouterService from '../../service/router/router.service.js';
 
 import {template} from './page-default.tmpl.js';
 

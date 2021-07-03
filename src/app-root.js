@@ -1,6 +1,6 @@
 import {CustomElement} from './utils/custom-element.js';
 import {template} from './app-root.tmpl.js';
-import RouterService from './service/router.service.js';
+import RouterService from './service/router/router.service.js';
 
 import './app-root.less';
 

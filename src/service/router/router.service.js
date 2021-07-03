@@ -1,4 +1,4 @@
-import {Service} from "../utils/service.js";
+import {Service} from "../../utils/service.js";
 import {routerConfig} from "./router.config.js";
 
 let instance;
@@ -31,6 +31,7 @@ export default Service() (
             return {hash, pathname, origin, queryParams};
         }
 
+        //TODO нужно переходить на url не перезагружая страницу history.pushState
         navigateTo(path = '/', query = {}, hash = '') {
             window.location.assign(`${window.location.origin}${path}`);
         }

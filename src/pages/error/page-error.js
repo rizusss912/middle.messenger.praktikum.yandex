@@ -1,15 +1,15 @@
 import {CustomElement} from '../../utils/custom-element.js';
 import RouterService from '../../service/router/router.service.js';
 
-import {template} from './page-auth.tmpl.js';
+import {template} from './page-error.tmpl.js';
 
-import './page-auth.less';
+import './page-error.less';
 
 export default CustomElement({
-    name: 'page-auth',
+    name: 'page-error',
     template, 
 })(
-    class PageAuth extends HTMLElement {
+    class PageError extends HTMLElement {
         router;
 
         constructor() {
@@ -22,8 +22,9 @@ export default CustomElement({
             this.render();
         }
 
-        navigateToDefault() {
-            this.router.navigateTo("/");
+        navigateToAuth() {
+            console.log(this);
+            this.router.navigateTo("/auth");
         }
     }
 )

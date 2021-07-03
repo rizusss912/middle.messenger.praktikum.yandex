@@ -1,4 +1,5 @@
 //TODO: Вынести все регулярки в константы
+//TODO: * почему-то ломает текстовую ноду Надо править регулярки
 export class Templator {
     isAppend = false;
     bindTextNodesMap = new Map();
