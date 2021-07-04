@@ -4,6 +4,7 @@ export class Templator {
     isAppend = false;
     bindTextNodesMap = new Map();
     bindEventsMap = new Map();
+    slotsMap = new Map();
     contentElement;
 
     constructor(template = '') {
@@ -14,9 +15,35 @@ export class Templator {
     }
 
     initTemplate(str) {
+        const outNodes = [];
         const addToChain = (node, content) => {
+            const getParent = () => {
+                //из-за того что есть не закрывающиеся теги
+                var parentIndex = htmlElements[htmlElements.length - 1] !== node
+                    ? htmlElements.length - 1
+                    : htmlElements.length - 2;
+
+                if(!htmlElements[parentIndex]) {
+                    throw new Error('Templator: the parent could not be found, most likely the element with the "slot" attribute lies in the root of the template');
+                }
+
+                return htmlElements[parentIndex];
+            }
+
+            if (node.hasAttribute('slot')) {
+                const parent = getParent(node);
+
+                if (this.slotsMap.has(parent)) {
+                    this.slotsMap.get(parent).push(node);
+                } else {
+                    this.slotsMap.set(parent, [node]);
+                };
+
+                return;
+            }
+
             if (htmlElements.length > 1) {
-                const parent = htmlElements[htmlElements.length - 2];
+                const parent = getParent(node);
 
                 parent.appendChild(node);
                 parent.appendChild(this.initBindTextNode(content));
@@ -25,9 +52,9 @@ export class Templator {
                 outNodes.push(this.initBindTextNode(content));
             }
         }
-        const outNodes = [];
         // получаем массив, который содержит один тег и контент до следующего тега
-        const htmlConfig = str.match(/\<.*?\>[^\<.*?\>]*/g)
+        //TODO: Не даёт писать атрибу
+        const htmlConfig = str.match(/\<.*?\>[^\<.*?\>]*/gim)
             .map(str => {
                 // выбираем только тег
                 const tagStr = str.match(/^\<.*?\>/)[0];
@@ -35,9 +62,10 @@ export class Templator {
                 // разбиваем тег на массив из имени тега и атрибутов (также элементы могут быть в {} и [])
                 //TODO: нужно переписать логику на что-нибудь менее страшное
                 const tagArray = tagStr.match(/([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)]+(?:"|'|\{\{|\}\})?)/gim);
+
                 const tag = {
                     isOpen: !(/^\<\//.test(tagStr)),
-                    name: tagArray[0].match(/[^</ ]+/)[0],
+                    name: tagArray[0].match(/[^</\s]+/)[0],
                     attributes: tagArray.slice(1),
                 };
 
@@ -45,15 +73,15 @@ export class Templator {
             })
 
         const htmlElements = [];
-        
+
         for (var item of htmlConfig) {
             if (item.tag.isOpen) {
                 const element = document.createElement(item.tag.name);
 
                 for (var attribute of item.tag.attributes) {
-                    if (!/[A-z]+[ ]*\=[ ]*\{\{.*\}\}/.test(attribute)) {
+                    if (!/[A-z]+[\s]*\=[\s]*\{\{.*\}\}/.test(attribute)) {
                         const atr = /.*=.*/.test(attribute) ? attribute.split('=') : [attribute, ''];
-                        atr[1] = atr[1].match(/[^"']/) || '';
+                        atr[1] = atr[1].match(/[^"']*/gim).reduce((out, str) => out || str) || '';
                         element.setAttribute(...atr);
                     } else {
                         const customAttribute = attribute.split('=');
@@ -81,7 +109,6 @@ export class Templator {
                    ) {
                     throw Error(`Templator: invalid html template: ${str}`);
                 }
-
                 addToChain(htmlElements[htmlElements.length - 1], item.content);
                 htmlElements.pop();
             }
@@ -96,7 +123,7 @@ export class Templator {
 
     initBindTextNode(content) {
         const node = document.createTextNode(content.trim());
-        const varieblesArr = content.match(/[\{]{2}[ ]*[A-z\.\(\)]+[ ]*[\}]{2}/g)
+        const varieblesArr = content.match(/[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g)
 
         if (!varieblesArr) return node;
 
@@ -118,11 +145,23 @@ export class Templator {
 
         this.setContext(context);
         this.setAttributesAndEventListeners(context);
+        this.setSlots();
     }
 
     setContent(content = []) {
         for (var node of content) {
             this.contentElement.appendChild(node);
+        }
+    }
+
+    setSlots() {
+        for (var parent of this.getMapKeys(this.slotsMap)) {
+            for (var slot of this.slotsMap.get(parent)) {
+
+                const slotNode =  this.getSlotNode(parent, slot.getAttribute('slot'));
+
+                if (slotNode) slotNode.appendChild(slot);
+            }
         }
     }
 
@@ -140,8 +179,10 @@ export class Templator {
                     case "string":
                         element.setAttribute(config.name, contextPoint);
                         break;
+                    case "boolean":
+                        if (contextPoint) element.setAttribute(config.name, '');
                     default:
-                        element.setAttribute(config.name, contextPoint.toSting());
+                        element.setAttribute(config.name, String(contextPoint));
                         break;
                   }
             }
@@ -172,5 +213,24 @@ export class Templator {
 
     isContentElement(element) {
         return element.tagName.toLowerCase() === 'content';
+    }
+
+    // node.querySelector("slot[name="name"]")
+    getSlotNode(node, name) {
+        if (!node.hasChildNodes()) return null;
+
+        for (var index = 0; index < node.children.length; index++) {
+            const child = node.children.item(index);
+
+            if (child.tagName === 'SLOT' && child.getAttribute('name') === name) {
+                return child;
+            }
+
+            var req = this.getSlotNode(child, name);
+
+            if (req) return req;
+        }
+
+        return null;
     }
 }

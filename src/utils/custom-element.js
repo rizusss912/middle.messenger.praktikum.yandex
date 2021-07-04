@@ -1,19 +1,25 @@
 import {Templator} from '../utils/templator.js';
 
+//TODO: прокинуть Callback об изменении роута
 export function CustomElement(config) {
     return function(clazz) {
-        var templator = new Templator(config.template);
 
-        clazz.prototype.render = function(options) {
-            if (!templator.isAppend) {
-                templator.isAppend = true;
+        clazz.prototype.init = function(options) {
+            this.templator = new Templator(config.template);
 
-                for (var node of templator.nodes) {
-                    this.append(node);
-                }
+            for (var node of this.templator.nodes) {
+                this.appendChild(node);
             }
 
-            templator.render(this, options);
+            this.templator.render(this, options);
+        }
+
+        clazz.prototype.render = function(options) {
+            if (!this.templator) {
+                this.init(options);
+            } else {
+                this.templator.render(this, options);
+            }
         }
 
         customElements.define(config.name, clazz, config.options);

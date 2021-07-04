@@ -23,7 +23,6 @@ export default CustomElement({
         }
 
         navigateToAuth() {
-            console.log(this);
             this.router.navigateTo("/auth");
         }
     }

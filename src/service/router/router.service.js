@@ -1,5 +1,6 @@
 import {Service} from "../../utils/service.js";
 import {routerConfig} from "./router.config.js";
+import {pages} from "./pages.config.js";
 
 let instance;
 
@@ -32,11 +33,11 @@ export default Service() (
         }
 
         //TODO нужно переходить на url не перезагружая страницу history.pushState
-        navigateTo(path = '/', query = {}, hash = '') {
+        navigateTo(path = pages.main, query = {}, hash = '') {
             window.location.assign(`${window.location.origin}${path}`);
         }
 
-        getPageByPath(path = '/') {
-            return this.config[path] || this.config['default'];
+        getPageByPath(path = pages.main) {
+            return this.config[path] || this.config[pages.default];
         }
 });

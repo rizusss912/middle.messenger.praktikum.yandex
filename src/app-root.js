@@ -10,7 +10,6 @@ export default CustomElement({
 })(
     class AppRoot extends HTMLElement {
         router;
-        text = 'text';
 
         constructor() {
             super();

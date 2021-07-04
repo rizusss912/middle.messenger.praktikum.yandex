@@ -4,13 +4,14 @@ import PageError from '../../pages/error/page-error.js';
 import PageProfile from '../../pages/profile/page-profile.js';
 import PageSettings from '../../pages/settings/page-settings.js'
 import PageDefault from '../../pages/default/page-default.js';
+import {pages} from './pages.config.js';
 
 //TODO: Суперсущность. Если будут роуты второго+ порядка, то стоит декомпозировать
 export const routerConfig = {
-    "/": PageMain,
-    "/auth": PageAuth,
-    "/error": PageError,
-    "/profile": PageProfile,
-    "/settings": PageSettings,
-    "default": PageDefault,
+    [pages.main]: PageMain,
+    [pages.auth]: PageAuth,
+    [pages.error]: PageError,
+    [pages.profile]: PageProfile,
+    [pages.settings]: PageSettings,
+    [pages.default]: PageDefault,
 }
