@@ -1,7 +1,7 @@
 export const pages = {
     main: "/",
+    chats: "/",
     auth: "/auth",
-    error: "/error",
     profile: "/profile",
     settings: "/settings",
     default: "default",

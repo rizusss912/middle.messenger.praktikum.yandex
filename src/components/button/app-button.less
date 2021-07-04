@@ -1,3 +1,33 @@
 app-button {
     display: block;
+    width: 100%;
+
+    &[appearance="primary"] {
+        --button-color: #3369F3;
+        --button-text-color: white;
+    }
+
+    &[appearance="secondary"] {
+        --button-color: white;
+        --button-text-color: #3369F3;
+    }
+
+    button {
+        border: none;
+        outline: none;
+
+        background-color: var(--button-color);
+        width: 100%;
+        border-radius: 8px;
+        padding: 10px;
+
+        slot[name="title"] {
+            font-family: Inter, sans-serif;
+            font-style: normal;
+            font-weight: 500;
+            font-size: 17px;
+            line-height: 15px;
+            color: var(--button-text-color);
+        }
+    }
 }

@@ -23,10 +23,14 @@ export default Service() (
                 .filter(value => value)
                 .reduce((out, str) => {
                     var param = str.split('=');
-                    out[param[0]] = param[1];
+
+                    if (param[1]) {
+                        out[param[0]] = param[1];
+                    }
 
                     return out;
                 }, {});
+
             hash = hash.replace('#', '');
 
             return {hash, pathname, origin, queryParams};
@@ -34,7 +38,13 @@ export default Service() (
 
         //TODO нужно переходить на url не перезагружая страницу history.pushState
         navigateTo(path = pages.main, query = {}, hash = '') {
-            window.location.assign(`${window.location.origin}${path}`);
+            var queryStr = '';
+
+            if (Object.keys(query) !== 0) {
+                queryStr = '?' + Object.keys(query).map(key => `${key}=${query[key]}`).join('&');
+            }
+
+            window.location.assign(`${window.location.origin}${path}${queryStr}`);
         }
 
         getPageByPath(path = pages.main) {

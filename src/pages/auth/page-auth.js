@@ -23,14 +23,6 @@ export default CustomElement({
             this.router = new RouterService();
         }
 
-        connectedCallback() {
-            this.render();
-        }
-
-        navigateToMain() {
-            this.router.navigateTo(pages.main);
-        }
-
         get title() {
             return this.isRegistration ? "Регистрация" : "Вход";
         }
@@ -41,6 +33,27 @@ export default CustomElement({
 
         get isAuthorization() {
             return !this.isRegistration;
+        }
+
+        connectedCallback() {
+            this.render();
+        }
+
+        navigateTo() {
+            if (this.isAuthorization) {
+                this.router.navigateTo(pages.auth, {type: "registration"});
+            } else {
+                this.router.navigateTo(pages.auth);
+            }
+        }
+
+        onAuthorization() {
+            console.log(this.isAuthorization ? "авторизация": "регистрация");
+            if (this.isAuthorization) {
+                //TODO: собираем с формочки данные авторизации и идём на сервер
+            } else {
+                //TODO: собираем с формочки данные регистрации и идём на сервер
+            }
         }
     }
 )

@@ -1,6 +1,11 @@
 export const template = `
-    <p>страничка 404</p>
-    <button click={{navigateToAuth()}}>
-        Перейти к страничке авторизации
-    </button>
+    <main>
+        <h1>{{ code }}</h1>
+        <p>{{ description }}</p>
+        <app-button appearance="secondary" click={{navigateToChats()}}>
+            <span slot="title">
+                Назад к чатам
+            </span>
+        </app-button>
+    </main>
 `;
