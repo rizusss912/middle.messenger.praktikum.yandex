@@ -21,9 +21,5 @@ export default CustomElement({
         connectedCallback() {
             this.render();
         }
-
-        navigateToAuth() {
-            this.router.navigateTo("/auth");
-        }
     }
 )

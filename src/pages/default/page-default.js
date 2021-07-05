@@ -32,7 +32,7 @@ export default CustomElement({
         get description() {
             return CODE_DESCRIPTION[this.code]
                 || CODE_DESCRIPTION[`${this.code[0]}00`]
-                || 'Кажется, то-то пошло не так :(';
+                || 'Кажется, что-то пошло не так :(';
         }
 
         connectedCallback() {

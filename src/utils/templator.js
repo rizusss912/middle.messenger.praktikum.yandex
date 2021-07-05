@@ -1,5 +1,6 @@
-//TODO: Вынести все регулярки в константы
+//TODO: Вынести все регулярки в константы (возможно стоит переписать класс. без регулярок выйдет за o(n))
 //TODO: * почему-то ломает текстовую ноду Надо править регулярки
+//TODO: Вынести часть реализации в helper
 export class Templator {
     isAppend = false;
     bindTextNodesMap = new Map();
@@ -54,14 +55,15 @@ export class Templator {
         }
         // получаем массив, который содержит один тег и контент до следующего тега
         //TODO: Не даёт писать атрибу
-        const htmlConfig = str.match(/\<.*?\>[^\<.*?\>]*/gim)
+
+        const htmlConfig = str.match(/\<.*?\>[^\<\>]*/gim)
             .map(str => {
                 // выбираем только тег
                 const tagStr = str.match(/^\<.*?\>/)[0];
                 const content = str.split(tagStr)[1];
                 // разбиваем тег на массив из имени тега и атрибутов (также элементы могут быть в {} и [])
                 //TODO: нужно переписать логику на что-нибудь менее страшное
-                const tagArray = tagStr.match(/([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)]+(?:"|'|\{\{|\}\})?)/gim);
+                const tagArray = tagStr.match(/([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.]+(?:"|'|\{\{|\}\})?)/gim);
 
                 const tag = {
                     isOpen: !(/^\<\//.test(tagStr)),
@@ -79,14 +81,14 @@ export class Templator {
                 const element = document.createElement(item.tag.name);
 
                 for (var attribute of item.tag.attributes) {
-                    if (!/[A-z]+[\s]*\=[\s]*\{\{.*\}\}/.test(attribute)) {
+                    if (!/[A-z]+[\s]*\=[\s]*[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/.test(attribute)) {
                         const atr = /.*=.*/.test(attribute) ? attribute.split('=') : [attribute, ''];
                         atr[1] = atr[1].match(/[^"']*/gim).reduce((out, str) => out || str) || '';
                         element.setAttribute(...atr);
                     } else {
                         const customAttribute = attribute.split('=');
                         const name = customAttribute[0];
-                        const value = customAttribute[1].replace(/[^A-z]*/g, '');
+                        const value = customAttribute[1].replace(/[^A-z\.]*/g, '');
 
                         this.bindEventsMap.has(element)
                             ? this.bindEventsMap.get(element).push({name, value})
@@ -123,8 +125,9 @@ export class Templator {
 
     initBindTextNode(content) {
         const node = document.createTextNode(content.trim());
-        const varieblesArr = content.match(/[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g)
 
+        const varieblesArr = content.match(/[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g)
+        
         if (!varieblesArr) return node;
 
         const variebles = varieblesArr.map(value => value.match(/[A-z\.\(\)]+/)[0]);
@@ -168,7 +171,11 @@ export class Templator {
     setAttributesAndEventListeners(context) {
         for (var element of this.getMapKeys(this.bindEventsMap)) {
             for (var config of this.bindEventsMap.get(element)) {
-                const contextPoint = context[config.value];
+                let contextPoint = context;
+
+                for(var value of config.value.split('.')) {
+                    contextPoint = contextPoint[value];
+                }
 
                 if (!contextPoint) break;
 
@@ -191,12 +198,24 @@ export class Templator {
 
     setContext(context) {
         for (var varieble of this.getMapKeys(this.bindTextNodesMap)) {
-            if (varieble in context) {
-                const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
-                for(var node of this.bindTextNodesMap.get(varieble)) {
-                    //TODO: добавить поддержку функций в шаблоне
-                    node.textContent = node.textContent.replace(reg, context[varieble]);
+            var value = context;
+            var hasValue = true;
+
+            for (var field of varieble.split('.')) {
+                if (field in value && typeof value[field] !== 'undefined') {
+                    value = value[field];
+                } else {
+                    hasValue = false;
+                    return;
                 }
+            }
+
+            if (!hasValue) break;
+
+            const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
+            for(var node of this.bindTextNodesMap.get(varieble)) {
+                //TODO: добавить поддержку функций в шаблоне
+                node.textContent = node.textContent.replace(reg, value);
             }
         }
     }

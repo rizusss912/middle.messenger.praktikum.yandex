@@ -1,6 +1,5 @@
 app-button {
     display: block;
-    width: 100%;
 
     &[appearance="primary"] {
         --button-color: #3369F3;
@@ -10,6 +9,11 @@ app-button {
     &[appearance="secondary"] {
         --button-color: white;
         --button-text-color: #3369F3;
+    }
+
+    &[appearance="error"] {
+        --button-color: white;
+        --button-text-color: red;
     }
 
     button {
