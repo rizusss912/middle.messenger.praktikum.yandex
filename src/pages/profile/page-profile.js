@@ -1,9 +1,14 @@
 import {CustomElement} from '../../utils/custom-element.js';
 import RouterService from '../../service/router/router.service.js';
+import ProfileManager from './service/profile-manager.service.js';
 
 import {template} from './page-profile.tmpl.js';
 
 import '../../components/button/app-button.js';
+
+import './components/user-data/user-data.js';
+import './components/form-user-data/form-user-data.js';
+import './components/form-password/form-password.js';
 
 import './page-profile.less';
 
@@ -19,35 +24,27 @@ export default CustomElement({
             super();
 
             this.router = new RouterService();
+            this.profileManager = new ProfileManager();
+
+            this.userData = this.profileManager.userData;
         }
 
         connectedCallback() {
-            this.userData = this.getUserData();
             this.render();
         }
 
-        onChangeData() {
-            console.log('Изменение данных');
+        // чтобы убрать это нужно научить шаблонизатор считать логические выражения
+        // или сделать свой <doom-id> и <dom-switch>
+        get isNotDataList() {
+            return !this.isNotFormPassword || !this.isNotFormUserData;
         }
 
-        onChangePassword() {
-            console.log('Смена пароля');
+        get isNotFormPassword() {
+            return this.router.urlParams.queryParams.type !== 'changePassword';
         }
 
-        onExit() {
-            console.log('Выход');
-        }
-
-        getUserData() {
-            return {
-                first_name: 'Вадим',
-                last_name: 'Кошечкин',
-                chat_name: 'Вадим',
-                avatarUrl: 'https://sun1-87.userapi.com/s/v1/if1/75kO7SiwUAoiofoYlkEX407eGBwbwRzlxVgqp-j8n_5kJZsBMSTOpA1BrMezYnl6lhaecWsP.jpg?size=400x0&quality=96&crop=6,335,1299,1299&ava=1',
-                email: 'Rizus912@yandex.ru',
-                login: 'rizus',
-                phone: '8-800-555-35-35',
-            }
+        get isNotFormUserData() {
+            return this.router.urlParams.queryParams.type !== 'changeData';
         }
     }
 )

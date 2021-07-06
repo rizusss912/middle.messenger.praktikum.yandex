@@ -3,4 +3,7 @@ export const template = `
     <button click={{navigateToAuth()}}>
         Перейти к страничке авторизации
     </button>
+    <button click={{navigateToProfile()}}>
+        Перейти к страничке профиля
+    </button>
 `;

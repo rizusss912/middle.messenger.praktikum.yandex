@@ -4,6 +4,7 @@ import RouterService from '../../service/router/router.service.js';
 import {pages} from '../../service/router/pages.config.js';
 
 import '../../components/input/app-input.js';
+import '../../components/form/app-form.js';
 import '../../components/button/app-button.js';
 
 import {template} from './page-auth.tmpl.js';

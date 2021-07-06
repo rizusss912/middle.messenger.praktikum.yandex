@@ -3,6 +3,5 @@ export const pages = {
     chats: "/",
     auth: "/auth",
     profile: "/profile",
-    settings: "/settings",
     default: "default",
 }

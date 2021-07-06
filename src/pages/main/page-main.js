@@ -1,6 +1,8 @@
 import {CustomElement} from '../../utils/custom-element.js';
 import RouterService from '../../service/router/router.service.js';
 
+import { pages } from '../../service/router/pages.config.js';
+
 import {template} from './page-main.tmpl.js';
 
 import './page-main.less';
@@ -23,7 +25,11 @@ export default CustomElement({
         }
 
         navigateToAuth() {
-            this.router.navigateTo("/auth");
+            this.router.navigateTo(pages.auth);
+        }
+
+        navigateToProfile() {
+            this.router.navigateTo(pages.profile);
         }
     }
 )

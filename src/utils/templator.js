@@ -1,8 +1,7 @@
 //TODO: Вынести все регулярки в константы (возможно стоит переписать класс. без регулярок выйдет за o(n))
-//TODO: * почему-то ломает текстовую ноду Надо править регулярки
+//TODO: * почему-то ломает текстовую ноду. Надо править регулярки
 //TODO: Вынести часть реализации в helper
 export class Templator {
-    isAppend = false;
     bindTextNodesMap = new Map();
     bindEventsMap = new Map();
     slotsMap = new Map();

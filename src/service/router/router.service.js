@@ -40,11 +40,19 @@ export default Service() (
         navigateTo(path = pages.main, query = {}, hash = '') {
             var queryStr = '';
 
-            if (Object.keys(query) !== 0) {
+            if (path[0] !== '/') {
+                path = `/${path}`;
+            }
+
+            if (Object.keys(query).length !== 0) {
                 queryStr = '?' + Object.keys(query).map(key => `${key}=${query[key]}`).join('&');
             }
 
-            window.location.assign(`${window.location.origin}${path}${queryStr}`);
+            if (hash && hash[0] !== '#') {
+                hash = `#${hash}`;
+            }
+
+            window.location.assign(`${window.location.origin}${path}${queryStr}${hash}`);
         }
 
         getPageByPath(path = pages.main) {
