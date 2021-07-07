@@ -19,6 +19,7 @@ export default CustomElement({
 
         connectedCallback() {
             const Page = this.router.getPageByPath(this.router.urlParams.pathname);
+            console.log(this.router.urlParams.pathname);
             this.render({content: [new Page()]});
         }
     }
