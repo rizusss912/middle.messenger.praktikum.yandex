@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-node_modules/
-dist/
-.cache/
-||||||| 2c6844c
-node_modules/
-=======
 node_modules/
 dist/
 .cache/
 .parcel-cache/
->>>>>>> deploy
