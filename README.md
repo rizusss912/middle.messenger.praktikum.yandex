@@ -1,6 +1,5 @@
 https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/1
 
-
 netlify: https://60e600be67201d00071cf6c1--rizus.netlify.app/
 
 скрипты:
