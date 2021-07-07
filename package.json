@@ -26,7 +26,7 @@
     "parcel-bundler": "^1.12.5"
   },
   "devDependencies": {
-    "@parcel/transformer-less": "^2.0.0-alpha.3",
+    "@parcel/transformer-less": "^2.0.0-alpha.2",
     "less": "^4.1.1",
     "parcel-plugin-nuke-dist": "^1.0.1"
   },
