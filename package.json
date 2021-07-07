@@ -8,7 +8,7 @@
     "build": "./node_modules/.bin/parcel build src/index.html --out-dir dist",
     "deploy": "npm install && npm run build",
     "dev": "./node_modules/.bin/parcel src/index.html --out-dir dist",
-    "start": "parcel build src/index.html --out-dir dist && node index.js"
+    "start": "./node_modules/.bin/parcel build src/index.html --out-dir dist && node index.js"
   },
   "repository": {
     "type": "git",
