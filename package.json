@@ -22,6 +22,7 @@
   "homepage": "https://github.com/rizusss912/middle.messenger.praktikum.yandex#readme",
   "dependencies": {
     "@parcel/transformer-less": "^2.0.0-alpha.3",
+    "@unofficial-parcel-nightly/transformer-less": "^2.0.0-alpha.3.2-28-g49b4f40b-test1",
     "express": "^4.17.1",
     "parcel": "^2.0.0-beta.2",
     "parcel-bundler": "^1.12.5",
