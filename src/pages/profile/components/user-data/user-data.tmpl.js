@@ -1,52 +1,45 @@
 export const template = `
 <section id="data-list">
-    <ul class="field-list">
-        <li>
-            <p class="text-primary">Почта</p>
-            <p class="text-secondary">{{ userData.email }}</p>
-        </li>
-        <li>
-            <p class="text-primary">Логин</p>
-            <p class="text-secondary">{{ userData.login }}</p>
-        </li>
-        <li>
-            <p class="text-primary">Имя</p>
-            <p class="text-secondary">{{ userData.first_name }}</p>
-        </li>
-        <li>
-            <p class="text-primary">Фамилия</p>
-            <p class="text-secondary">{{ userData.second_name }}</p>
-        </li>
-        <li>
-            <p class="text-primary">Имя в чате</p>
-            <p class="text-secondary">{{ userData.display_name }}</p>
-        </li>
-            <li>
-            <p class="text-primary">Телефон</p>
-            <p class="text-secondary">{{ userData.phone }}</p>
-        </li>
-    </ul>
+    <dl class="field-list">
+        <dt class="text-primary">Почта</dt>
+        <dd class="text-secondary">{{ userData.email }}</dd>
+
+        <dt class="text-primary">Логин</dt>
+        <dd class="text-secondary">{{ userData.login }}</dd>
+
+        <dt class="text-primary">Имя</dt>
+        <dd class="text-secondary">{{ userData.first_name }}</dd>
+
+        <dt class="text-primary">Фамилия</dt>
+        <dd class="text-secondary">{{ userData.second_name }}</dd>
+
+        <dt class="text-primary">Имя в чате</dt>
+        <dd class="text-secondary">{{ userData.display_name }}</dd>
+
+        <dt class="text-primary">Телефон</dt>
+        <dd class="text-secondary">{{ userData.phone }}</dd>
+    </dl>
 </section>
 
 <section id="footer-buttons">
     <ul class="field-list">
         <li>
             <app-button click={{onChangeData()}} appearance="secondary">
-                <span slot="title">
+                <span slot="label">
                     Изменить данные
                 </span>
             </app-button>
         </li>
         <li>
             <app-button click={{onChangePassword()}} appearance="secondary">
-                <span slot="title">
+                <span slot="label">
                     Изменить пароль
                 </span>
             </app-button>
         </li>
         <li>
             <app-button click={{onExit()}} appearance="error">
-                <span slot="title">
+                <span slot="label">
                     Выйти
                 </span>
             </app-button>

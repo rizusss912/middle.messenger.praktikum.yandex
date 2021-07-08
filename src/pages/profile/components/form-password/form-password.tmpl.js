@@ -2,13 +2,13 @@ export const template = `
 <section>
     <app-form name="password">
         <app-input slot="field" name="last">
-            <span slot="title">Старый пароль</span>
+            <span slot="label">Старый пароль</span>
         </app-input>
         <app-input slot="field" name="new">
-            <span slot="title">Новый пароль</span>    
+            <span slot="label">Новый пароль</span>    
         </app-input>
         <app-input slot="field" name="repeat">
-            <span slot="title">Повторите пароль</span>
+            <span slot="label">Повторите пароль</span>
         </app-input>
     </app-form>
 </section>
@@ -17,14 +17,14 @@ export const template = `
     <ul class="field-list">
         <li>
             <app-button click={{onChangePassword()}} appearance="primary">
-                <span slot="title">
+                <span slot="label">
                     Сохранить
                 </span>
             </app-button>
         </li>
         <li>
             <app-button click={{onBack()}} appearance="error">
-                <span slot="title">
+                <span slot="label">
                     Назад
                 </span>
             </app-button>

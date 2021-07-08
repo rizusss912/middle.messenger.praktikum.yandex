@@ -3,16 +3,22 @@ app-button {
 
     &[appearance="primary"] {
         --button-color: #3369F3;
+        --button-color-hover: #1d53db;
+        --button-color-active: #0b36a1;
         --button-text-color: white;
     }
 
     &[appearance="secondary"] {
         --button-color: white;
+        --button-color-hover: #f1f1f1;
+                --button-color-active: #dddddd;
         --button-text-color: #3369F3;
     }
 
     &[appearance="error"] {
         --button-color: white;
+        --button-color-hover: #f1f1f1;
+        --button-color-active: #dddddd;
         --button-text-color: red;
     }
 
@@ -20,12 +26,15 @@ app-button {
         border: none;
         outline: none;
 
+        cursor: pointer;
+        transition: 0.2s;
+
         background-color: var(--button-color);
         width: 100%;
         border-radius: 8px;
         padding: 10px;
 
-        slot[name="title"] {
+        slot[name="label"] {
             font-family: Inter, sans-serif;
             font-style: normal;
             font-weight: 500;
@@ -33,5 +42,12 @@ app-button {
             line-height: 15px;
             color: var(--button-text-color);
         }
+    }
+
+    button:hover {
+        background-color: var(--button-color-hover);
+    }
+    button:active {
+        background-color: var(--button-color-active);
     }
 }

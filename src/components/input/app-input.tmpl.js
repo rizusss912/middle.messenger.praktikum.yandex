@@ -1,4 +1,6 @@
 export const template = `
-    <slot name="title"></slot>
-    <input type="text" name={{name}}>
+    <label for={{name}}>
+        <slot name="label"></slot>
+    </label>
+    <input type="text" name={{name}} id={{name}}>
 `;

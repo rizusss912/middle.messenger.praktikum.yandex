@@ -1,5 +1,5 @@
 export const template = `
     <button>
-        <slot name="title"></slot>
+        <slot name="label"></slot>
     </button>
 `;

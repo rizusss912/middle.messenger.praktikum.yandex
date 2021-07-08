@@ -1,6 +1,55 @@
-//TODO: Вынести все регулярки в константы (возможно стоит переписать класс. без регулярок выйдет за o(n))
+//TODO: Возможно стоит переписать класс. без регулярок выйдет за o(n)
 //TODO: * почему-то ломает текстовую ноду. Надо править регулярки
 //TODO: Вынести часть реализации в helper
+
+//TODO: Когда появятся тесты, описание можно будет убрать
+/**
+ * Разбивает html на массив по одному тегу в каждом элементе и при этом тег на первом месте. Пример:
+ * <div>content<p>text</p>content2</div> =>
+ * ['<div>content', '<p>text', '</p>content2', '</div>']
+ */
+const HTML_TAG_AND_CONTENT = /\<.*?\>[^\<\>]*/gim;
+/**
+ * Разбивает тег на массив атрибутов. Пример:
+ * <div name={{name}} click={{handler()}} type="test" hidden> =>
+ * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
+ */
+const TEG_ATTRIBUTES = /([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.]+(?:"|'|\{\{|\}\})?)/gim;
+/**
+ * Выделяет тег. Пример:
+ * '<div hidden name={{name}}> content text' => ['<div hidden name={{name}}>']
+ */
+const TEG = /^\<.*?\>/;
+/**
+ * Начинается не с </
+ */
+const OPEN_TEG = /^\<\//;
+/**
+ * Выделяет из строки всё, кроме '<', '/' и пробелов
+ */
+const TEG_NAME = /[^</\s]+/;
+/**
+ * Проверяет содержит ли атрибут значение в двойных фигурных скобках. Примеры:
+ * name="test" => false
+ * name={{getName()}} => true
+ */
+const IS_CUSTOM_ATTRIBUTE = /[A-z]+[\s]*\=[\s]*[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/;
+/**
+ * Проверяет есть ли в теге знак равенства. Примеры:
+ * 'hidden' => false
+ * 'name="name"' => true
+ */
+const HAS_VALUE = /.*=.*/;
+/**
+ * Достаёт из текста строки в двойных фигурных скобках. Пример:
+ * 'server has bin started on port {{PORT}}' => ['{{PORT}}']
+ */
+const VARIEBLES = /[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g;
+/**
+ * Получает строку состоящую из букв, точек и круглых скобок. Пример:
+ * '{{ api.test.getValue()}}' => ['api.test.getValue()']
+ */
+const VARIEBLE_VALUE = /[A-z\.\(\)]+/;
 export class Templator {
     bindTextNodesMap = new Map();
     bindEventsMap = new Map();
@@ -19,7 +68,7 @@ export class Templator {
         const addToChain = (node, content) => {
             const getParent = () => {
                 //из-за того что есть не закрывающиеся теги
-                var parentIndex = htmlElements[htmlElements.length - 1] !== node
+                const parentIndex = htmlElements[htmlElements.length - 1] !== node
                     ? htmlElements.length - 1
                     : htmlElements.length - 2;
 
@@ -54,19 +103,18 @@ export class Templator {
         }
         // получаем массив, который содержит один тег и контент до следующего тега
         //TODO: Не даёт писать атрибу
-
-        const htmlConfig = str.match(/\<.*?\>[^\<\>]*/gim)
+        const htmlConfig = str.match(HTML_TAG_AND_CONTENT)
             .map(str => {
                 // выбираем только тег
-                const tagStr = str.match(/^\<.*?\>/)[0];
+                const tagStr = str.match(TEG)[0];
                 const content = str.split(tagStr)[1];
                 // разбиваем тег на массив из имени тега и атрибутов (также элементы могут быть в {} и [])
                 //TODO: нужно переписать логику на что-нибудь менее страшное
-                const tagArray = tagStr.match(/([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.]+(?:"|'|\{\{|\}\})?)/gim);
+                const tagArray = tagStr.match(TEG_ATTRIBUTES);
 
                 const tag = {
-                    isOpen: !(/^\<\//.test(tagStr)),
-                    name: tagArray[0].match(/[^</\s]+/)[0],
+                    isOpen: !(OPEN_TEG.test(tagStr)),
+                    name: tagArray[0].match(TEG_NAME)[0],
                     attributes: tagArray.slice(1),
                 };
 
@@ -75,13 +123,13 @@ export class Templator {
 
         const htmlElements = [];
 
-        for (var item of htmlConfig) {
+        for (let item of htmlConfig) {
             if (item.tag.isOpen) {
                 const element = document.createElement(item.tag.name);
 
                 for (var attribute of item.tag.attributes) {
-                    if (!/[A-z]+[\s]*\=[\s]*[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/.test(attribute)) {
-                        const atr = /.*=.*/.test(attribute) ? attribute.split('=') : [attribute, ''];
+                    if (!IS_CUSTOM_ATTRIBUTE.test(attribute)) {
+                        const atr = HAS_VALUE.test(attribute) ? attribute.split('=') : [attribute, ''];
                         atr[1] = atr[1].match(/[^"']*/gim).reduce((out, str) => out || str) || '';
                         element.setAttribute(...atr);
                     } else {
@@ -110,6 +158,7 @@ export class Templator {
                    ) {
                     throw Error(`Templator: invalid html template: ${str}`);
                 }
+
                 addToChain(htmlElements[htmlElements.length - 1], item.content);
                 htmlElements.pop();
             }
@@ -125,11 +174,11 @@ export class Templator {
     initBindTextNode(content) {
         const node = document.createTextNode(content.trim());
 
-        const varieblesArr = content.match(/[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g)
+        const varieblesArr = content.match(VARIEBLES);
         
         if (!varieblesArr) return node;
 
-        const variebles = varieblesArr.map(value => value.match(/[A-z\.\(\)]+/)[0]);
+        const variebles = varieblesArr.map(value => value.match(VARIEBLE_VALUE)[0]);
 
         for (var varieble of variebles) {
             if (this.bindTextNodesMap.has(varieble)) {
@@ -159,7 +208,6 @@ export class Templator {
     setSlots() {
         for (var parent of this.getMapKeys(this.slotsMap)) {
             for (var slot of this.slotsMap.get(parent)) {
-
                 const slotNode =  this.getSlotNode(parent, slot.getAttribute('slot'));
 
                 if (slotNode) slotNode.appendChild(slot);
