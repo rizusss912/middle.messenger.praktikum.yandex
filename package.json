@@ -1,0 +1,35 @@
+{
+  "name": "middle.messenger.praktikum.yandex",
+  "version": "1.0.0",
+  "description": "### Откройте pull request в ветку main из ветки, где вы разрабатывали проект, и добавьте ссылку на этот pr в README.md в ветке main. Название pull request может быть любое.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./node_modules/.bin/parcel build src/index.html --out-dir dist",
+    "deploy": "npm install && npm run build",
+    "dev": "./node_modules/.bin/parcel src/index.html --out-dir dist",
+    "start": "./node_modules/.bin/parcel build src/index.html --out-dir dist && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rizusss912/middle.messenger.praktikum.yandex.git"
+  },
+  "author": "Вадим Кошечкин <Rizus912@yandex.ru>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rizusss912/middle.messenger.praktikum.yandex/issues"
+  },
+  "homepage": "https://github.com/rizusss912/middle.messenger.praktikum.yandex#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "parcel": "^2.0.0-beta.2"
+  },
+  "devDependencies": {
+    "less": "^4.1.1",
+    "parcel-bundler": "^1.12.5",
+    "parcel-plugin-nuke-dist": "^1.0.1"
+  },
+  "engines": {
+    "node": "^12.18.4"
+  }
+}
