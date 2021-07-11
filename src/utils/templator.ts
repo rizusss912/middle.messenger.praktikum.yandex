@@ -1,7 +1,6 @@
 //TODO: Возможно стоит переписать класс. без регулярок выйдет за o(n)
 //TODO: * почему-то ломает текстовую ноду. Надо править регулярки
 //TODO: Вынести часть реализации в helper
-
 //TODO: Когда появятся тесты, описание можно будет убрать
 /**
  * Разбивает html на массив по одному тегу в каждом элементе и при этом тег на первом месте. Пример:
@@ -50,11 +49,25 @@ const VARIEBLES = /[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g;
  * '{{ api.test.getValue()}}' => ['api.test.getValue()']
  */
 const VARIEBLE_VALUE = /[A-z\.\(\)]+/;
+
+type customAttribute = {
+    name: string;
+    value: string;
+}
+
+export type RenderOptions = {
+    content?: HTMLElement[],
+};
+
+type Context = {[key: string]: any};
+
 export class Templator {
-    bindTextNodesMap = new Map();
-    bindEventsMap = new Map();
-    slotsMap = new Map();
-    contentElement;
+    bindTextNodesMap: Map<string, Text[]> = new Map();
+    bindEventsMap: Map<HTMLElement, customAttribute[]> = new Map();
+    slotsMap: Map<HTMLElement, HTMLElement[]> = new Map();
+    contentElement: HTMLElement;
+    template: string;
+    nodes: HTMLElement[];
 
     constructor(template = '') {
         if (typeof template !== 'string') throw Error('Templator: template is not string');
@@ -63,7 +76,7 @@ export class Templator {
         this.nodes = this.initTemplate(template);
     }
 
-    initTemplate(str) {
+    initTemplate(str): HTMLElement[] {
         const outNodes = [];
         const addToChain = (node, content) => {
             const getParent = () => {
@@ -80,7 +93,7 @@ export class Templator {
             }
 
             if (node.hasAttribute('slot')) {
-                const parent = getParent(node);
+                const parent = getParent();
 
                 if (this.slotsMap.has(parent)) {
                     this.slotsMap.get(parent).push(node);
@@ -92,7 +105,7 @@ export class Templator {
             }
 
             if (htmlElements.length > 1) {
-                const parent = getParent(node);
+                const parent = getParent();
 
                 parent.appendChild(node);
                 parent.appendChild(this.initBindTextNode(content));
@@ -171,7 +184,7 @@ export class Templator {
         return outNodes;
     }
 
-    initBindTextNode(content) {
+    initBindTextNode(content: string): Text {
         const node = document.createTextNode(content.trim());
 
         const varieblesArr = content.match(VARIEBLES);
@@ -191,7 +204,7 @@ export class Templator {
         return node;
     }
 
-    render(context, options = {}) {
+    render(context: Context, options: RenderOptions = {}): void {
         if (options.content && this.contentElement) this.setContent(options.content);
 
         this.setContext(context);
@@ -199,14 +212,14 @@ export class Templator {
         this.setSlots();
     }
 
-    setContent(content = []) {
+    setContent(content: HTMLElement[] = []): void {
         for (var node of content) {
             this.contentElement.appendChild(node);
         }
     }
 
-    setSlots() {
-        for (var parent of this.getMapKeys(this.slotsMap)) {
+    setSlots(): void {
+        for (let parent of this.getMapKeys(this.slotsMap)) {
             for (var slot of this.slotsMap.get(parent)) {
                 const slotNode =  this.getSlotNode(parent, slot.getAttribute('slot'));
 
@@ -215,7 +228,7 @@ export class Templator {
         }
     }
 
-    setAttributesAndEventListeners(context) {
+    setAttributesAndEventListeners(context: Context): void {
         for (var element of this.getMapKeys(this.bindEventsMap)) {
             for (var config of this.bindEventsMap.get(element)) {
                 let contextPoint = context;
@@ -243,7 +256,7 @@ export class Templator {
         }
     }
 
-    setContext(context) {
+    setContext(context: Context): void {
         for (var varieble of this.getMapKeys(this.bindTextNodesMap)) {
             var value = context;
             var hasValue = true;
@@ -262,27 +275,31 @@ export class Templator {
             const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
             for(var node of this.bindTextNodesMap.get(varieble)) {
                 //TODO: добавить поддержку функций в шаблоне
-                node.textContent = node.textContent.replace(reg, value);
+                node.textContent = node.textContent.replace(reg, String(value));
             }
         }
     }
     //TODO: вынести в утилиту
-    getMapKeys(map) {
-        return [...map].map(value => value[0]);
+    getMapKeys<key, value>(map: Map<key, value>): key[] {
+        const keys = [];
+
+        map.forEach((value, key) => keys.push(key));
+
+        return keys;
     }
 
-    isSolloTag(element) {
+    isSolloTag(element: HTMLElement): boolean {
         const solloTags = ['area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed', 'hr', 'img',
             'input', 'isindex', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr', 'content'];
         return solloTags.includes(element.tagName.toLowerCase());
     }
 
-    isContentElement(element) {
+    isContentElement(element: HTMLElement): boolean {
         return element.tagName.toLowerCase() === 'content';
     }
 
     // node.querySelector("slot[name="name"]")
-    getSlotNode(node, name) {
+    getSlotNode(node: Element, name: string): Element | null {
         if (!node.hasChildNodes()) return null;
 
         for (var index = 0; index < node.children.length; index++) {

@@ -1,23 +1,28 @@
-import {Service} from "../../utils/service.js";
-import {routerConfig} from "./router.config.js";
-import {pages} from "./pages.config.js";
+import {Service} from "../../utils/service";
+import {HTMLPageConstructor, routerConfig} from "./router.config";
+import {pages} from "./pages.config";
 
 let instance;
 
-export default Service() (
-    class RouterService {
+export interface urlParams<Query> {
+    pathname: string;
+    origin: string;
+    hash: string;
+    queryParams: Query;
+}
 
+@Service()
+export class RouterService<Query extends {}> {
         constructor() {
             if (instance) return instance;
-
             instance = this;
         }
 
-        get config() {
+        public static get config(): Record<pages, HTMLPageConstructor> {
             return routerConfig;
         }
 
-        get urlParams() {
+        public get urlParams(): urlParams<Query> {
             var {hash, pathname, origin, search} = window.location;
             var queryParams = search.match(/[^\?\&]*/g)
                 .filter(value => value)
@@ -29,7 +34,7 @@ export default Service() (
                     }
 
                     return out;
-                }, {});
+                }, {}) as Query;
 
             hash = hash.replace('#', '');
 
@@ -37,7 +42,7 @@ export default Service() (
         }
 
         //TODO нужно переходить на url не перезагружая страницу history.pushState
-        navigateTo(path = pages.main, query = {}, hash = '') {
+        public navigateTo(path: string = pages.main, query: Query = {} as Query, hash: string = ''): void {
             var queryStr = '';
 
             if (path[0] !== '/') {
@@ -55,10 +60,16 @@ export default Service() (
             window.location.assign(`${window.location.origin}${path}${queryStr}${hash}`);
         }
 
-        getPageByPath(path = pages.main) {
+        public getPageByPath(path: string = pages.main): HTMLPageConstructor {
             path = path.split('?')[0];
+
             if (path[path.length - 1] === '/' && path.length > 1) path = path.slice(0, -1);
             if (path[0] !== '/') path = `/${path}`;
-            return this.config[path] || this.config[pages.default];
+
+            return RouterService.config[path] || RouterService.config[pages.default];
         }
-});
+
+        public getPage(): HTMLPageConstructor {
+            return this.getPageByPath(this.urlParams.pathname);
+        }
+}

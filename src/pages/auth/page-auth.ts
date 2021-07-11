@@ -1,54 +1,58 @@
-import {CustomElement} from '../../utils/custom-element.js';
+import {Component, CustomHTMLElement} from '../../utils/component';
 
-import RouterService from '../../service/router/router.service.js';
-import {pages} from '../../service/router/pages.config.js';
+import {RouterService} from '../../service/router/router.service';
+import {pages} from '../../service/router/pages.config';
 
-import '../../components/input/app-input.js';
-import '../../components/form/app-form.js';
-import '../../components/button/app-button.js';
+import '../../components/input/app-input';
+import '../../components/form/app-form';
+import '../../components/button/app-button';
 
-import {template} from './page-auth.tmpl.js';
+import {template} from './page-auth.tmpl';
 
 import './page-auth.less';
 
-export default CustomElement({
+enum authPageType {
+    registration = 'registration',
+};
+
+type authPageQueryParams = {
+    type?: authPageType,
+}
+
+@Component<PageAuth>({
     name: 'page-auth',
     template,
-})(
-    class PageAuth extends HTMLElement {
-        router;
+})
+export class PageAuth implements CustomHTMLElement {
+        router: RouterService<authPageQueryParams>;
 
         constructor() {
-            super();
-
             this.router = new RouterService();
         }
 
-        get title() {
+        onInit(): void {}
+
+        get title(): string {
             return this.isRegistration ? "Регистрация" : "Вход";
         }
 
-        get isRegistration() {
+        get isRegistration(): boolean {
             return this.router.urlParams.queryParams.type === "registration";
         }
 
-        get isAuthorization() {
+        get isAuthorization(): boolean {
             return !this.isRegistration;
         }
 
-        connectedCallback() {
-            this.render();
-        }
-
-        navigateTo() {
+        navigateTo(): void {
             if (this.isAuthorization) {
-                this.router.navigateTo(pages.auth, {type: "registration"});
+                this.router.navigateTo(pages.auth, {type: authPageType.registration});
             } else {
                 this.router.navigateTo(pages.auth);
             }
         }
 
-        onAuthorization() {
+        onAuthorization(): void {
             console.log(this.isAuthorization ? "авторизация": "регистрация");
             if (this.isAuthorization) {
                 //TODO: собираем с формочки данные авторизации и идём на сервер
@@ -57,4 +61,3 @@ export default CustomElement({
             }
         }
     }
-)

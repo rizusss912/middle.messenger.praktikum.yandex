@@ -1,10 +1,20 @@
-import {Service} from "../../../utils/service.js";
+import {Service} from "../../../utils/service";
+
+export interface userData {
+    first_name: string;
+    second_name: string;
+    display_name: string;
+    avatarUrl: string;
+    email: string;
+    login: string;
+    phone: string;
+}
 
 let instance;
 
-export default Service() (
-    class ProfileManagerService {
-        handlers = [];
+@Service()
+export class ProfileManagerService {
+        handlers: ((data?: userData) => void)[] = [];
 
         constructor() {
             if (instance) return instance;
@@ -12,7 +22,7 @@ export default Service() (
             instance = this;
         }
 
-        get userData() {
+        get userData(): userData {
             return {
                 first_name: 'Вадим',
                 second_name: 'Кошечкин',
@@ -24,10 +34,7 @@ export default Service() (
             }
         }
 
-        onUserDataChanged(handler) {
+        onUserDataChanged(handler: (data?: userData) => void): void {
             this.handlers.push(handler);
         }
-
-        
     }
-)

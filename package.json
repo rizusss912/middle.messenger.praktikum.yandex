@@ -21,13 +21,17 @@
   },
   "homepage": "https://github.com/rizusss912/middle.messenger.praktikum.yandex#readme",
   "dependencies": {
+    "@webcomponents/custom-elements": "^1.4.3",
+    "document-register-element": "^1.8.1",
     "express": "^4.17.1",
     "parcel": "^2.0.0-beta.2"
   },
   "devDependencies": {
+    "@webcomponents/webcomponentsjs": "^2.5.0",
     "less": "^4.1.1",
     "parcel-bundler": "^1.12.5",
-    "parcel-plugin-nuke-dist": "^1.0.1"
+    "parcel-plugin-nuke-dist": "^1.0.1",
+    "typescript": "^4.3.5"
   },
   "engines": {
     "node": "^12.18.4"
