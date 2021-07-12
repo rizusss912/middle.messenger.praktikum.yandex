@@ -1,18 +1,21 @@
 import {Service} from "../../utils/service";
 import {HTMLPageConstructor, routerConfig} from "./router.config";
 import {pages} from "./pages.config";
+import { Subject } from "../../utils/observeble/subject";
+import { Observable } from "../../utils/observeble/observeble";
 
 let instance;
 
 export interface urlParams<Query> {
     pathname: string;
-    origin: string;
     hash: string;
     queryParams: Query;
 }
 
 @Service()
 export class RouterService<Query extends {}> {
+    private readonly _popstate = new Subject<urlParams<Query>>();
+
         constructor() {
             if (instance) return instance;
             instance = this;
@@ -22,8 +25,19 @@ export class RouterService<Query extends {}> {
             return routerConfig;
         }
 
+        public get $popstate(): Observable<urlParams<Query>> {
+            return this._popstate.asObserveble();
+        }
+
+        public get $path(): Observable<string> {
+            return this.$popstate
+                .map(urlParams => urlParams.pathname)
+                .uniqueNext()
+                .startWith(this.urlParams.pathname)
+        }
+
         public get urlParams(): urlParams<Query> {
-            var {hash, pathname, origin, search} = window.location;
+            var {hash, pathname, search} = window.location;
             var queryParams = search.match(/[^\?\&]*/g)
                 .filter(value => value)
                 .reduce((out, str) => {
@@ -38,7 +52,7 @@ export class RouterService<Query extends {}> {
 
             hash = hash.replace('#', '');
 
-            return {hash, pathname, origin, queryParams};
+            return {hash, pathname, queryParams};
         }
 
         //TODO нужно переходить на url не перезагружая страницу history.pushState
@@ -57,7 +71,9 @@ export class RouterService<Query extends {}> {
                 hash = `#${hash}`;
             }
 
-            window.location.assign(`${window.location.origin}${path}${queryStr}${hash}`);
+            history.pushState({}, "page", `${window.location.origin}${path}${queryStr}${hash}`);
+            this.emitUrl(path, query, hash);
+            //window.location.assign(`${window.location.origin}${path}${queryStr}${hash}`);
         }
 
         public getPageByPath(path: string = pages.main): HTMLPageConstructor {
@@ -71,5 +87,15 @@ export class RouterService<Query extends {}> {
 
         public getPage(): HTMLPageConstructor {
             return this.getPageByPath(this.urlParams.pathname);
+        }
+
+        private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
+            if (pathname[0] !== '/') {
+                pathname = `/${pathname}`;
+            }
+
+            hash = hash.replace('#', '');
+
+            this._popstate.next({pathname, queryParams, hash});
         }
 }

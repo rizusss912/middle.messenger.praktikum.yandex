@@ -2,6 +2,10 @@
 //TODO: * почему-то ломает текстовую ноду. Надо править регулярки
 //TODO: Вынести часть реализации в helper
 //TODO: Когда появятся тесты, описание можно будет убрать
+
+import { Observable } from "./observeble/observeble";
+import { Subscription } from "./observeble/subscription";
+
 /**
  * Разбивает html на массив по одному тегу в каждом элементе и при этом тег на первом месте. Пример:
  * <div>content<p>text</p>content2</div> =>
@@ -42,13 +46,15 @@ const HAS_VALUE = /.*=.*/;
 /**
  * Достаёт из текста строки в двойных фигурных скобках. Пример:
  * 'server has bin started on port {{PORT}}' => ['{{PORT}}']
+ * refactor!
  */
-const VARIEBLES = /[\{]{2}[\s]*[A-z\.\(\)]+[\s]*[\}]{2}/g;
+const VARIEBLES = /[\{\[]{2}[\s]*[A-z\.\(\)\$]+[\s]*[\}\]]{2}/g;
 /**
  * Получает строку состоящую из букв, точек и круглых скобок. Пример:
  * '{{ api.test.getValue()}}' => ['api.test.getValue()']
+ * refactor!
  */
-const VARIEBLE_VALUE = /[A-z\.\(\)]+/;
+const VARIEBLE_VALUE = /[^\{\}\[\] ]+/;
 
 type customAttribute = {
     name: string;
@@ -56,7 +62,7 @@ type customAttribute = {
 }
 
 export type RenderOptions = {
-    content?: HTMLElement[],
+    content?: HTMLElement[] | Observable<HTMLElement[]>,
 };
 
 type Context = {[key: string]: any};
@@ -68,6 +74,7 @@ export class Templator {
     contentElement: HTMLElement;
     template: string;
     nodes: HTMLElement[];
+    contentSubscription: Subscription<HTMLElement[]> | undefined;
 
     constructor(template = '') {
         if (typeof template !== 'string') throw Error('Templator: template is not string');
@@ -205,16 +212,32 @@ export class Templator {
     }
 
     render(context: Context, options: RenderOptions = {}): void {
-        if (options.content && this.contentElement) this.setContent(options.content);
+        if (
+            options.content
+            && this.contentElement
+            && !this.contentSubscription
+        ) this.setContent(options.content);
 
         this.setContext(context);
         this.setAttributesAndEventListeners(context);
         this.setSlots();
     }
 
-    setContent(content: HTMLElement[] = []): void {
-        for (var node of content) {
-            this.contentElement.appendChild(node);
+    setContent(content: HTMLElement[] | Observable<HTMLElement[]> = []): void {
+        if (content instanceof Observable) {
+            this.contentSubscription = content.subscribe(elements => {
+                while (this.contentElement.firstChild) {
+                    this.contentElement.removeChild(this.contentElement.firstChild);
+                }
+                
+                for (var node of elements) {
+                    this.contentElement.appendChild(node);
+                }
+            });
+        } else {
+            for (var node of content) {
+                this.contentElement.appendChild(node);
+            }
         }
     }
 
@@ -258,6 +281,7 @@ export class Templator {
 
     setContext(context: Context): void {
         for (var varieble of this.getMapKeys(this.bindTextNodesMap)) {
+            console.log(varieble)
             var value = context;
             var hasValue = true;
 
@@ -272,6 +296,10 @@ export class Templator {
 
             if (!hasValue) break;
 
+            if (value instanceof Observable) {
+                this.subscribeValue(value, varieble);
+            }
+
             const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
             for(var node of this.bindTextNodesMap.get(varieble)) {
                 //TODO: добавить поддержку функций в шаблоне
@@ -279,6 +307,18 @@ export class Templator {
             }
         }
     }
+
+    private subscribeValue(value: Observable<string>, varieble: string): void {
+        value.subscribe(value => {
+            console.log(value, varieble);
+            const reg = RegExp(`\[\[[ ]*${varieble}[ ]*\]\]`, "gi");
+            for(var node of this.bindTextNodesMap.get(varieble)) {
+                console.log(node, reg);
+                node.textContent = node.textContent.replace(reg, String(value));
+            }
+        });
+    }
+
     //TODO: вынести в утилиту
     getMapKeys<key, value>(map: Map<key, value>): key[] {
         const keys = [];

@@ -1,4 +1,4 @@
-import { ChainPromise, ChainPromiseValue } from "./chain-promise";
+import {ChainPromiseValue} from "./chain-promise";
 import {Observable} from "./observeble";
 
 type DeferPromise<T, Error> = {

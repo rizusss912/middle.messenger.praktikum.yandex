@@ -1,10 +1,17 @@
 //import '@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js';
 //import '@webcomponents/custom-elements';
 
+import { Observable } from './observeble/observeble';
 import {Templator, RenderOptions} from './templator';
 
+export interface ComponentConfig {
+    name: string;
+    template: string;
+    observedAttributes?: string[];
+}
+
 export interface CustomHTMLElement {
-    content?: HTMLElement[];
+    content?: HTMLElement[] | Observable<HTMLElement[]>;
     onInit?: () => void;
     onDestroy?: () => void;
     onAttributeChanged?: (name: string, oldValue: string, newValue: string) => boolean;
@@ -15,7 +22,7 @@ enum defaultObservedAttributes {
     style = 'style',
 }
 
-export function Component<T extends CustomHTMLElement>(config): (clazz: new () => T) => new () => T {
+export function Component<T extends CustomHTMLElement>(config: ComponentConfig): (clazz: new () => T) => new () => T {
     return function(clazz: new () => T): new () => T {
         class CustomElement extends HTMLElement {
             private templator: Templator | undefined;
@@ -37,7 +44,8 @@ export function Component<T extends CustomHTMLElement>(config): (clazz: new () =
             }
 
             static get observedAttributes(): string[] {
-                return Object.values(defaultObservedAttributes).concat(config.observedAttributes);
+                //@ts-ignore
+                return Object.values(defaultObservedAttributes).concat(config.observedAttributes ? config.observedAttributes : []);
             }
 
             attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
