@@ -27,10 +27,14 @@
     "parcel": "^2.0.0-beta.2"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^4.28.3",
     "@webcomponents/webcomponentsjs": "^2.5.0",
+    "eslint": "^7.30.0",
+    "eslint-config-xo": "^0.37.0",
     "less": "^4.1.1",
     "parcel-bundler": "^1.12.5",
     "parcel-plugin-nuke-dist": "^1.0.1",
+    "stylelint": "^13.13.1",
     "typescript": "^4.3.5"
   },
   "engines": {

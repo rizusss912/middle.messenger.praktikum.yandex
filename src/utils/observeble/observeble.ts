@@ -1,4 +1,5 @@
 import {ChainPromise, ChainPromiseValue} from './chain-promise';
+import { Subject } from './subject';
 import {Subscription} from './subscription';
 
 export class Observable<T> {
@@ -15,6 +16,39 @@ export class Observable<T> {
 
         this.promise = chainPromise;
         chainPromise.then(value => this.onNext(value));
+    }
+
+    private static combine<T>(observebles: Observable<T>[], waitAll): Observable<(T | undefined)[]> {
+        const subject: Subject<(T | undefined)[]> = new Subject<(T | undefined)[]>();
+        const values: (T | undefined)[] = Array(observebles.length).fill(undefined);
+        const hasValues: boolean[] = Array(observebles.length).fill(false);
+        var hasAllValues: boolean = false;
+
+        for (var index = 0; index < observebles.length; index++) {
+            observebles[index].subscribe(value => {
+                values[index] = value;
+
+                if (hasAllValues || !waitAll) {
+                    subject.next(values.slice());
+                    return;
+                } else {
+                    hasValues[index] = true;
+                    hasAllValues = hasValues.every(has => has);
+
+                    if (hasAllValues) subject.next(values.slice());
+                }
+            });
+        }
+
+        return subject.asObserveble();
+    }
+
+    public static all<T>(observebles: Observable<T>[]): Observable<T[]> {
+        return Observable.combine(observebles, true); 
+    }
+
+    public static concat<T>(observebles: Observable<T>[]): Observable<(T | undefined)[]> {
+        return Observable.combine(observebles, false);
     }
 
     public subscribe(handler: (value?: T) => void): Subscription<T> {
@@ -101,6 +135,16 @@ export class Observable<T> {
         return this
             .filter(value => checkUnicue(last, value))
             .on(value => last = value);
+    }
+
+    public only(count: number): Observable<T> {
+        const emptyPromise = new Promise(() => {return {value: null, promise: emptyPromise}});
+
+        if (this.hasValue) {
+            return new Observable<T>(count ? this.promise : emptyPromise, this._value).filter(() => count-- > 0);
+        } else {
+            return new Observable<T>(count ? this.promise : emptyPromise).filter(() => count-- > 0);
+        }
     }
 
     private onNext(value: ChainPromiseValue<T>): void {

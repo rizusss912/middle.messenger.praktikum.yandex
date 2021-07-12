@@ -19,6 +19,11 @@ type authPageQueryParams = {
     type?: authPageType,
 }
 
+const FORM_TITLE = {
+    registration: 'Регистрация',
+    authorization: 'Вход',
+}
+
 @Component<PageAuth>({
     name: 'page-auth',
     template,
@@ -33,11 +38,11 @@ export class PageAuth implements CustomHTMLElement {
         onInit(): void {}
 
         get title(): string {
-            return this.isRegistration ? "Регистрация" : "Вход";
+            return this.isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization;
         }
 
         get isRegistration(): boolean {
-            return this.router.urlParams.queryParams.type === "registration";
+            return this.router.urlParams.queryParams?.type === authPageType.registration;
         }
 
         get isAuthorization(): boolean {

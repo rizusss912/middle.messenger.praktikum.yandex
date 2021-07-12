@@ -21,6 +21,14 @@ export class AppRoot implements CustomHTMLElement {
     }
 
     onInit(): void {
+        const subject = new Subject<number>();
+        var v = 0;
+        setInterval(() => subject.next(v++), 1000);
+        subject.asObserveble()
+            .map(v => v * v)
+            .filter(v => v % 2 === 0)
+            .only(5)
+            .subscribe(console.log); // 0, 4, 16, 36, 64
     }
 
     get content(): Observable<HTMLElement[]> {
