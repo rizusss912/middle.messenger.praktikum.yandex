@@ -70,8 +70,6 @@ export type RenderOptions = {
 //TODO: Разобраться с типизацией страниц и компонентов type Context = {[key: string]: any};
 
 export class Templator<Context extends object> {
-    bindTextNodesMap: Map<string, Text[]> = new Map();
-    bindEventsMap: Map<HTMLElement, customAttribute[]> = new Map();
     slotsMap: Map<HTMLElement, HTMLElement[]> = new Map();
     contentElement: HTMLElement;
     nodes: HTMLElement[];
@@ -83,13 +81,13 @@ export class Templator<Context extends object> {
     private readonly htmlElementRendererManager: HTMLElementsRenderManager<Context>;
 
     constructor(template = '', context: Context) {
-        if (typeof template !== 'string') throw Error('Templator: template is not string');
+        if (typeof template !== 'string') throw new Error('Templator: template is not string');
 
-        this.template = template;
         this.context = context;
+        this.template = template;
         this.textNodesRenderManager = new TextNodesRenderManager(this.context);
         this.htmlElementRendererManager = new HTMLElementsRenderManager(this.context);
-        this.nodes = this.initTemplate(template);
+        this.nodes = this.initTemplate(this.template);
     }
 
     initTemplate(str): HTMLElement[] {
@@ -183,37 +181,15 @@ export class Templator<Context extends object> {
         return outNodes;
     }
 
-    initBindTextNode(content: string): Text {
-        const node = document.createTextNode(content.trim());
-
-        const varieblesArr = content.match(VARIEBLES);
-
-        if (!varieblesArr) return node;
-
-        const variebles = varieblesArr.map(value => value.match(VARIEBLE_VALUE)[0]);
-
-        for (var varieble of variebles) {
-            if (this.bindTextNodesMap.has(varieble)) {
-                this.bindTextNodesMap.get(varieble).push(node);
-            } else {
-                this.bindTextNodesMap.set(varieble, [node]);
-            }
-        }
-
-        return node;
-    }
-
-    render(context: Context, options: RenderOptions = {}): void {
+    render(options: RenderOptions = {}): void {
         if (
             options.content
             && this.contentElement
             && !this.contentSubscription
         ) this.setContent(options.content);
 
-        this.textNodesRenderManager.renderAll(context);
-        this.setContext(context);
-        this.htmlElementRendererManager.render();
-        //this.setAttributesAndEventListeners(context);
+        this.textNodesRenderManager.renderAll();
+        this.htmlElementRendererManager.renderAll();
         this.setSlots();
     }
 
@@ -241,59 +217,6 @@ export class Templator<Context extends object> {
                 const slotNode =  this.getSlotNode(parent, slot.getAttribute('slot'));
 
                 if (slotNode) slotNode.appendChild(slot);
-            }
-        }
-    }
-
-    setAttributesAndEventListeners(context: Context): void {
-        this.htmlElementRendererManager.render();
-        for (var element of this.getMapKeys(this.bindEventsMap)) {
-            for (var config of this.bindEventsMap.get(element)) {
-                let contextPoint = context;
-
-                for(var value of config.value.split('.')) {
-                    contextPoint = contextPoint[value];
-                }
-
-                if (!contextPoint) break;
-
-                switch(typeof contextPoint) {
-                    case "function":
-                        element.addEventListener(config.name, (e) => (contextPoint as Function).call(this.context, e));
-                        break;
-                    case "string":
-                        element.setAttribute(config.name, contextPoint);
-                        break;
-                    case "boolean":
-                        if (contextPoint) element.setAttribute(config.name, '');
-                    default:
-                        element.setAttribute(config.name, String(contextPoint));
-                        break;
-                  }
-            }
-        }
-    }
-
-    setContext(context: Context): void {
-        for (var varieble of this.getMapKeys(this.bindTextNodesMap)) {
-            var value = context;
-            var hasValue = true;
-
-            for (var field of varieble.split('.')) {
-                if (field in value && typeof value[field] !== 'undefined') {
-                    value = value[field];
-                } else {
-                    hasValue = false;
-                    return;
-                }
-            }
-
-            if (!hasValue) break;
-
-            const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
-            for(var node of this.bindTextNodesMap.get(varieble)) {
-                //TODO: добавить поддержку функций в шаблоне
-                node.textContent = node.textContent.replace(reg, String(value));
             }
         }
     }

@@ -16,7 +16,7 @@ export class HTMLElementsRenderManager<Context extends object> {
         return elementRenderer.element;
     }
 
-    public render(): void {
+    public renderAll(): void {
         for (var elementRenderer of this.renderers) {
             elementRenderer.render();
         }

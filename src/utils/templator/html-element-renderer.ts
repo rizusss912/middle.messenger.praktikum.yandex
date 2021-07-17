@@ -17,7 +17,7 @@ interface CustomAttribute {
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
- const TEG_ATTRIBUTES = /([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.|\$]+(?:"|'|\{\{|\}\})?)/gim;
+ const TEG_ATTRIBUTES = /([(<|<\/)\w\-\@]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.|\$]+(?:"|'|\{\{|\}\})?)/gim;
 
 export class HTMLElementRenderer<Context extends object> extends Renderer<Context, CustomAttribute> {
     public readonly element: HTMLElement;
@@ -81,18 +81,27 @@ export class HTMLElementRenderer<Context extends object> extends Renderer<Contex
     }
 
     private onValueChanged(attribute: CustomAttribute): void {
+        if (attribute.name[0] === '@') {
+            if (typeof attribute.value !== 'function') throw new Error(`HTMLElementRenderer: ${attribute.name} is not a function`);
+            if (
+                this.eventListenersMap.has(attribute.name)
+                && this.eventListenersMap.get(attribute.name).includes(attribute.value as Function)
+            ) return;
+
+            this.eventListenersMap.has(attribute.name)
+            ? this.eventListenersMap.get(attribute.name).push(attribute.value)
+            : this.eventListenersMap.set(attribute.name, [attribute.value]);
+
+            const name = attribute.name.slice(1);
+
+            this.element.addEventListener(name, (e) => (attribute.value as Function).call(this.context, e));
+
+            return;
+        }
+
         switch(typeof attribute.value) {
             case "function":
-                if (
-                    this.eventListenersMap.has(attribute.name)
-                    && this.eventListenersMap.get(attribute.name).includes(attribute.value)
-                ) return;
-
-                this.eventListenersMap.has(attribute.name)
-                    ? this.eventListenersMap.get(attribute.name).push(attribute.value)
-                    : this.eventListenersMap.set(attribute.name, [attribute.value]);
-
-                this.element.addEventListener(attribute.name, (e) => (attribute.value as Function).call(this.context, e));
+                this.element.setAttribute(attribute.name, String(attribute.value()));
                 break;
             case "string":
                 this.element.setAttribute(attribute.name, attribute.value);

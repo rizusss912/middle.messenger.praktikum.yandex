@@ -2,7 +2,7 @@ export const template = `
     <main>
         <section id="label">
             <img alt="avatar" src={{userData.avatarUrl}}>
-            <h1>{{ userData.login }}</h1>
+            <h1>{{userData.login}}</h1>
         </section>
 
         <user-data class="content" hidden={{isNotDataList}}></user-data>

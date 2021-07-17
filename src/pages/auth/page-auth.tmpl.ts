@@ -37,12 +37,12 @@ export const template = `
                 <span slot="label">Телефон</span> 
             </app-input>
 
-            <app-button slot="field" click={{onAuthorization()}} appearance="primary">
+            <app-button slot="field" @click={{onAuthorization()}} appearance="primary">
                 <span slot="label">Регистрация</span>
             </app-button>
         </app-form>
 
-        <app-button click={{navigateTo()}} appearance="secondary">
+        <app-button @click={{navigateTo()}} appearance="secondary">
             <span slot="label" hidden={{isRegistration}}>
                 Нет акаунта?
             </span>

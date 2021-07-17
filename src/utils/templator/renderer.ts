@@ -12,10 +12,10 @@ export class Renderer<Context extends object, value> {
     }
 
     protected getFieldValue(fieldName: string): unknown {
-        var out: unknown = this.context;
+        var out = this.context;
 
         for (var field of fieldName.split('.')) {
-            if (field in this.context) {
+            if (field in out) {
                 out = out[field];
             } else {
                 //Только так мы можем понять что поле отсутствует

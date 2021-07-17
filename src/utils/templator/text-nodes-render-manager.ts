@@ -16,7 +16,7 @@ export class TextNodesRenderManager<Context extends object> {
         return renderer.node;
     }
 
-    public renderAll(context: Context): void {
+    public renderAll(): void {
         for (var renderer of this.renderers) {
             renderer.render();
         }

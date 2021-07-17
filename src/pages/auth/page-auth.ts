@@ -50,6 +50,7 @@ export class PageAuth implements CustomHTMLElement {
         }
 
         navigateTo(): void {
+            console.log(this.isAuthorization ? "авторизация": "регистрация");
             if (this.isAuthorization) {
                 this.router.navigateTo(pages.auth, {type: authPageType.registration});
             } else {

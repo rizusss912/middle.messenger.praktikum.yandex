@@ -24,21 +24,21 @@ export const template = `
 <section id="footer-buttons">
     <ul class="field-list">
         <li>
-            <app-button click={{onChangeData()}} appearance="secondary">
+            <app-button @click={{onChangeData()}} appearance="secondary">
                 <span slot="label">
                     Изменить данные
                 </span>
             </app-button>
         </li>
         <li>
-            <app-button click={{onChangePassword()}} appearance="secondary">
+            <app-button @click={{onChangePassword()}} appearance="secondary">
                 <span slot="label">
                     Изменить пароль
                 </span>
             </app-button>
         </li>
         <li>
-            <app-button click={{onExit()}} appearance="error">
+            <app-button @click={{onExit()}} appearance="error">
                 <span slot="label">
                     Выйти
                 </span>
