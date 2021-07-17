@@ -24,8 +24,8 @@ export class Observable<T> {
         const hasValues: boolean[] = Array(observebles.length).fill(false);
         var hasAllValues: boolean = false;
 
-        for (var index = 0; index < observebles.length; index++) {
-            observebles[index].subscribe(value => {
+        const subscribeobserveble = (observeble: Observable<T>, index: number): void => {
+            observeble.subscribe(value => {
                 values[index] = value;
 
                 if (hasAllValues || !waitAll) {
@@ -38,6 +38,10 @@ export class Observable<T> {
                     if (hasAllValues) subject.next(values.slice());
                 }
             });
+        }
+
+        for (var index = 0; index < observebles.length; index++) {
+            subscribeobserveble(observebles[index], index);
         }
 
         return subject.asObserveble();

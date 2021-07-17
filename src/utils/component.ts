@@ -1,8 +1,8 @@
 //import '@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js';
 //import '@webcomponents/custom-elements';
 
-import { Observable } from './observeble/observeble';
-import {Templator, RenderOptions} from './templator';
+import {Observable} from './observeble/observeble';
+import {Templator, RenderOptions} from './templator/templator';
 
 export interface ComponentConfig {
     name: string;
@@ -25,7 +25,7 @@ enum defaultObservedAttributes {
 export function Component<T extends CustomHTMLElement>(config: ComponentConfig): (clazz: new () => T) => new () => T {
     return function(clazz: new () => T): new () => T {
         class CustomElement extends HTMLElement {
-            private templator: Templator | undefined;
+            private templator: Templator<T> | undefined;
             private readonly clazz: T;
 
             constructor() {
@@ -72,7 +72,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             }
 
             init(): void {
-                this.templator = new Templator(config.template);
+                this.templator = new Templator(config.template, this.clazz);
     
                 for (var node of this.templator.nodes) {
                     this.appendChild(node);

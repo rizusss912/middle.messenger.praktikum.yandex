@@ -3,8 +3,10 @@
 //TODO: Вынести часть реализации в helper
 //TODO: Когда появятся тесты, описание можно будет убрать
 
-import { Observable } from "./observeble/observeble";
-import { Subscription } from "./observeble/subscription";
+import { Observable } from "../observeble/observeble";
+import { Subscription } from "../observeble/subscription";
+import { HTMLElementsRenderManager } from "./html-elements-render-manager";
+import { TextNodesRenderManager } from "./text-nodes-render-manager";
 
 /**
  * Разбивает html на массив по одному тегу в каждом элементе и при этом тег на первом месте. Пример:
@@ -17,7 +19,7 @@ const HTML_TAG_AND_CONTENT = /\<.*?\>[^\<\>]*/gim;
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
-const TEG_ATTRIBUTES = /([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.]+(?:"|'|\{\{|\}\})?)/gim;
+const TEG_ATTRIBUTES = /([(<|<\/)\w\-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.|\$]+(?:"|'|\{\{|\}\})?)/gim;
 /**
  * Выделяет тег. Пример:
  * '<div hidden name={{name}}> content text' => ['<div hidden name={{name}}>']
@@ -65,21 +67,28 @@ export type RenderOptions = {
     content?: HTMLElement[] | Observable<HTMLElement[]>,
 };
 
-type Context = {[key: string]: any};
+//TODO: Разобраться с типизацией страниц и компонентов type Context = {[key: string]: any};
 
-export class Templator {
+export class Templator<Context extends object> {
     bindTextNodesMap: Map<string, Text[]> = new Map();
     bindEventsMap: Map<HTMLElement, customAttribute[]> = new Map();
     slotsMap: Map<HTMLElement, HTMLElement[]> = new Map();
     contentElement: HTMLElement;
-    template: string;
     nodes: HTMLElement[];
     contentSubscription: Subscription<HTMLElement[]> | undefined;
 
-    constructor(template = '') {
+    private readonly template: string;
+    private readonly context: Context;
+    private readonly textNodesRenderManager: TextNodesRenderManager<Context>;
+    private readonly htmlElementRendererManager: HTMLElementsRenderManager<Context>;
+
+    constructor(template = '', context: Context) {
         if (typeof template !== 'string') throw Error('Templator: template is not string');
 
         this.template = template;
+        this.context = context;
+        this.textNodesRenderManager = new TextNodesRenderManager(this.context);
+        this.htmlElementRendererManager = new HTMLElementsRenderManager(this.context);
         this.nodes = this.initTemplate(template);
     }
 
@@ -115,27 +124,26 @@ export class Templator {
                 const parent = getParent();
 
                 parent.appendChild(node);
-                parent.appendChild(this.initBindTextNode(content));
+                parent.appendChild(this.textNodesRenderManager.initTextNode(content));
             } else {
                 outNodes.push(node);
-                outNodes.push(this.initBindTextNode(content));
+                outNodes.push(this.textNodesRenderManager.initTextNode(content));
             }
         }
         // получаем массив, который содержит один тег и контент до следующего тега
-        //TODO: Не даёт писать атрибу
         const htmlConfig = str.match(HTML_TAG_AND_CONTENT)
             .map(str => {
                 // выбираем только тег
                 const tagStr = str.match(TEG)[0];
                 const content = str.split(tagStr)[1];
                 // разбиваем тег на массив из имени тега и атрибутов (также элементы могут быть в {} и [])
-                //TODO: нужно переписать логику на что-нибудь менее страшное
                 const tagArray = tagStr.match(TEG_ATTRIBUTES);
 
+                if (!(OPEN_TEG.test(tagStr))) this.htmlElementRendererManager.initNode(tagStr);
                 const tag = {
                     isOpen: !(OPEN_TEG.test(tagStr)),
                     name: tagArray[0].match(TEG_NAME)[0],
-                    attributes: tagArray.slice(1),
+                    str: tagStr,
                 };
 
                 return {tag, content};
@@ -145,26 +153,10 @@ export class Templator {
 
         for (let item of htmlConfig) {
             if (item.tag.isOpen) {
-                const element = document.createElement(item.tag.name);
-
-                for (var attribute of item.tag.attributes) {
-                    if (!IS_CUSTOM_ATTRIBUTE.test(attribute)) {
-                        const atr = HAS_VALUE.test(attribute) ? attribute.split('=') : [attribute, ''];
-                        atr[1] = atr[1].match(/[^"']*/gim).reduce((out, str) => out || str) || '';
-                        element.setAttribute(...atr);
-                    } else {
-                        const customAttribute = attribute.split('=');
-                        const name = customAttribute[0];
-                        const value = customAttribute[1].replace(/[^A-z\.]*/g, '');
-
-                        this.bindEventsMap.has(element)
-                            ? this.bindEventsMap.get(element).push({name, value})
-                            : this.bindEventsMap.set(element, [{name, value}]);
-                    }
-                }
+                const element = this.htmlElementRendererManager.initNode(item.tag.str);
 
                 if (!this.isSolloTag(element)) {
-                    element.appendChild(this.initBindTextNode(item.content));
+                    element.appendChild(this.textNodesRenderManager.initTextNode(item.content));
                     htmlElements.push(element);
                 } else {
                     if (this.isContentElement(element)) this.contentElement = element;
@@ -195,7 +187,7 @@ export class Templator {
         const node = document.createTextNode(content.trim());
 
         const varieblesArr = content.match(VARIEBLES);
-        
+
         if (!varieblesArr) return node;
 
         const variebles = varieblesArr.map(value => value.match(VARIEBLE_VALUE)[0]);
@@ -218,8 +210,10 @@ export class Templator {
             && !this.contentSubscription
         ) this.setContent(options.content);
 
+        this.textNodesRenderManager.renderAll(context);
         this.setContext(context);
-        this.setAttributesAndEventListeners(context);
+        this.htmlElementRendererManager.render();
+        //this.setAttributesAndEventListeners(context);
         this.setSlots();
     }
 
@@ -252,6 +246,7 @@ export class Templator {
     }
 
     setAttributesAndEventListeners(context: Context): void {
+        this.htmlElementRendererManager.render();
         for (var element of this.getMapKeys(this.bindEventsMap)) {
             for (var config of this.bindEventsMap.get(element)) {
                 let contextPoint = context;
@@ -264,7 +259,7 @@ export class Templator {
 
                 switch(typeof contextPoint) {
                     case "function":
-                        element.addEventListener(config.name, (e) => contextPoint.call(context, e));
+                        element.addEventListener(config.name, (e) => (contextPoint as Function).call(this.context, e));
                         break;
                     case "string":
                         element.setAttribute(config.name, contextPoint);
@@ -281,7 +276,6 @@ export class Templator {
 
     setContext(context: Context): void {
         for (var varieble of this.getMapKeys(this.bindTextNodesMap)) {
-            console.log(varieble)
             var value = context;
             var hasValue = true;
 
@@ -296,27 +290,12 @@ export class Templator {
 
             if (!hasValue) break;
 
-            if (value instanceof Observable) {
-                this.subscribeValue(value, varieble);
-            }
-
             const reg = RegExp(`\{\{[ ]*${varieble}[ ]*\}\}`, "gi");
             for(var node of this.bindTextNodesMap.get(varieble)) {
                 //TODO: добавить поддержку функций в шаблоне
                 node.textContent = node.textContent.replace(reg, String(value));
             }
         }
-    }
-
-    private subscribeValue(value: Observable<string>, varieble: string): void {
-        value.subscribe(value => {
-            console.log(value, varieble);
-            const reg = RegExp(`\[\[[ ]*${varieble}[ ]*\]\]`, "gi");
-            for(var node of this.bindTextNodesMap.get(varieble)) {
-                console.log(node, reg);
-                node.textContent = node.textContent.replace(reg, String(value));
-            }
-        });
     }
 
     //TODO: вынести в утилиту

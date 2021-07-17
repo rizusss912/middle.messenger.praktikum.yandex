@@ -15,20 +15,26 @@ import { Observable } from '../../utils/observeble/observeble';
 })
 export class PageMain implements CustomHTMLElement {
         private routerService: RouterService<{}>;
-        private s: Subject<number> = new Subject<number>();
-        public value = 'test';
+        private s: Subject<Date> = new Subject<Date>(new Date());
+        private hidden: Subject<boolean> = new Subject<boolean>(false);
+        public text = 'Шаблонизатор умеет получать значения из класса';
 
         constructor() {
             this.routerService = new RouterService();
         }
 
         onInit(): void {
-            var x = 0;
-            setInterval(() => this.s.next(x++), 1000);
+            setInterval(() => this.s.next(new Date()), 1000);
+        var f = 0;
+            setInterval(() => this.hidden.next(f++ % 2 === 0), 1000);
         }
 
-        get $value(): Observable<number> {
+        get $data(): Observable<Date> {
             return this.s.asObserveble();
+        }
+
+        get $hidden(): Observable<boolean> {
+            return this.hidden.asObserveble();
         }
 
         navigateToAuth(): void {
