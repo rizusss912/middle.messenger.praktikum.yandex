@@ -36,6 +36,13 @@ export class RouterService<Query extends {}> {
                 .startWith(this.urlParams.pathname)
         }
 
+        public get $queryParams(): Observable<Query> {
+            return this.$popstate
+                .map(urlParams => urlParams.queryParams)
+                .uniqueNext(false, this.hasQueryParamsDiff)
+                .startWith(this.urlParams.queryParams)
+        }
+
         public get urlParams(): urlParams<Query> {
             var {hash, pathname, search} = window.location;
             var queryParams = search.match(/[^\?\&]*/g)
@@ -73,7 +80,6 @@ export class RouterService<Query extends {}> {
 
             history.pushState({}, "page", `${window.location.origin}${path}${queryStr}${hash}`);
             this.emitUrl(path, query, hash);
-            //window.location.assign(`${window.location.origin}${path}${queryStr}${hash}`);
         }
 
         public getPageByPath(path: string = pages.main): HTMLPageConstructor {
@@ -97,5 +103,16 @@ export class RouterService<Query extends {}> {
             hash = hash.replace('#', '');
 
             this._popstate.next({pathname, queryParams, hash});
+        }
+
+        private hasQueryParamsDiff(last: Query, next: Query): boolean {
+            if (!last) return true;
+            if (Object.keys(last).length !== Object.keys(next).length) return true;
+
+            for (const key in last) {
+                if (last[key] !== next[key]) return true;
+            }
+
+            return false;
         }
 }

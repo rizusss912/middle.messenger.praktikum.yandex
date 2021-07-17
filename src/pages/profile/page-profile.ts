@@ -11,6 +11,7 @@ import './components/form-user-data/form-user-data';
 import './components/form-password/form-password';
 
 import './page-profile.less';
+import { Observable } from '../../utils/observeble/observeble';
 
 enum profilePageType {
     changePassword = 'changePassword',
@@ -38,19 +39,18 @@ export class PageProfile implements CustomHTMLElement {
         }
 
         onInit() {
-
-        }
-        // чтобы убрать это нужно научить шаблонизатор считать логические выражения
-        // или сделать свой <doom-id> и <dom-switch>
-        get isNotDataList() {
-            return !this.isNotFormPassword || !this.isNotFormUserData;
         }
 
-        get isNotFormPassword() {
-            return this.routerService.urlParams.queryParams.type !== profilePageType.changePassword;
+        get $isNotDataList(): Observable<boolean> {
+            return Observable.concat<boolean>([this.$isNotFormPassword, this.$isNotFormUserData])
+                .map(([isNotFormPassword, isNotFormUserData]) => !isNotFormPassword || !isNotFormUserData);
         }
 
-        get isNotFormUserData() {
-            return this.routerService.urlParams.queryParams.type !== profilePageType.changeData;
+        get $isNotFormPassword(): Observable<boolean> {
+            return this.routerService.$queryParams.map(query => query.type !== profilePageType.changePassword);
+        }
+
+        get $isNotFormUserData(): Observable<boolean> {
+            return this.routerService.$queryParams.map(query => query.type !== profilePageType.changeData);
         }
     }

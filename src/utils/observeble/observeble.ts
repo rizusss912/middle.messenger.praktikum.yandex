@@ -18,35 +18,6 @@ export class Observable<T> {
         chainPromise.then(value => this.onNext(value));
     }
 
-    private static combine<T>(observebles: Observable<T>[], waitAll): Observable<(T | undefined)[]> {
-        const subject: Subject<(T | undefined)[]> = new Subject<(T | undefined)[]>();
-        const values: (T | undefined)[] = Array(observebles.length).fill(undefined);
-        const hasValues: boolean[] = Array(observebles.length).fill(false);
-        var hasAllValues: boolean = false;
-
-        const subscribeobserveble = (observeble: Observable<T>, index: number): void => {
-            observeble.subscribe(value => {
-                values[index] = value;
-
-                if (hasAllValues || !waitAll) {
-                    subject.next(values.slice());
-                    return;
-                } else {
-                    hasValues[index] = true;
-                    hasAllValues = hasValues.every(has => has);
-
-                    if (hasAllValues) subject.next(values.slice());
-                }
-            });
-        }
-
-        for (var index = 0; index < observebles.length; index++) {
-            subscribeobserveble(observebles[index], index);
-        }
-
-        return subject.asObserveble();
-    }
-
     public static all<T>(observebles: Observable<T>[]): Observable<T[]> {
         return Observable.combine(observebles, true); 
     }
@@ -149,6 +120,35 @@ export class Observable<T> {
         } else {
             return new Observable<T>(count ? this.promise : emptyPromise).filter(() => count-- > 0);
         }
+    }
+
+    private static combine<T>(observebles: Observable<T>[], waitAll): Observable<(T | undefined)[]> {
+        const subject: Subject<(T | undefined)[]> = new Subject<(T | undefined)[]>();
+        const values: (T | undefined)[] = Array(observebles.length).fill(undefined);
+        const hasValues: boolean[] = Array(observebles.length).fill(false);
+        var hasAllValues: boolean = false;
+
+        const subscribeobserveble = (observeble: Observable<T>, index: number): void => {
+            observeble.subscribe(value => {
+                values[index] = value;
+
+                if (hasAllValues || !waitAll) {
+                    subject.next(values.slice());
+                    return;
+                } else {
+                    hasValues[index] = true;
+                    hasAllValues = hasValues.every(has => has);
+
+                    if (hasAllValues) subject.next(values.slice());
+                }
+            });
+        }
+
+        for (var index = 0; index < observebles.length; index++) {
+            subscribeobserveble(observebles[index], index);
+        }
+
+        return subject.asObserveble();
     }
 
     private onNext(value: ChainPromiseValue<T>): void {
