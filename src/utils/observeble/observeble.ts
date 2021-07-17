@@ -106,9 +106,10 @@ export class Observable<T> {
         }
 
         var last = this._value;
+        var firstAppruved = false;
 
-        return this
-            .filter(value => checkUnicue(last, value))
+        return this.filter(value => (!firstAppruved) || checkUnicue(last, value))
+            .on(()=> firstAppruved = true)
             .on(value => last = value);
     }
 

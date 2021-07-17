@@ -13,6 +13,7 @@ import './page-auth.less';
 
 import { Observable } from '../../utils/observeble/observeble';
 import { FormGroup } from '../../utils/form/form-group';
+import { ValidatorError } from '../../utils/form/validator-error';
 
 enum authPageType {
     registration = 'registration',
@@ -42,8 +43,8 @@ export class PageAuth implements CustomHTMLElement {
 
         public readonly registrationForm = new FormGroup({
             controls: {
-                first_name: {},
-                second_name: {value: 'second_name'},
+                first_name: {validators: [(value) => { if (value) {return new ValidatorError('поле не должно быть заполнено')}}]},
+                second_name: {value: 'second_name', validators: [(value) => { if (!value) {return new ValidatorError('поле должно быть заполнено')}}]},
                 login: {value: 'login'},
                 email: {value: 'email'},
                 password: {value: 'password'},
@@ -54,7 +55,9 @@ export class PageAuth implements CustomHTMLElement {
             this.routerService = new RouterService();
         }
 
-        onInit(): void {}
+        onInit(): void {
+            this.registrationForm.$statusChanged.subscribe(console.log);
+        }
 
         get $title(): Observable<string> {
             return this.$isRegistration.map(
