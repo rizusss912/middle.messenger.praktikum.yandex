@@ -62,7 +62,7 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
             );
     }
 
-    private addObservable(observebles: Observable<contextValue>[], fieldTemplate: string, fieldValue: Observable<unknown>): void {
+    private addObservable(observebles: Observable<contextValue>[], fieldTemplate: string, fieldValue: Observable<contextValue>): void {
         observebles.push(
             fieldValue.map(value => {return {tempate: fieldTemplate, value}})
         );
@@ -82,6 +82,6 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
             }
         }
 
-        this.node.textContent = content;
+        this.node.textContent = content.trim();
     }
 }

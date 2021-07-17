@@ -13,6 +13,7 @@ export interface ComponentConfig {
 export interface CustomHTMLElement {
     content?: HTMLElement[] | Observable<HTMLElement[]>;
     onInit?: () => void;
+    onRendered?: (element: HTMLElement) => void;
     onDestroy?: () => void;
     onAttributeChanged?: (name: string, oldValue: string, newValue: string) => boolean;
 };
@@ -37,6 +38,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             connectedCallback(): void {
                 if (this.clazz.onInit) this.clazz.onInit();
                 this.render();
+                if (this.clazz.onRendered) this.clazz.onRendered(this);
             }
 
             disconnectedCallback(): void {
@@ -58,6 +60,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
                 if (this.clazz.onAttributeChanged) {
                     needRender = this.clazz.onAttributeChanged(name, oldValue, newValue) || needRender;
                 }
+
                 if (needRender) this.render();
             }
 
@@ -68,7 +71,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
                 if (content) options.content = content;
                 if (!this.templator) this.init();
 
-                this.templator.render(this.clazz, options);
+                this.templator.render(this.clazz);
             }
 
             init(): void {
@@ -77,6 +80,10 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
                 for (var node of this.templator.nodes) {
                     this.appendChild(node);
                 }
+            }
+
+            inject(fieldName: string, value: unknown): void {
+                this.clazz[fieldName] = value;
             }
 
             onDefaultAttributeChanged(name: string, oldValue: string | null, newValue: string | null): boolean {
@@ -93,7 +100,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             }
         }
 
-        customElements.define(config.name, CustomElement, config.options);
+        customElements.define(config.name, CustomElement);
 
         return <new () => T><unknown>CustomElement;
     }

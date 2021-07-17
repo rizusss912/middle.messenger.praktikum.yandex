@@ -9,18 +9,22 @@ interface Attribute {
 interface CustomAttribute {
     name: string;
     value: unknown;
+    valueTemplate: string;
 }
 
+interface Conponent extends HTMLElement {
+    inject: (name: string, value: unknown) => void;
+}
 
 /**
  * Разбивает тег на массив атрибутов. Пример:
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
- const TEG_ATTRIBUTES = /([(<|<\/)\w\-\@]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|\(|\)|\.|\$]+(?:"|'|\{\{|\}\})?)/gim;
+ const TEG_ATTRIBUTES = /([(<|<\/)\w\-\@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|\(|\)|\.|\$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
 
 export class HTMLElementRenderer<Context extends object> extends Renderer<Context, CustomAttribute> {
-    public readonly element: HTMLElement;
+    public readonly element: Conponent | HTMLElement;
 
     private readonly customAttributes: Map<string,string> = new Map<string,string>();
     private readonly eventListenersMap: Map<string, Function[]> = new Map<string, Function[]>();
@@ -29,6 +33,7 @@ export class HTMLElementRenderer<Context extends object> extends Renderer<Contex
         super(context);
 
         const tagArr = tagStr.match(TEG_ATTRIBUTES);
+
         const tagName = tagArr[0].replace(/\</g, '');
         const tagAttributeStrs = tagArr.splice(1);
 
@@ -39,6 +44,9 @@ export class HTMLElementRenderer<Context extends object> extends Renderer<Contex
 
             if (this.isCustomAttribute(attribute)) {
                 this.customAttributes.set(attribute.name, attribute.value);
+                //@ts-ignore
+            } else if (this.isInjectableAttribute(attribute) && this.element.inject) {
+                this.injectAttribute(attribute);
             } else {
                 this.element.setAttribute(
                     attribute.name,
@@ -119,6 +127,16 @@ export class HTMLElementRenderer<Context extends object> extends Renderer<Contex
           }
     }
 
+    private injectAttribute(attribute: Attribute): void {
+        try {
+            const value = this.getFieldValue(this.mapTemplateToField(attribute.value));
+            //@ts-ignore
+            this.element.inject(attribute.name, value);
+        } catch (e) {
+            console.error(`Error when inject in ${this.element.tagName} HTMLElement: ${e}`);
+        }
+    }
+
     private addObservable(
         observebles: Observable<CustomAttribute>[],
         observeble: Observable<unknown>,
@@ -148,5 +166,11 @@ export class HTMLElementRenderer<Context extends object> extends Renderer<Contex
         if (!attribute.value) return false;
 
         return  /[\{]{2}(.+)[\}]{2}/.test(String(attribute.value));
+    }
+
+    private isInjectableAttribute(attribute: Attribute): boolean {
+        if (!attribute.value) return false;
+
+        return  /[\[]{2}(.+)[\]]{2}/.test(String(attribute.value));
     }
 }

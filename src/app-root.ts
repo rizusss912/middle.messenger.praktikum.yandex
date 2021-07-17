@@ -29,8 +29,6 @@ export class AppRoot implements CustomHTMLElement {
             .filter(v => v % 2 === 0)
             .only(5)
             .subscribe(console.log); // 0, 4, 16, 36, 64
-
-        this.router.$queryParams.subscribe(console.log);
     }
 
     get content(): Observable<HTMLElement[]> {

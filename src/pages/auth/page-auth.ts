@@ -10,7 +10,9 @@ import '../../components/button/app-button';
 import {template} from './page-auth.tmpl';
 
 import './page-auth.less';
+
 import { Observable } from '../../utils/observeble/observeble';
+import { FormGroup } from '../../utils/form/form-group';
 
 enum authPageType {
     registration = 'registration',
@@ -32,6 +34,22 @@ const FORM_TITLE = {
 export class PageAuth implements CustomHTMLElement {
         private readonly routerService: RouterService<authPageQueryParams>;
 
+        public readonly authForm = new FormGroup({
+            controls: {
+                password: {value: 'password'},
+                login: {value: 'login'},
+            }});
+
+        public readonly registrationForm = new FormGroup({
+            controls: {
+                first_name: {},
+                second_name: {value: 'second_name'},
+                login: {value: 'login'},
+                email: {value: 'email'},
+                password: {value: 'password'},
+                phone: {value: 'phone'},
+            }});
+
         constructor() {
             this.routerService = new RouterService();
         }
@@ -40,7 +58,7 @@ export class PageAuth implements CustomHTMLElement {
 
         get $title(): Observable<string> {
             return this.$isRegistration.map(
-                isRegistration => isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization,
+                    isRegistration => isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization,
                 );
         }
 
@@ -70,8 +88,10 @@ export class PageAuth implements CustomHTMLElement {
                 .subscribe(isAuthorization => {
                     if (isAuthorization) {
                         //TODO: собираем с формочки данные авторизации и идём на сервер
+                        console.log(this.authForm.value);
                     } else {
                         //TODO: собираем с формочки данные регистрации и идём на сервер
+                        console.log(this.registrationForm.value);
                     }
                 });
         }

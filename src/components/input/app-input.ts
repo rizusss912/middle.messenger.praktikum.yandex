@@ -3,22 +3,40 @@ import {Component, CustomHTMLElement} from '../../utils/component';
 import {template} from './app-input.tmpl';
 
 import './app-input.less';
+import { FormControl } from '../../utils/form/form-control';
+
 
 @Component<AppInput>({
     name: 'app-input',
     template,
-    observedAttributes: ['name'],
 })
 export class AppInput implements CustomHTMLElement {
-        name: string;
+        public name: string | boolean;
+        public formControl: FormControl | undefined;
+        private input: HTMLInputElement;
 
-        onAttributeChanged(name: string, oldValue: string | null, newValue: string | null): boolean {
-            if (name === "name" && oldValue !== newValue) {
-                this.name = newValue;
+        public onInit(): void {
+            this.name = this.formControl ? this.formControl.name : false;
+        }
 
-                return true;
+        public onRendered(element: HTMLElement): void {
+            this.input = element.querySelector('input');
+
+            if(this.formControl) {
+                this.formControl.$valueChanged.subscribe(value => this.input.value = value);
+            } else {
+                this.formControl = new FormControl({name: ''});
             }
+        }
 
-            return false;
+        public onFocus(event: Event): void {
+        }
+
+        public onBlur(event: Event): void {
+        }
+
+        public onInput(event: InputEvent): void {
+            this.formControl.next((event.target as HTMLInputElement).value);
         }
     }
+

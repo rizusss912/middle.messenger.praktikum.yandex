@@ -47,6 +47,6 @@ export class Renderer<Context extends object, value> {
     }
 
     protected mapTemplateToField(template: string): string {
-        return template.replace(/[\s\{\}\(\)]+/gim, '');
+        return template.replace(/[\s\{\}\(\)\[\]]+/gim, '');
     }
 }

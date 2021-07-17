@@ -108,12 +108,14 @@ export class Templator<Context extends object> {
 
             if (node.hasAttribute('slot')) {
                 const parent = getParent();
-
+                
                 if (this.slotsMap.has(parent)) {
                     this.slotsMap.get(parent).push(node);
                 } else {
                     this.slotsMap.set(parent, [node]);
                 };
+
+                parent.appendChild(node);
 
                 return;
             }
@@ -137,7 +139,6 @@ export class Templator<Context extends object> {
                 // разбиваем тег на массив из имени тега и атрибутов (также элементы могут быть в {} и [])
                 const tagArray = tagStr.match(TEG_ATTRIBUTES);
 
-                if (!(OPEN_TEG.test(tagStr))) this.htmlElementRendererManager.initNode(tagStr);
                 const tag = {
                     isOpen: !(OPEN_TEG.test(tagStr)),
                     name: tagArray[0].match(TEG_NAME)[0],
@@ -214,9 +215,11 @@ export class Templator<Context extends object> {
     setSlots(): void {
         for (let parent of this.getMapKeys(this.slotsMap)) {
             for (var slot of this.slotsMap.get(parent)) {
-                const slotNode =  this.getSlotNode(parent, slot.getAttribute('slot'));
+                const slotNode = this.getSlotNode(parent, slot.getAttribute('slot'));
 
-                if (slotNode) slotNode.appendChild(slot);
+                if (slotNode) {
+                    slotNode.appendChild(slot);
+                }
             }
         }
     }
@@ -242,8 +245,6 @@ export class Templator<Context extends object> {
 
     // node.querySelector("slot[name="name"]")
     getSlotNode(node: Element, name: string): Element | null {
-        if (!node.hasChildNodes()) return null;
-
         for (var index = 0; index < node.children.length; index++) {
             const child = node.children.item(index);
 

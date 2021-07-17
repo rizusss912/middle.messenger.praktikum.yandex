@@ -3,6 +3,7 @@ import {Component, CustomHTMLElement} from '../../utils/component';
 import {template} from './app-form.tmpl';
 
 import './app-form.less';
+import { FormGroup } from '../../utils/form/form-group';
 
 @Component<AppForm>({
     name: 'app-form',
@@ -10,9 +11,10 @@ import './app-form.less';
     observedAttributes: ['name'],
 })
 export class AppForm implements CustomHTMLElement {
-        name: string;
+        public name: string;
+        public formGroup: FormGroup<{}> | undefined;
 
-        onAttributeChanged(name: string, oldValue: string | null, newValue: string | null): boolean {
+        public onAttributeChanged(name: string, oldValue: string | null, newValue: string | null): boolean {
             if (name === "name" && oldValue !== newValue) {
                 this.name = newValue;
 
