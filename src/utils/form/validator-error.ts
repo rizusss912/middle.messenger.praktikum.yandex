@@ -1,6 +1,6 @@
 export enum ValidationErrorType {
-    shown,
-    hidden,
+    shown = 'SHOWN',
+    hidden = 'HIDDEN',
 }
 
 export class ValidatorError extends Error {

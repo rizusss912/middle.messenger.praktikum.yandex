@@ -1,5 +1,5 @@
 import {ChainPromise, ChainPromiseValue} from './chain-promise';
-import { Subject } from './subject';
+import {Subject} from './subject';
 import {Subscription} from './subscription';
 
 export class Observable<T> {
@@ -24,6 +24,14 @@ export class Observable<T> {
 
     public static concat<T>(observebles: Observable<T>[]): Observable<(T | undefined)[]> {
         return Observable.combine(observebles, false);
+    }
+
+    public static event<T>(element: HTMLElement, eventName: string): Observable<Event> {
+        const emitter: Subject<Event> = new Subject<Event>();
+
+        element.addEventListener(eventName, (e: Event) => emitter.next(e));
+
+        return emitter.asObserveble();
     }
 
     public subscribe(handler: (value?: T) => void): Subscription<T> {

@@ -3,4 +3,7 @@ export const template = `
         <slot name="label"></slot>
     </label>
     <input type="text" name={{name}} id={{name}} @focus={{onFocus}} @blur={{onBlur}} @input={{onInput}}>
+    <span hidden={{$needHiddenErrors}} class="error">
+        {{$errorMessage}}
+    </span>
 `;

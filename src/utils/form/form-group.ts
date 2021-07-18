@@ -68,4 +68,10 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
                 return {status: FormStatusType.invalid, errors};
             });
     }
+
+    public touch(): void {
+        for (var control of Object.values(this.controls)) {
+            control.touch();
+        }
+    }
 }

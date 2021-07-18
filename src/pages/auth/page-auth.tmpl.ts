@@ -34,7 +34,7 @@ export const template = `
             </app-input>
         </app-form>
 
-        <app-button @click={{onAuthorization()}} appearance="primary">
+        <app-button @click={{onAuthorization()}} @disabledclick={{onDisabledClick()}} appearance="primary" disabled={{$isInvalidalidForm}}>
             <span slot="label" hidden={{$isAuthorization}}>
                 Регистрация
             </span>
