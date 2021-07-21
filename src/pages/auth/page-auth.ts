@@ -1,21 +1,20 @@
-import {Component, CustomHTMLElement} from '../../utils/component';
-
 import {RouterService} from '../../service/router/router.service';
 import {pages} from '../../service/router/pages.config';
+
+import {template} from './page-auth.tmpl';
+
+import {Observable} from '../../utils/observeble/observeble';
+import {FormGroup} from '../../utils/form/form-group';
+import {FormStatusType} from '../../utils/form/form-control';
+import {Component, CustomHTMLElement} from '../../utils/component';
+
+import {formValidators} from '../../const/form-validators';
 
 import '../../components/input/app-input';
 import '../../components/form/app-form';
 import '../../components/button/app-button';
 
-import {template} from './page-auth.tmpl';
-
 import './page-auth.less';
-
-import { Observable } from '../../utils/observeble/observeble';
-import { FormGroup } from '../../utils/form/form-group';
-import { Validators } from '../../utils/form/validators';
-import { FormStatusType } from '../../utils/form/form-control';
-import { ValidatorError } from '../../utils/form/validator-error';
 
 enum authPageType {
     registration = 'registration',
@@ -29,24 +28,6 @@ const FORM_TITLE = {
     registration: 'Регистрация',
     authorization: 'Вход',
 }
-
-
-const defaultValidators = [Validators.noSpaces(), Validators.maxLength(32), Validators.empty()];
-
-const formValidators = {
-    password: [...defaultValidators, Validators.minLength(6)],
-    login: [...defaultValidators, Validators.minLength(4)],
-    first_name: [...defaultValidators],
-    second_name: [...defaultValidators],
-    email: [...defaultValidators, Validators.email()],
-    phone: [
-        ...defaultValidators,
-        Validators.required(
-            /^\+?\d+$/,
-            new ValidatorError('Телефон может содержать только цифры и "+" в начале'),
-        ),
-    ],
-};
 
 @Component<PageAuth>({
     name: 'page-auth',
@@ -92,7 +73,7 @@ export class PageAuth implements CustomHTMLElement {
             return this.$isRegistration.map(isAuthorization => !isAuthorization);
         }
 
-        public get $isInvalidalidForm(): Observable<boolean> {
+        public get $isInvalidForm(): Observable<boolean> {
             return Observable.all([
                     this.$isRegistration,
                     this.authForm.$statusChanged.map(status => status.status === FormStatusType.valid),

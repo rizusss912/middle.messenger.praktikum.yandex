@@ -1,12 +1,12 @@
 import {Component, CustomHTMLElement} from './utils/component';
 import {template} from './app-root.tmpl';
-import {RouterService, urlParams} from './service/router/router.service';
-
-import {Subject} from './utils/observeble/subject';
+import {RouterService} from './service/router/router.service';
 import {Observable} from './utils/observeble/observeble';
 
+import {HTMLPageConstructor} from './service/router/router.config';
 
 import './app-root.less';
+
 @Component<AppRoot>({
     name: 'app-root',
     template,
@@ -14,18 +14,17 @@ import './app-root.less';
 })
 export class AppRoot implements CustomHTMLElement {
     private readonly router: RouterService<{}>;
-    private readonly _content: Subject<urlParams<{}>> = new Subject<urlParams<{}>>();
 
     constructor() {
         this.router = new RouterService();
     }
 
-    onInit(): void {}
+    public onInit(): void {}
 
-    get content(): Observable<HTMLElement[]> {
+    public get content(): Observable<HTMLElement[]> {
         return this.router.$path
             .map(pathname => this.router.getPageByPath(pathname))
             //TODO: Проблема с типизацией. HTMLPage !== HTMLElement (
-            .map(constructor => [new constructor() as unknown as HTMLElement]);
+            .map((constructor: HTMLPageConstructor) => [new constructor() as unknown as HTMLElement]);
     }
 }

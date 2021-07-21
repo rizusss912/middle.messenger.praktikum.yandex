@@ -1,6 +1,3 @@
-//import '@webcomponents/webcomponentsjs/custom-elements-es5-adapter.js';
-//import '@webcomponents/custom-elements';
-
 import {Observable} from './observeble/observeble';
 import {Templator, RenderOptions} from './templator/templator';
 
@@ -23,7 +20,8 @@ enum defaultObservedAttributes {
     style = 'style',
 }
 
-export function Component<T extends CustomHTMLElement>(config: ComponentConfig): (clazz: new () => T) => new () => T {
+export function Component<T extends CustomHTMLElement>(config: ComponentConfig): 
+(clazz: new () => T) => new () => T {
     return function(clazz: new () => T): new () => T {
         class CustomElement extends HTMLElement {
             private templator: Templator<T> | undefined;
@@ -51,7 +49,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             }
 
             attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
-                var needRender = false;
+                let needRender = false;
 
                 //@ts-ignore name - строка не обязательно содержааяся в defaultObservedAttributes
                 if (Object.values(defaultObservedAttributes).includes(name)) {
@@ -77,7 +75,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             init(): void {
                 this.templator = new Templator(config.template, this.clazz);
     
-                for (var node of this.templator.nodes) {
+                for (let node of this.templator.nodes) {
                     this.appendChild(node);
                 }
             }

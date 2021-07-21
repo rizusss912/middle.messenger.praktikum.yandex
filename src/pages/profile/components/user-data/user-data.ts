@@ -13,28 +13,29 @@ import './user-data.less';
     template, 
 })
 export class UserData implements CustomHTMLElement {
-        userData: userData;
-        profileManagerService: ProfileManagerService;
-        routerService: RouterService<{}>;
+        public userData: userData;
+
+        private readonly profileManagerService: ProfileManagerService;
+        private readonly routerService: RouterService<{}>;
 
         constructor() {
             this.profileManagerService = new ProfileManagerService();
             this.routerService = new RouterService();
         }
 
-        onInit(): void {
+        public onInit(): void {
             this.userData = this.profileManagerService.userData;
         }
 
-        onChangeData(): void {
+        public onChangeData(): void {
             this.routerService.navigateTo(pages.profile, {type: 'changeData'});
         }
 
-        onChangePassword(): void {
+        public onChangePassword(): void {
             this.routerService.navigateTo(pages.profile, {type: 'changePassword'});
         }
 
-        onExit(): void {
+        public onExit(): void {
             this.routerService.navigateTo(pages.chats);
         }
     }

@@ -10,10 +10,10 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
     public readonly controls: Record<keyof Form, FormControl>;
 
     constructor(config: FormGroupConfig<Form>) {
-        var controls = {} as Record<keyof Form, FormControl>;
+        let controls = {} as Record<keyof Form, FormControl>;
 
         if (config.controls) {
-            for (var name in config.controls) {
+            for (let name in config.controls) {
                 controls[name] = new FormControl({name, ...config.controls[name]});
             }
         }
@@ -69,8 +69,13 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
             });
     }
 
+    public get $isValid(): Observable<boolean> {
+        return Observable.concat(Object.values(this.controls).map(control => control.$isValid))
+            .map(isValidFieldsArray => isValidFieldsArray.every(isValid => isValid));
+    }
+
     public touch(): void {
-        for (var control of Object.values(this.controls)) {
+        for (let control of Object.values(this.controls)) {
             control.touch();
         }
     }

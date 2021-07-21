@@ -113,8 +113,8 @@ export class Observable<T> {
             checkUnicue = (last, next) => last !== next || (!this.hasValue && approveFirst);
         }
 
-        var last = this._value;
-        var firstAppruved = false;
+        let last = this._value;
+        let firstAppruved = false;
 
         return this.filter(value => (!firstAppruved) || checkUnicue(last, value))
             .on(()=> firstAppruved = true)
@@ -135,7 +135,7 @@ export class Observable<T> {
         const subject: Subject<(T | undefined)[]> = new Subject<(T | undefined)[]>();
         const values: (T | undefined)[] = Array(observebles.length).fill(undefined);
         const hasValues: boolean[] = Array(observebles.length).fill(false);
-        var hasAllValues: boolean = false;
+        let hasAllValues: boolean = false;
 
         const subscribeobserveble = (observeble: Observable<T>, index: number): void => {
             observeble.subscribe(value => {
@@ -153,7 +153,7 @@ export class Observable<T> {
             });
         }
 
-        for (var index = 0; index < observebles.length; index++) {
+        for (let index = 0; index < observebles.length; index++) {
             subscribeobserveble(observebles[index], index);
         }
 
@@ -175,7 +175,7 @@ export class Observable<T> {
     }
 
     private emitValue(value: T): void {
-        for (var handler of this.subscriptionMap.values()) {
+        for (let handler of this.subscriptionMap.values()) {
             handler(value);
         }
     }

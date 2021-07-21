@@ -60,6 +60,11 @@ export class FormControl {
         return this.touched.asObserveble();
     }
 
+    public get $isValid(): Observable<boolean> {
+        return this.$statusChanged.map(status => status.status === FormStatusType.valid)
+            .uniqueNext();
+    }
+
     public next(value: string): void {
         this._value = value;
         this.$value.next(value);
@@ -84,7 +89,7 @@ export class FormControl {
         if (last === undefined && next === undefined) return false;
         if (last.length !== next.length) return true;
         
-        for (var index = 0; index < last.length; index++) {
+        for (let index = 0; index < last.length; index++) {
             if (!last[index].equals(next[index])) return true;
         }
 

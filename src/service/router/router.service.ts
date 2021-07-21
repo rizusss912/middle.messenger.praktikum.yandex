@@ -4,7 +4,7 @@ import {pages} from "./pages.config";
 import { Subject } from "../../utils/observeble/subject";
 import { Observable } from "../../utils/observeble/observeble";
 
-let instance;
+let instance: RouterService<{}>;
 
 export interface urlParams<Query> {
     pathname: string;
@@ -17,7 +17,7 @@ export class RouterService<Query extends {}> {
     private readonly _popstate = new Subject<urlParams<Query>>();
 
         constructor() {
-            if (instance) return instance;
+            if (instance) return instance as RouterService<Query>;
             instance = this;
         }
 
@@ -44,11 +44,11 @@ export class RouterService<Query extends {}> {
         }
 
         public get urlParams(): urlParams<Query> {
-            var {hash, pathname, search} = window.location;
-            var queryParams = search.match(/[^\?\&]*/g)
+            let {hash, pathname, search} = window.location;
+            let queryParams = search.match(/[^\?\&]*/g)
                 .filter(value => value)
                 .reduce((out, str) => {
-                    var param = str.split('=');
+                    let param = str.split('=');
 
                     if (param[1]) {
                         out[param[0]] = param[1];
@@ -64,7 +64,7 @@ export class RouterService<Query extends {}> {
 
         //TODO нужно переходить на url не перезагружая страницу history.pushState
         public navigateTo(path: string = pages.main, query: Query = {} as Query, hash: string = ''): void {
-            var queryStr = '';
+            let queryStr = '';
 
             if (path[0] !== '/') {
                 path = `/${path}`;

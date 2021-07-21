@@ -10,19 +10,17 @@ export interface userData {
     phone: string;
 }
 
-let instance;
+let instance: ProfileManagerService;
 
 @Service()
 export class ProfileManagerService {
-        handlers: ((data?: userData) => void)[] = [];
-
         constructor() {
             if (instance) return instance;
 
             instance = this;
         }
 
-        get userData(): userData {
+        public get userData(): userData {
             return {
                 first_name: 'Вадим',
                 second_name: 'Кошечкин',
@@ -32,9 +30,5 @@ export class ProfileManagerService {
                 login: 'rizus',
                 phone: '8-800-555-35-35',
             }
-        }
-
-        onUserDataChanged(handler: (data?: userData) => void): void {
-            this.handlers.push(handler);
         }
     }

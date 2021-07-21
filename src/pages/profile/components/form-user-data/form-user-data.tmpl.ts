@@ -1,22 +1,22 @@
 export const template = `
 <section>
     <app-form name="user_data">
-        <app-input slot="field" name="email">
+        <app-input slot="field" formControl=[[form.controls.email]]>
             <span slot="label">Почта</span>
         </app-input>
-        <app-input slot="field" name="login">
+        <app-input slot="field" formControl=[[form.controls.login]]>
             <span slot="label">Логин</span>    
         </app-input>
-        <app-input slot="field" name="first_name">
+        <app-input slot="field" formControl=[[form.controls.first_name]]>
             <span slot="label">Имя</span>
         </app-input>
-        <app-input slot="field" name="second_name">
+        <app-input slot="field" formControl=[[form.controls.second_name]]>
             <span slot="label">Фамилия</span>
         </app-input>
-        <app-input slot="field" name="display_name">
+        <app-input slot="field" formControl=[[form.controls.display_name]]>
             <span slot="label">Имя в чате</span>
         </app-input>
-        <app-input slot="field" name="phone">
+        <app-input slot="field" formControl=[[form.controls.phone]]>
             <span slot="label">Телефон</span>
         </app-input>
     </app-form>
@@ -25,7 +25,7 @@ export const template = `
 <section id="footer-buttons">
     <ul class="field-list">
         <li>
-            <app-button @click={{onChangeData()}} appearance="primary">
+            <app-button @click={{onChangeData()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} onDisabledClick appearance="primary">
                 <span slot="label">
                     Сохранить
                 </span>
