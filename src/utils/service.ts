@@ -1,5 +1,5 @@
-export function Service(config?) {
-    return function (constructor) {
-        return constructor;
-    }
+export function Service() {
+	return function (constructor: Function) {
+		return constructor;
+	};
 }
