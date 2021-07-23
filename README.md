@@ -11,3 +11,14 @@ netlify: https://60e600be67201d00071cf6c1--rizus.netlify.app/
     npm run deploy : устанавливает зависимости и собирает проект в dist
     npm run dev : запускает проект локально через parcel
     npm run start : собирает проект и раздаёт статику через express
+
+
+const subject = new Subject<number>();
+
+subject.asObserveble()
+    .map(v => v * v)
+    .filter(v => v % 2 === 0)
+    .subscribe(v => console.log(v));
+
+    var v = 0;
+    setInterval(() => subject.next(v++), 1000);
