@@ -7,5 +7,8 @@
         "@typescript-eslint/no-unused-vars": 2,
         "camelcase": ["error", {"allow": ["first_name", "last_name", "second_name", "display_name"]}],
         "no-mixed-spaces-and-tabs": 0
+    },
+    "env": {
+        "browser": true
     }
 } 

@@ -107,7 +107,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             }
 
             onDefaultAttributeChanged(
-            	name: string, oldValue: string | null, newValue: string | null): boolean {
+            	name: string, _oldValue: string | null, newValue: string | null): boolean {
             	switch (name) {
             		case defaultObservedAttributes.hidden:
             			this.style.display = this.hasAttribute(defaultObservedAttributes.hidden)

@@ -10,7 +10,7 @@ export class Observable<T> {
 
     constructor(chainPromise: ChainPromise<T>, value?: T) {
         if (arguments.length > 1) {
-            this._value = value;
+            this._value = value as T;
             this.hasValue = true;
         }
 
@@ -19,7 +19,7 @@ export class Observable<T> {
     }
 
     public static all<T>(observebles: Observable<T>[]): Observable<T[]> {
-        return Observable.combine(observebles, true); 
+        return Observable.combine(observebles, true) as Observable<T[]>;
     }
 
     public static concat<T>(observebles: Observable<T>[]): Observable<(T | undefined)[]> {
@@ -113,16 +113,16 @@ export class Observable<T> {
             checkUnicue = (last, next) => last !== next || (!this.hasValue && approveFirst);
         }
 
-        let last = this._value;
+        let last: T = this._value;
         let firstAppruved = false;
 
-        return this.filter(value => (!firstAppruved) || checkUnicue(last, value))
+        return this.filter(value => (!firstAppruved) || checkUnicue!(last, value!))
             .on(()=> firstAppruved = true)
-            .on(value => last = value);
+            .on(value => last = value!);
     }
 
     public only(count: number): Observable<T> {
-        const emptyPromise = new Promise(() => {return {value: null, promise: emptyPromise}});
+        const emptyPromise: ChainPromise<T> = new Promise(() => {return {value: null, promise: emptyPromise}});
 
         if (this.hasValue) {
             return new Observable<T>(count ? this.promise : emptyPromise, this._value).filter(() => count-- > 0);
@@ -131,7 +131,7 @@ export class Observable<T> {
         }
     }
 
-    private static combine<T>(observebles: Observable<T>[], waitAll): Observable<(T | undefined)[]> {
+    private static combine<T>(observebles: Observable<T>[], waitAll: boolean): Observable<(T | undefined)[]> {
         const subject: Subject<(T | undefined)[]> = new Subject<(T | undefined)[]>();
         const values: (T | undefined)[] = Array(observebles.length).fill(undefined);
         const hasValues: boolean[] = Array(observebles.length).fill(false);
