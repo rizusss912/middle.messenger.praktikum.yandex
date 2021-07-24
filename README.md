@@ -1,7 +1,8 @@
 Это учебный проект для курса Мидл-фронтенд от яндекс.практикума.
 Тут планируется реализовать фронтенд для месседжера.
 
-https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/1
+первый спринт: https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/1
+второй спринт: https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/4
 
 netlify: https://60e600be67201d00071cf6c1--rizus.netlify.app/
 
