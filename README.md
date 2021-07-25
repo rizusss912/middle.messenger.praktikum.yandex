@@ -14,4 +14,3 @@ netlify: https://60e600be67201d00071cf6c1--rizus.netlify.app/
     npm run eslint:fix : Запускает линтер для ts-файлов и пытается починить ошибки в них
     npm run stylelint : Запускает линтер для less-файлов
     npm run lint : Запускает все линтеры проекта
-    
