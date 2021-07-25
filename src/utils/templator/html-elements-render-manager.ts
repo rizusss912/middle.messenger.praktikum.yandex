@@ -1,24 +1,24 @@
-import {HTMLElementRenderer} from "./html-element-renderer";
+import {HTMLElementRenderer} from './html-element-renderer';
 
 export class HTMLElementsRenderManager<Context extends object> {
     private readonly context: Context;
     private readonly renderers: HTMLElementRenderer<Context>[] = [];
 
     constructor(context: Context) {
-        this.context = context;
+    	this.context = context;
     }
 
     public initNode(tagStr: string): HTMLElement {
-        const elementRenderer = new HTMLElementRenderer<Context>(tagStr, this.context);
+    	const elementRenderer = new HTMLElementRenderer<Context>(tagStr, this.context);
 
-        this.renderers.push(elementRenderer);
+    	this.renderers.push(elementRenderer);
 
-        return elementRenderer.element;
+    	return elementRenderer.element;
     }
 
     public renderAll(): void {
-        for (var elementRenderer of this.renderers) {
-            elementRenderer.render();
-        }
+    	for (const elementRenderer of this.renderers) {
+    		elementRenderer.render();
+    	}
     }
 }

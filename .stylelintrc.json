@@ -1,7 +1,17 @@
 {
     "extends": "stylelint-config-standard",
     "rules": {
-      "color-hex-case": "lower"
+      "color-hex-case": "lower",
+      "indentation": [4],
+      "declaration-empty-line-before": [
+        "always",
+        {
+          "ignore": [
+            "first-nested",
+            "after-declaration"
+          ]
+        }
+      ]
     },
     "ignoreFiles": [
       "build/*"

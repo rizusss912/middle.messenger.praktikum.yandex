@@ -21,7 +21,7 @@ enum defaultObservedAttributes {
     style = 'style',
 }
 
-export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
+export function component<T extends CustomHTMLElement>(config: ComponentConfig):
 (Сlazz: new () => T) => new () => T {
 	return function (Clazz: new () => T): new () => T {
 		class CustomElement extends HTMLElement {
@@ -94,7 +94,7 @@ export function Component<T extends CustomHTMLElement>(config: ComponentConfig):
             }
 
             init(): void {
-            	this.templator = new Templator(config.template, this.clazz);
+            	this.templator = new Templator(this.clazz, config.template);
 
             	for (const node of this.templator.nodes) {
             		this.appendChild(node);

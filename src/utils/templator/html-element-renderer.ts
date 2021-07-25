@@ -1,5 +1,5 @@
-import { Observable } from "../observeble/observeble";
-import {Renderer} from "./renderer";
+import {Observable} from '../observeble/observeble';
+import {Renderer} from './renderer';
 
 interface Attribute {
     name: string;
@@ -21,156 +21,183 @@ interface Conponent extends HTMLElement {
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
- const TEG_ATTRIBUTES = /([(<|<\/)\w\-\@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|\(|\)|\.|\$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
+const TEG_ATTRIBUTES = /([(<|</)\w\-@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
 
-export class HTMLElementRenderer<Context extends object> extends Renderer<Context, CustomAttribute> {
+export class HTMLElementRenderer
+<Context extends object> extends Renderer<Context, CustomAttribute> {
     public readonly element: Conponent | HTMLElement;
 
-    private readonly customAttributes: Map<string,string> = new Map<string,string>();
+    private readonly customAttributes: Map<string, string> = new Map<string, string>();
     private readonly eventListenersMap: Map<string, Function[]> = new Map<string, Function[]>();
 
     constructor(tagStr: string, context: Context) {
-        super(context);
+    	super(context);
 
-        const tagArr = tagStr.match(TEG_ATTRIBUTES);
+    	const tagArr = tagStr.match(TEG_ATTRIBUTES);
 
-        const tagName = tagArr[0].replace(/\</g, '');
-        const tagAttributeStrs = tagArr.splice(1);
+    	const tagName = tagArr[0].replace(/</g, '');
+    	const tagAttributeStrs = tagArr.splice(1);
 
-        this.element = document.createElement(tagName);
+    	this.element = document.createElement(tagName);
 
-        for (var attributeStr of tagAttributeStrs) {
-            const attribute: Attribute = this.mapStrToAttribute(attributeStr);
+    	for (const attributeStr of tagAttributeStrs) {
+    		const attribute: Attribute = this.mapStrToAttribute(attributeStr);
 
-            if (this.isCustomAttribute(attribute)) {
-                this.customAttributes.set(attribute.name, attribute.value);
-                //@ts-ignore
-            } else if (this.isInjectableAttribute(attribute) && this.element.inject) {
-                this.injectAttribute(attribute);
-            } else {
-                this.element.setAttribute(
-                    attribute.name,
-                    this.mapAttributeValueToValue(attribute.value),
-                );
-            }
-        }
+    		if (this.isCustomAttribute(attribute)) {
+    			this.customAttributes.set(attribute.name, attribute.value);
+    			// @ts-ignore
+    		} else if (this.isInjectableAttribute(attribute) && this.element.inject) {
+    			this.injectAttribute(attribute);
+    		} else {
+    			this.element.setAttribute(
+    				attribute.name,
+    				this.mapAttributeValueToValue(attribute.value),
+    			);
+    		}
+    	}
     }
 
     public render(): void {
-        const observebles: Observable<CustomAttribute>[] = [];
-        const staticValues: CustomAttribute[] = [];
+    	const observebles: Observable<CustomAttribute>[] = [];
+    	const staticValues: CustomAttribute[] = [];
 
-        for (var customAttributeEntries of this.customAttributes.entries()) {
-            try {
-                const value = this.getFieldValue(this.mapTemplateToField(customAttributeEntries[1]));
-                const customAttribute = {name: customAttributeEntries[0], valueTemplate: customAttributeEntries[1]};
+    	for (const customAttributeEntries of this.customAttributes.entries()) {
+    		try {
+    			const value = this.getFieldValue(
+    				this.mapTemplateToField(customAttributeEntries[1]));
+    			const customAttribute = {
+    				name: customAttributeEntries[0],
+    				valueTemplate: customAttributeEntries[1],
+    			};
 
-                if (value instanceof Observable) {
-                    this.addObservable(observebles, value, customAttribute.name, customAttribute.valueTemplate);
-                } else {
-                    staticValues.push({...customAttribute, value});
-                }
-            } catch (e) {
-                console.error(`Error when rendering attribute in ${this.element.tagName} HTMLElement: ${e}`);
-            }
-        }
+    			if (value instanceof Observable) {
+    				this.addObservable(
+    					observebles,
+    					value,
+    					customAttribute.name,
+    					customAttribute.valueTemplate,
+    				);
+    			} else {
+    				staticValues.push({...customAttribute, value});
+    			}
+    		} catch (e) {
+    			console.error(`Error when rendering attribute in ${this.element.tagName} HTMLElement: ${e}`);
+    		}
+    	}
 
-        if (!this.subscription) {
-            this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
-        }
+    	if (!this.subscription) {
+    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
+    	}
 
-        this.$staticValues.next(staticValues);
+    	this.$staticValues.next(staticValues);
     }
 
     private onValuesChanged(values: CustomAttribute[]): void {
-        for (var value of values) {
-            this.onValueChanged(value);
-        }
+    	for (const value of values) {
+    		this.onValueChanged(value);
+    	}
     }
 
     private onValueChanged(attribute: CustomAttribute): void {
-        if (attribute.name[0] === '@') {
-            if (typeof attribute.value !== 'function') throw new Error(`HTMLElementRenderer: ${attribute.name} is not a function`);
-            if (
-                this.eventListenersMap.has(attribute.name)
+    	if (attribute.name[0] === '@') {
+    		if (typeof attribute.value !== 'function') {
+    			throw new Error(`HTMLElementRenderer: ${attribute.name} is not a function`);
+    		}
+
+    		if (
+    			this.eventListenersMap.has(attribute.name)
                 && this.eventListenersMap.get(attribute.name).includes(attribute.value as Function)
-            ) return;
+    		) {
+    			return;
+    		}
 
-            this.eventListenersMap.has(attribute.name)
-            ? this.eventListenersMap.get(attribute.name).push(attribute.value)
-            : this.eventListenersMap.set(attribute.name, [attribute.value]);
+    		if (this.eventListenersMap.has(attribute.name)) {
+    			this.eventListenersMap.get(attribute.name).push(attribute.value);
+    		} else {
+    			this.eventListenersMap.set(attribute.name, [attribute.value]);
+    		}
 
-            const name = attribute.name.slice(1);
+    		const name = attribute.name.slice(1);
 
-            this.element.addEventListener(name, (e) => (attribute.value as Function).call(this.context, e));
+    		this.element.addEventListener(name, e => (attribute.value as Function)
+    			.call(this.context, e));
 
-            return;
-        }
+    		return;
+    	}
 
-        switch(typeof attribute.value) {
-            case "function":
-                this.element.setAttribute(attribute.name, String(attribute.value()));
-                break;
-            case "string":
-                this.element.setAttribute(attribute.name, attribute.value);
-                break;
-            case "boolean":
-                if (attribute.value) {
-                    if (!this.element.hasAttribute(attribute.name)) this.element.setAttribute(attribute.name, '');
-                } else {
-                    this.element.removeAttribute(attribute.name);
-                }
-                break;
-            default:
-                this.element.setAttribute(attribute.name, String(attribute.value));
-                break;
-          }
+    	switch (typeof attribute.value) {
+    		case 'function':
+    			this.element.setAttribute(attribute.name, String(attribute.value()));
+    			break;
+    		case 'string':
+    			this.element.setAttribute(attribute.name, attribute.value);
+    			break;
+    		case 'boolean':
+    			if (attribute.value) {
+    				if (!this.element.hasAttribute(attribute.name)) {
+    					this.element.setAttribute(attribute.name, '');
+    				}
+    			} else {
+    				this.element.removeAttribute(attribute.name);
+    			}
+
+    			break;
+    		default:
+    			this.element.setAttribute(attribute.name, String(attribute.value));
+    			break;
+    	}
     }
 
     private injectAttribute(attribute: Attribute): void {
-        try {
-            const value = this.getFieldValue(this.mapTemplateToField(attribute.value));
-            //@ts-ignore
-            this.element.inject(attribute.name, value);
-        } catch (e) {
-            console.error(`Error when inject in ${this.element.tagName} HTMLElement: ${e}`);
-        }
+    	try {
+    		const value = this.getFieldValue(this.mapTemplateToField(attribute.value));
+    		// @ts-ignore
+    		this.element.inject(attribute.name, value);
+    	} catch (e) {
+    		console.error(`Error when inject in ${this.element.tagName} HTMLElement: ${e}`);
+    	}
     }
 
     private addObservable(
-        observebles: Observable<CustomAttribute>[],
-        observeble: Observable<unknown>,
-        name: string,
-        valueTemplate: string,
-        ) {
-        observebles.push(
-            observeble.map(value => {return {name, value, valueTemplate}}),
-        );
+    	observebles: Observable<CustomAttribute>[],
+    	observeble: Observable<unknown>,
+    	name: string,
+    	valueTemplate: string,
+    ) {
+    	observebles.push(
+    		observeble.map(value => ({name, value, valueTemplate})),
+    	);
     }
 
     private mapStrToAttribute(str: string): Attribute {
-        const strArr = str.split('=');
+    	const strArr = str.split('=');
 
-        return strArr.length > 1
-            ? {name: strArr[0], value: strArr[1]}
-            : {name: strArr[0]};
+    	return strArr.length > 1
+    		? {name: strArr[0], value: strArr[1]}
+    		: {name: strArr[0]};
     }
 
     private mapAttributeValueToValue(template: string | undefined): string | undefined {
-        if (!template) return;
+    	if (!template) {
+    		return;
+    	}
 
-        return String(template).replace(/[\'\"]+/g, '');
+    	return String(template).replace(/['"]+/g, '');
     }
 
     private isCustomAttribute(attribute: Attribute): boolean {
-        if (!attribute.value) return false;
+    	if (!attribute.value) {
+    		return false;
+    	}
 
-        return  /[\{]{2}(.+)[\}]{2}/.test(String(attribute.value));
+    	return /[{]{2}(.+)[}]{2}/.test(String(attribute.value));
     }
 
     private isInjectableAttribute(attribute: Attribute): boolean {
-        if (!attribute.value) return false;
+    	if (!attribute.value) {
+    		return false;
+    	}
 
-        return  /[\[]{2}(.+)[\]]{2}/.test(String(attribute.value));
+    	return /[[]{2}(.+)[\]]{2}/.test(String(attribute.value));
     }
 }

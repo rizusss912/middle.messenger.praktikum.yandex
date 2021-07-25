@@ -1,7 +1,7 @@
 export enum pages {
-    main = "/",
-    chats = "/",
-    auth = "/auth",
-    profile = "/profile",
-    default = "default",
+    main = '/',
+    chats = '/',
+    auth = '/auth',
+    profile = '/profile',
+    default = 'default',
 }

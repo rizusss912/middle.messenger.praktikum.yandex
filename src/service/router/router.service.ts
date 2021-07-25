@@ -1,10 +1,9 @@
-import {Service} from "../../utils/service";
-import {HTMLPageConstructor, routerConfig} from "./router.config";
-import {pages} from "./pages.config";
-import { Subject } from "../../utils/observeble/subject";
-import { Observable } from "../../utils/observeble/observeble";
+import {HTMLPageConstructor, routerConfig} from './router.config';
+import {pages} from './pages.config';
+import {Subject} from '../../utils/observeble/subject';
+import {Observable} from '../../utils/observeble/observeble';
 
-let instance: RouterService<{}>;
+let instance: RouterService<unknown>;
 
 export interface urlParams<Query> {
     pathname: string;
@@ -12,107 +11,121 @@ export interface urlParams<Query> {
     queryParams: Query;
 }
 
-@Service()
 export class RouterService<Query extends {}> {
     private readonly _popstate = new Subject<urlParams<Query>>();
 
-        constructor() {
-            if (instance) return instance as RouterService<Query>;
-            instance = this;
-        }
+    constructor() {
+    	if (instance) {
+    		return instance as RouterService<Query>;
+    	}
 
-        public static get config(): Record<pages, HTMLPageConstructor> {
-            return routerConfig;
-        }
+    	instance = this as RouterService<unknown>;
+    }
 
-        public get $popstate(): Observable<urlParams<Query>> {
-            return this._popstate.asObserveble();
-        }
+    public get config(): Record<pages, HTMLPageConstructor> {
+    	return routerConfig;
+    }
 
-        public get $path(): Observable<string> {
-            return this.$popstate
-                .map(urlParams => urlParams.pathname)
-                .uniqueNext()
-                .startWith(this.urlParams.pathname)
-        }
+    public get $popstate(): Observable<urlParams<Query>> {
+    	return this._popstate.asObserveble();
+    }
 
-        public get $queryParams(): Observable<Query> {
-            return this.$popstate
-                .map(urlParams => urlParams.queryParams)
-                .uniqueNext(false, this.hasQueryParamsDiff)
-                .startWith(this.urlParams.queryParams)
-        }
+    public get $path(): Observable<string> {
+    	return this.$popstate
+    		.map(urlParams => urlParams.pathname)
+    		.uniqueNext()
+    		.startWith(this.urlParams.pathname);
+    }
 
-        public get urlParams(): urlParams<Query> {
-            let {hash, pathname, search} = window.location;
-            let queryParams = search.match(/[^\?\&]*/g)
-                .filter(value => value)
-                .reduce((out, str) => {
-                    let param = str.split('=');
+    public get $queryParams(): Observable<Query> {
+    	return this.$popstate
+    		.map(urlParams => urlParams.queryParams)
+    		.uniqueNext(false, this.hasQueryParamsDiff)
+    		.startWith(this.urlParams.queryParams);
+    }
 
-                    if (param[1]) {
-                        out[param[0]] = param[1];
-                    }
+    public get urlParams(): urlParams<Query> {
+    	let {hash, pathname, search} = window.location;
+    	const queryParams = search.match(/[^?&]*/g)
+    		.filter(value => value)
+    		.reduce((out, str) => {
+    			const param = str.split('=');
 
-                    return out;
-                }, {}) as Query;
+    			if (param[1]) {
+    				out[param[0]] = param[1];
+    			}
 
-            hash = hash.replace('#', '');
+    			return out;
+    		}, {}) as Query;
 
-            return {hash, pathname, queryParams};
-        }
+    	hash = hash.replace('#', '');
 
-        //TODO нужно переходить на url не перезагружая страницу history.pushState
-        public navigateTo(path: string = pages.main, query: Query = {} as Query, hash: string = ''): void {
-            let queryStr = '';
+    	return {hash, pathname, queryParams};
+    }
 
-            if (path[0] !== '/') {
-                path = `/${path}`;
-            }
+    // TODO нужно переходить на url не перезагружая страницу history.pushState
+    public navigateTo(path: string = pages.main, query: Query = {} as Query, hash: string = ''): void {
+    	let queryStr = '';
 
-            if (Object.keys(query).length !== 0) {
-                queryStr = '?' + Object.keys(query).map(key => `${key}=${query[key]}`).join('&');
-            }
+    	if (path[0] !== '/') {
+    		path = `/${path}`;
+    	}
 
-            if (hash && hash[0] !== '#') {
-                hash = `#${hash}`;
-            }
+    	if (Object.keys(query).length !== 0) {
+    		queryStr = '?' + Object.keys(query).map(key => `${key}=${query[key]}`).join('&');
+    	}
 
-            history.pushState({}, "page", `${window.location.origin}${path}${queryStr}${hash}`);
-            this.emitUrl(path, query, hash);
-        }
+    	if (hash && hash[0] !== '#') {
+    		hash = `#${hash}`;
+    	}
 
-        public getPageByPath(path: string = pages.main): HTMLPageConstructor {
-            path = path.split('?')[0];
+    	history.pushState({}, 'page', `${window.location.origin}${path}${queryStr}${hash}`);
+    	this.emitUrl(path, query, hash);
+    }
 
-            if (path[path.length - 1] === '/' && path.length > 1) path = path.slice(0, -1);
-            if (path[0] !== '/') path = `/${path}`;
+    public getPageByPath(path: string = pages.main): HTMLPageConstructor {
+    	path = path.split('?')[0];
 
-            return RouterService.config[path] || RouterService.config[pages.default];
-        }
+    	if (path[path.length - 1] === '/' && path.length > 1) {
+    		path = path.slice(0, -1);
+    	}
 
-        public getPage(): HTMLPageConstructor {
-            return this.getPageByPath(this.urlParams.pathname);
-        }
+    	if (path[0] !== '/') {
+    		path = `/${path}`;
+    	}
 
-        private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
-            if (pathname[0] !== '/') {
-                pathname = `/${pathname}`;
-            }
+    	return this.config[path] || this.config[pages.default];
+    }
 
-            hash = hash.replace('#', '');
+    public getPage(): HTMLPageConstructor {
+    	return this.getPageByPath(this.urlParams.pathname);
+    }
 
-            this._popstate.next({pathname, queryParams, hash});
-        }
+    private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
+    	if (pathname[0] !== '/') {
+    		pathname = `/${pathname}`;
+    	}
 
-        private hasQueryParamsDiff(last: Query, next: Query): boolean {
-            if (!last) return true;
-            if (Object.keys(last).length !== Object.keys(next).length) return true;
+    	hash = hash.replace('#', '');
 
-            for (const key in last) {
-                if (last[key] !== next[key]) return true;
-            }
+    	this._popstate.next({pathname, queryParams, hash});
+    }
 
-            return false;
-        }
+    private hasQueryParamsDiff(last: Query, next: Query): boolean {
+    	if (!last) {
+    		return true;
+    	}
+
+    	if (Object.keys(last).length !== Object.keys(next).length) {
+    		return true;
+    	}
+
+    	for (const key in last) {
+    		if (last[key] !== next[key]) {
+    			return true;
+    		}
+    	}
+
+    	return false;
+    }
 }

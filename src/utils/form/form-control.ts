@@ -1,6 +1,6 @@
-import { Observable } from "../observeble/observeble";
-import { Subject } from "../observeble/subject";
-import { ValidatorError } from "./validator-error";
+import {Observable} from '../observeble/observeble';
+import {Subject} from '../observeble/subject';
+import {ValidatorError} from './validator-error';
 
 export type formValue = string | undefined;
 
@@ -16,8 +16,8 @@ export interface FormControlConfig extends FormControlOptions {
 }
 
 export enum FormStatusType {
-    valid = "VALID",
-    invalid = "INVALID",
+    valid = 'VALID',
+    invalid = 'INVALID',
 }
 
 export interface FormStatus {
@@ -36,82 +36,95 @@ export class FormControl {
     private _value: formValue;
 
     constructor(config: FormControlConfig) {
-        this.$value = new Subject<string>(config.value  || '');
-        this._value = config.value;
-        this.name = config.name;
-        this.validators = config.validators || [];
+    	this.$value = new Subject<string>(config.value || '');
+    	this._value = config.value;
+    	this.name = config.name;
+    	this.validators = config.validators || [];
     }
 
     public get value(): formValue {
-        return this._value;
+    	return this._value;
     }
 
     public get $valueChanged(): Observable<string> {
-        return this.$value.asObserveble();
+    	return this.$value.asObserveble();
     }
 
     public get $statusChanged(): Observable<FormStatus> {
-        return this.$valueChanged
-            .map(value => this.mapValueToStatus(value))
-            .uniqueNext(true, (last, next) => FormControl.hasDiffInStatuses(last, next));
+    	return this.$valueChanged
+    		.map(value => this.mapValueToStatus(value))
+    		.uniqueNext(true, (last, next) => FormControl.hasDiffInStatuses(last, next));
     }
 
     public get $touched(): Observable<boolean> {
-        return this.touched.asObserveble();
+    	return this.touched.asObserveble();
     }
 
     public get $isValid(): Observable<boolean> {
-        return this.$statusChanged.map(status => status.status === FormStatusType.valid)
-            .uniqueNext();
+    	return this.$statusChanged.map(status => status.status === FormStatusType.valid)
+    		.uniqueNext();
     }
 
     public next(value: string): void {
-        this._value = value;
-        this.$value.next(value);
+    	this._value = value;
+    	this.$value.next(value);
     }
 
     public touch(): void {
-        this.touched.next(true);
+    	this.touched.next(true);
     }
 
     public changeFocus(hasFocus: boolean): void {
-        this.hasFocus.next(hasFocus);
+    	this.hasFocus.next(hasFocus);
     }
 
     private static hasDiffInStatuses(last: FormStatus, next: FormStatus): boolean {
-        const hasStatusDiff = last.status !== next.status;
+    	const hasStatusDiff = last.status !== next.status;
 
-        return hasStatusDiff || FormControl.hasErrorsDiff(last.errors, next.errors);
+    	return hasStatusDiff || FormControl.hasErrorsDiff(last.errors, next.errors);
     }
 
-    private static hasErrorsDiff(last: ValidatorError[] | undefined, next: ValidatorError[] | undefined): boolean {
-        if (last === undefined && next !== undefined || last !== undefined && next === undefined) return true;
-        if (last === undefined && next === undefined) return false;
-        if (last.length !== next.length) return true;
-        
-        for (let index = 0; index < last.length; index++) {
-            if (!last[index].equals(next[index])) return true;
-        }
+    private static hasErrorsDiff(
+    	last: ValidatorError[] | undefined, next: ValidatorError[] | undefined): boolean {
+    	if ((last && !next) || (!last && next)) {
+    		return true;
+    	}
 
-        return false;
+    	if (last === undefined && next === undefined) {
+    		return false;
+    	}
+
+    	if (last.length !== next.length) {
+    		return true;
+    	}
+
+    	for (let index = 0; index < last.length; index++) {
+    		if (!last[index].equals(next[index])) {
+    			return true;
+    		}
+    	}
+
+    	return false;
     }
 
     private mapValueToStatus(value: formValue): FormStatus {
-        const errors = [];
+    	const errors = [];
 
-        for (const validator of this.validators) {
-            const error = validator(value);
+    	for (const validator of this.validators) {
+    		const error = validator(value);
 
-            if (error) {
-                errors.push(error);
-            }
-        }
+    		if (error) {
+    			errors.push(error);
+    		}
+    	}
 
-        if (errors.length === 0) return {status: FormStatusType.valid};
+    	if (errors.length === 0) {
+    		return {status: FormStatusType.valid};
+    	}
 
-        return {
-            status: FormStatusType.invalid,
-            errors,
-        };
+    	return {
+    		status: FormStatusType.invalid,
+    		errors,
+    	};
     }
 }

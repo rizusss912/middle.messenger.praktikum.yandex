@@ -3,12 +3,36 @@
     "parser": "@typescript-eslint/parser",
     "plugins": ["@typescript-eslint"],
     "rules": {
-        "max-len": [2, 100],
         "@typescript-eslint/no-unused-vars": 2,
-        "camelcase": ["error", {"allow": ["first_name", "last_name", "second_name", "display_name"]}],
-        "no-mixed-spaces-and-tabs": 0
+        "camelcase": [
+            "error",
+            {
+                "allow":
+                [
+                    "first_name",
+                    "last_name",
+                    "second_name",
+                    "display_name"
+                ]
+            }
+        ],
+        "max-len": [
+            "error",
+            {
+                "ignoreTemplateLiterals": true,
+                "ignoreRegExpLiterals": true,
+                "ignoreStrings": true,
+                "ignoreUrls": true,
+                "code": 100
+            }
+        ],
+        "no-promise-executor-return": 1,
+        "no-mixed-spaces-and-tabs": 0,
+        "no-constructor-return": 0,
+        "no-warning-comments": 0,
+        "func-call-spacing": 0
     },
     "env": {
         "browser": true
     }
-} 
+}

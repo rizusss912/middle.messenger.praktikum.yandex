@@ -1,4 +1,4 @@
-import {Component, CustomHTMLElement} from '../../../../utils/component';
+import {component, CustomHTMLElement} from '../../../../utils/component';
 
 import {ProfileManagerService, userData} from '../../service/profile-manager.service';
 import {RouterService} from '../../../../service/router/router.service';
@@ -8,9 +8,9 @@ import {template} from './user-data.tmpl';
 
 import './user-data.less';
 
-@Component<UserData>({
-    name: 'user-data',
-    template, 
+@component<UserData>({
+	name: 'user-data',
+	template,
 })
 export class UserData implements CustomHTMLElement {
         public userData: userData;
@@ -19,23 +19,23 @@ export class UserData implements CustomHTMLElement {
         private readonly routerService: RouterService<{}>;
 
         constructor() {
-            this.profileManagerService = new ProfileManagerService();
-            this.routerService = new RouterService();
+        	this.profileManagerService = new ProfileManagerService();
+        	this.routerService = new RouterService();
         }
 
         public onInit(): void {
-            this.userData = this.profileManagerService.userData;
+        	this.userData = this.profileManagerService.userData;
         }
 
         public onChangeData(): void {
-            this.routerService.navigateTo(pages.profile, {type: 'changeData'});
+        	this.routerService.navigateTo(pages.profile, {type: 'changeData'});
         }
 
         public onChangePassword(): void {
-            this.routerService.navigateTo(pages.profile, {type: 'changePassword'});
+        	this.routerService.navigateTo(pages.profile, {type: 'changePassword'});
         }
 
         public onExit(): void {
-            this.routerService.navigateTo(pages.chats);
+        	this.routerService.navigateTo(pages.chats);
         }
-    }
+}
