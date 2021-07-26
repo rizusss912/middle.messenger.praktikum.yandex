@@ -26,7 +26,10 @@ export class Observable<T> {
     	return Observable.combine(observebles, false);
     }
 
-    public static event(element: HTMLElement, eventName: string): Observable<Event> {
+    public static event(
+		element: HTMLElement | Window & typeof globalThis,
+		eventName: string,
+		): Observable<Event> {
     	const emitter: Subject<Event> = new Subject<Event>();
 
     	element.addEventListener(eventName, (e: Event) => emitter.next(e));

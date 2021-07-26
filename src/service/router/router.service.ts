@@ -20,6 +20,8 @@ export class RouterService<Query extends {}> {
     	}
 
     	instance = this as RouterService<unknown>;
+
+		Observable.event(window, "popstate").subscribe(() => this.onPopState());
     }
 
     public get config(): Record<pages, HTMLPageConstructor> {
@@ -100,6 +102,10 @@ export class RouterService<Query extends {}> {
     public getPage(): HTMLPageConstructor {
     	return this.getPageByPath(this.urlParams.pathname);
     }
+
+	private onPopState(): void {
+		this._popstate.next(this.urlParams);
+	}
 
     private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
     	if (pathname[0] !== '/') {
