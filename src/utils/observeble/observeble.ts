@@ -37,7 +37,7 @@ export class Observable<T> {
     	return emitter.asObserveble();
     }
 
-    public subscribe(handler: (value?: T) => void): Subscription<T> {
+    public subscribe(handler: (value: T) => void): Subscription<T> {
     	const subscription = new Subscription(this.getUnsubscribeFunction(this.subscriptionMap));
 
     	this.subscriptionMap.set(subscription, handler);
@@ -49,7 +49,7 @@ export class Observable<T> {
     	return subscription;
     }
 
-    public map<R>(handler: (value?: T) => R): Observable<R> {
+    public map<R>(handler: (value: T) => R): Observable<R> {
     	function mapPromise(promise: ChainPromise<T>): ChainPromise<R> {
     		return promise.then(chain => ({
     			value: handler(chain.value),
@@ -64,7 +64,7 @@ export class Observable<T> {
     	return new Observable<R>(mapPromise(this.promise));
     }
 
-    public filter(handler: (value?: T) => boolean): Observable<T> {
+    public filter(handler: (value: T) => boolean): Observable<T> {
     	function filterPromise(promise: ChainPromise<T>): ChainPromise<T> {
     		return promise.then(chain => {
     			if (handler(chain.value)) {
@@ -85,7 +85,7 @@ export class Observable<T> {
     	return new Observable<T>(filterPromise(this.promise));
     }
 
-    public on(handler: (value?: T) => void): Observable<T> {
+    public on(handler: (value: T) => void): Observable<T> {
     	function onPromise(promise: ChainPromise<T>): ChainPromise<T> {
     		return promise.then(chain => {
     			handler(chain.value);

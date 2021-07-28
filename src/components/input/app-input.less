@@ -8,16 +8,58 @@ app-input {
     }
 
     input {
-        width: 100%;
+        outline: none;
+        border: none;
         box-sizing: border-box;
+
+        width: 100%;
+
+        font-size: 18px;
+
+        background-color: white;
+        color: var(--text-primary);
+
+        &[disabled] {
+            color: var(--text-secondary);
+        }
+    }
+
+    label {
+        display: block;
+
+        font-size: 14px;
+        min-height: 21px;
+
+        color: var(--text-secondary);
+
+        &[status="focus"] {
+            color: rgb(255, 145, 0);
+        }
+
+        &[status="error"] {
+            color: red;
+        }
+
+        & > slot {
+            display: block;
+            transition: 0.3s;
+
+            padding-top: 4px;
+
+            &[instead-of-text] {
+                padding-top: 0px;
+    
+                transform: translateY(100%);
+    
+                font-size: 18px;
+            }
+        }
     }
 
     .error {
         opacity: 1;
-        transition: 0.5s;
+        transition: 0.4s;
         color: red;
-
-        margin-top: 2px;
 
         min-height: 15px;
         font-size: 13px;
@@ -25,5 +67,37 @@ app-input {
 
     .error[transparent] {
         opacity: 0;
+    }
+
+    [underline] {
+        margin-top: 3px;
+        margin-bottom: 2px;
+
+        display: block;
+        height: 1px;
+        width: 100%;
+
+        background-color: rgb(200, 200, 200);
+        transition: 0.3s;
+
+        &[underline="error"] {
+            margin-bottom: 1px;
+            height: 2px;
+            background-color: red;
+        }
+
+        &[underline="focus"] {
+            margin-bottom: 1px;
+            height: 2px;
+            background-color: rgb(255, 145, 0);
+        }
+
+        &[underline="valid"] {
+            background-color: rgb(147, 233, 147);
+        }
+
+        &[underline="disabled"] {
+            background-color: rgb(175, 175, 175);
+        }
     }
 }

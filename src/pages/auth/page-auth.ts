@@ -36,8 +36,8 @@ const FORM_TITLE = {
 export class PageAuth implements CustomHTMLElement {
     public readonly authForm = new FormGroup({
     	controls: {
-        	password: {validators: formValidators.password},
         	login: {validators: formValidators.login},
+			password: {validators: formValidators.password},
     	},
     });
 
@@ -58,7 +58,10 @@ export class PageAuth implements CustomHTMLElement {
     	this.routerService = new RouterService();
     }
 
-    public onInit(): void {}
+    public onInit(): void {
+		this.authForm.$submit.subscribe(v => console.log('автризация:', v));
+		this.registrationForm.$submit.subscribe(v => console.log('регистрация:', v));
+	}
 
     public get $title(): Observable<string> {
     	return this.$isRegistration.map(
@@ -76,17 +79,23 @@ export class PageAuth implements CustomHTMLElement {
     	return this.$isRegistration.map(isAuthorization => !isAuthorization);
     }
 
-    public get $isInvalidForm(): Observable<boolean> {
-    	return Observable.all([
-        	this.$isRegistration,
-        	this.authForm.$statusChanged.map(status => status.status === FormStatusType.valid),
-    		this.registrationForm.$statusChanged.map(
-    			status => status.status === FormStatusType.valid),
-    	])
-        	.map(([isRegistration, isAuthFormValid, isRegistrationFormValid]) =>
-        		isRegistration ? !isRegistrationFormValid : !isAuthFormValid,
-    		);
-    }
+	public get $isDisabledAuthorizationForm(): Observable<boolean> {
+		return this.authForm.$isValid.map(isValid => !isValid);
+	}
+
+	public get $isDisabledRegistrationForm(): Observable<boolean> {
+		return this.registrationForm.$isValid.map(isValid => !isValid);
+	}
+
+	public onDisabledClickFormAuthorization(): void {
+		this.authForm.touch();
+		this.authForm.shakingFirstInvalidField();
+	}
+
+	public onDisabledClickFormRegistration(): void {
+		this.registrationForm.touch();
+		this.registrationForm.shakingFirstInvalidField();
+	}
 
     public navigateTo(): void {
     	this.$isAuthorization
@@ -96,32 +105,6 @@ export class PageAuth implements CustomHTMLElement {
         			this.routerService.navigateTo(pages.auth, {type: authPageType.registration});
         		} else {
         			this.routerService.navigateTo(pages.auth);
-        		}
-    		});
-    }
-
-    public onAuthorization(): void {
-    	this.$isAuthorization
-    		.only(1)
-        	.subscribe(isAuthorization => {
-        		if (isAuthorization) {
-        			// TODO: собираем с формочки данные авторизации и идём на сервер
-        			console.log(this.authForm.value);
-        		} else {
-        			// TODO: собираем с формочки данные регистрации и идём на сервер
-        			console.log(this.registrationForm.value);
-    			}
-    		});
-    }
-
-    public onDisabledClick(): void {
-    	this.$isAuthorization
-        	.only(1)
-        	.subscribe(isAuthorization => {
-        		if (isAuthorization) {
-        			this.authForm.touch();
-        		} else {
-        			this.registrationForm.touch();
         		}
     		});
     }

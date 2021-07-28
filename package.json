@@ -9,7 +9,7 @@
     "deploy": "npm install && npm run build",
     "dev": "./node_modules/.bin/parcel src/index.html --out-dir dist",
     "start": "./node_modules/.bin/parcel build src/index.html --out-dir dist && node index.js",
-    "eslint:fix": "eslint . --ext .ts --fix",
+    "eslint:fix": "eslint . --ext .js --fix",
     "eslint": "eslint . --ext .ts",
     "stylelint": "npx stylelint '**/*.less'",
     "lint": "npm run eslint && npm run stylelint"

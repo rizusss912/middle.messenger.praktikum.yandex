@@ -20,7 +20,7 @@ export class AppButton implements CustomHTMLElement {
     }
 
     public onRendered(element: HTMLElement): void {
-    	element.querySelector('button').addEventListener('click', event => {
+    	element.querySelector('button')!.addEventListener('click', event => {
     		if (this._disabled) {
     			event.stopPropagation();
 

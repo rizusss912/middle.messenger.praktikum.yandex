@@ -21,6 +21,8 @@ interface Conponent extends HTMLElement {
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
+
+//TODO: не может читать значение атрибута с пробелом
 const TEG_ATTRIBUTES = /([(<|</)\w\-@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
 
 export class HTMLElementRenderer
@@ -34,7 +36,6 @@ export class HTMLElementRenderer
     	super(context);
 
     	const tagArr = tagStr.match(TEG_ATTRIBUTES);
-
     	const tagName = tagArr[0].replace(/</g, '');
     	const tagAttributeStrs = tagArr.splice(1);
 

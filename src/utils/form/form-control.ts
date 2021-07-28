@@ -1,3 +1,4 @@
+import { AppAnimation } from '../animation/animation';
 import {Observable} from '../observeble/observeble';
 import {Subject} from '../observeble/subject';
 import {ValidatorError} from './validator-error';
@@ -32,6 +33,8 @@ export class FormControl {
     private readonly validators: Array<formValidator>;
     private readonly touched: Subject<boolean> = new Subject<boolean>(false);
     private readonly hasFocus: Subject<boolean> = new Subject<boolean>(false);
+	private readonly disabled: Subject<boolean> = new Subject<boolean>(false);
+	private readonly animations: Subject<AppAnimation[][]> = new Subject<AppAnimation[][]>();
 
     private _value: formValue;
 
@@ -60,10 +63,24 @@ export class FormControl {
     	return this.touched.asObserveble();
     }
 
+	public get $changeFocus(): Observable<boolean> {
+    	return this.hasFocus.asObserveble()
+			.uniqueNext();
+    }
+
     public get $isValid(): Observable<boolean> {
     	return this.$statusChanged.map(status => status.status === FormStatusType.valid)
     		.uniqueNext();
     }
+
+	public get $disabled(): Observable<boolean> {
+		return this.disabled.asObserveble()
+			.uniqueNext();
+	}
+
+	public get $animations(): Observable<AppAnimation[][]> {
+		return this.animations.asObserveble();
+	}
 
     public next(value: string): void {
     	this._value = value;
@@ -74,9 +91,17 @@ export class FormControl {
     	this.touched.next(true);
     }
 
+	public disable(disabled: boolean): void {
+		this.disabled.next(disabled);
+	}
+
     public changeFocus(hasFocus: boolean): void {
     	this.hasFocus.next(hasFocus);
     }
+
+	public animate(animations: AppAnimation[][]): void {
+		this.animations.next(animations);
+	}
 
     private static hasDiffInStatuses(last: FormStatus, next: FormStatus): boolean {
     	const hasStatusDiff = last.status !== next.status;
@@ -94,14 +119,12 @@ export class FormControl {
     		return false;
     	}
 
-    	if (last.length !== next.length) {
+    	if (last!.length !== next!.length) {
     		return true;
     	}
 
-    	for (let index = 0; index < last.length; index++) {
-    		if (!last[index].equals(next[index])) {
-    			return true;
-    		}
+    	for (let index = 0; index < last!.length; index++) {
+    		if (!last![index].equals(next![index])) return true;
     	}
 
     	return false;

@@ -11,6 +11,12 @@ export const template = `
             <app-input slot="field" formControl=[[authForm.controls.password]]>
                 <span slot="label">Пароль</span>
             </app-input>
+
+            <app-button slot="submit" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance="primary">
+                <span slot="label">
+                    Авторизация
+                </span>
+            </app-button>
         </app-form>
 
         <app-form name="registration" hidden={{$isAuthorization}} formGroup=[[registrationForm]]>
@@ -32,16 +38,13 @@ export const template = `
             <app-input slot="field" formControl=[[registrationForm.controls.phone]]>
                 <span slot="label">Телефон</span> 
             </app-input>
-        </app-form>
 
-        <app-button @click={{onAuthorization()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} appearance="primary">
-            <span slot="label" hidden={{$isAuthorization}}>
+            <app-button slot="submit" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance="primary">
+            <span slot="label">
                 Регистрация
             </span>
-            <span slot="label" hidden={{$isRegistration}}>
-                Авторизация
-            </span>
         </app-button>
+        </app-form>
 
         <app-button @click={{navigateTo()}} appearance="secondary">
             <span slot="label" hidden={{$isRegistration}}>
