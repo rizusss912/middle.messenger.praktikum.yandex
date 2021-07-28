@@ -5,7 +5,6 @@ import {template} from './page-auth.tmpl';
 
 import {Observable} from '../../utils/observeble/observeble';
 import {FormGroup} from '../../utils/form/form-group';
-import {FormStatusType} from '../../utils/form/form-control';
 import {component, CustomHTMLElement} from '../../utils/component';
 
 import {formValidators} from '../../const/form-validators';
