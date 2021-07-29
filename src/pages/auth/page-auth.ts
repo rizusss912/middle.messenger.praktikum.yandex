@@ -14,6 +14,8 @@ import '../../components/form/app-form';
 import '../../components/button/app-button';
 
 import './page-auth.less';
+import { HTTPClientFacade } from '../../service/router/api/http-client.facade';
+import { AuthorizationData } from '../../service/router/api/modules/auth-api-module';
 
 enum authPageType {
     registration = 'registration',
@@ -39,7 +41,6 @@ export class PageAuth implements CustomHTMLElement {
 			password: {validators: formValidators.password},
     	},
     });
-
     public readonly registrationForm = new FormGroup({
     	controls: {
         	first_name: {validators: formValidators.first_name},
@@ -52,13 +53,15 @@ export class PageAuth implements CustomHTMLElement {
     });
 
     private readonly routerService: RouterService<authPageQueryParams>;
+	private readonly httpClientFacade: HTTPClientFacade;
 
     constructor() {
     	this.routerService = new RouterService();
+		this.httpClientFacade = new HTTPClientFacade();
     }
 
     public onInit(): void {
-		this.authForm.$submit.subscribe(v => console.log('автризация:', v));
+		this.authForm.$submit.subscribe(v => console.log('автризация:', this.httpClientFacade.auth.authorization(v as unknown as AuthorizationData)));
 		this.registrationForm.$submit.subscribe(v => console.log('регистрация:', v));
 	}
 
@@ -96,15 +99,11 @@ export class PageAuth implements CustomHTMLElement {
 		this.registrationForm.shakingFirstInvalidField();
 	}
 
-    public navigateTo(): void {
-    	this.$isAuthorization
-        	.only(1)
-        	.subscribe(isAuthorization => {
-        		if (isAuthorization) {
-        			this.routerService.navigateTo(pages.auth, {type: authPageType.registration});
-        		} else {
-        			this.routerService.navigateTo(pages.auth);
-        		}
-    		});
-    }
+	public navigateToAuthorization(): void {
+		this.routerService.navigateTo(pages.auth, {type: authPageType.registration});
+	}
+
+	public navigateToRegistration(): void {
+		this.routerService.navigateTo(pages.auth);
+	}
 }

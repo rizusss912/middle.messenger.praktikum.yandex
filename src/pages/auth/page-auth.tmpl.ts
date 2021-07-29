@@ -40,19 +40,22 @@ export const template = `
             </app-input>
 
             <app-button slot="submit" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance="primary">
-            <span slot="label">
-                Регистрация
-            </span>
-        </app-button>
+                <span slot="label">
+                    Регистрация
+                </span>
+            </app-button>
         </app-form>
 
-        <app-button @click={{navigateTo()}} appearance="secondary">
-            <span slot="label" hidden={{$isRegistration}}>
-                Нет акаунта?
-            </span>
-            <span slot="label" hidden={{$isAuthorization}}>
+        <app-button @click={{navigateToAuthorization()}} appearance="secondary" hidden={{$isRegistration}}>
+            <span slot="label">
                 Войти
             </span>
         </app-button>
+
+        <app-button @click={{navigateToRegistration()}} appearance="secondary" hidden={{$isAuthorization}}>
+            <span slot="label">
+                Нет акаунта?
+            </span>
+    </app-button>
     </main>
 `;

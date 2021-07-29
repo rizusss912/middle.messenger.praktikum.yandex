@@ -116,7 +116,7 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 			const firstInvalidControlsName = isValidObjArray.find(isValidObj => !isValidObj.isValid)?.name;
 
 			if (firstInvalidControlsName) {
-				this.controls[firstInvalidControlsName].animate([[new ShakingAnimation()]]);
+				this.controls[firstInvalidControlsName].animate(new ShakingAnimation());
 			}
 		});
 	}

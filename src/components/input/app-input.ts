@@ -1,5 +1,3 @@
-import {Animator} from '../../utils/animation/animator';
-
 import {component, CustomHTMLElement} from '../../utils/component';
 
 import {template} from './app-input.tmpl';
@@ -35,7 +33,9 @@ export class AppInput implements CustomHTMLElement {
 
 		Observable.event(element, 'click').subscribe(() => this.setFocusForInput());
 
-		this.formControl.$animations.subscribe(animation => new Animator(element, animation).animate());
+		this.formControl.$animations.subscribe(
+			animation => element.animate(animation.keyFrames, animation.keyframeAnimationOptions),
+		);
     }
 
 	public get $hasFocus(): Observable<boolean> {

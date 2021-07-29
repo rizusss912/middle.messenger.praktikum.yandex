@@ -34,7 +34,7 @@ export class FormControl {
     private readonly touched: Subject<boolean> = new Subject<boolean>(false);
     private readonly hasFocus: Subject<boolean> = new Subject<boolean>(false);
 	private readonly disabled: Subject<boolean> = new Subject<boolean>(false);
-	private readonly animations: Subject<AppAnimation[][]> = new Subject<AppAnimation[][]>();
+	private readonly animations: Subject<AppAnimation> = new Subject<AppAnimation>();
 
     private _value: formValue;
 
@@ -78,7 +78,7 @@ export class FormControl {
 			.uniqueNext();
 	}
 
-	public get $animations(): Observable<AppAnimation[][]> {
+	public get $animations(): Observable<AppAnimation> {
 		return this.animations.asObserveble();
 	}
 
@@ -99,7 +99,7 @@ export class FormControl {
     	this.hasFocus.next(hasFocus);
     }
 
-	public animate(animations: AppAnimation[][]): void {
+	public animate(animations: AppAnimation): void {
 		this.animations.next(animations);
 	}
 
