@@ -92,7 +92,7 @@ export class AppInput implements CustomHTMLElement {
 
 				return 'valid';
 			})
-			.uniqueNext(true);
+			.uniqueNext();
 	}
 
 	public get $labelIsInsteadOfText(): Observable<boolean> {

@@ -1,4 +1,4 @@
-import {component, CustomHTMLElement} from '../../../../utils/component';
+import {component} from '../../../../utils/component';
 
 import {template} from './form-user-data.tmpl';
 
@@ -13,12 +13,14 @@ import './form-user-data.less';
 import {FormGroup} from '../../../../utils/form/form-group';
 import {Observable} from '../../../../utils/observeble/observeble';
 import {formValidators} from '../../../../const/form-validators';
+import { ProfileContent } from '../../elements/profile-content';
 
-@component<FormUserData>({
+//@ts-ignore
+@component({
 	name: 'form-user-data',
 	template,
 })
-export class FormUserData implements CustomHTMLElement {
+export class FormUserData extends ProfileContent {
     public readonly form = new FormGroup({
     	controls: {
         	email: {validators: formValidators.email},
@@ -33,6 +35,8 @@ export class FormUserData implements CustomHTMLElement {
     private readonly routerService: RouterService<{}>;
 
     constructor() {
+		super();
+
     	this.routerService = new RouterService();
     }
 
@@ -40,7 +44,9 @@ export class FormUserData implements CustomHTMLElement {
     	return this.form.$isValid.map(isValid => !isValid);
     }
 
-    public onInit(): void {}
+	static get observedAttributes(): string[] {
+		return super.observedAttributes;
+	}
 
     public onBack(): void {
     	this.routerService.navigateTo(pages.profile);

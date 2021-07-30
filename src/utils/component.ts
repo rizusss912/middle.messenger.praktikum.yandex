@@ -21,12 +21,16 @@ enum defaultObservedAttributes {
     style = 'style',
 }
 
-export function component<T extends CustomHTMLElement>(config: ComponentConfig):
-(Сlazz: new () => T) => new () => T {
-	return function (Clazz: new () => T): new () => T {
+//@ts-ignore тут вообще никак не получается без any (
+export type Component = CustomHTMLElement & any;
+export type Clazz = Partial<{observedAttributes: string}> & (new () => Component);
+
+export function component(config: ComponentConfig):
+(Сlazz: Clazz) => Clazz {
+	return function (Clazz: Clazz): Clazz {
 		class CustomElement extends HTMLElement {
-            private templator: Templator<T> | undefined;
-            private readonly clazz: T;
+            private templator: Templator<Component> | undefined;
+            private readonly clazz: Component;
 
             constructor() {
             	super();
@@ -53,10 +57,12 @@ export function component<T extends CustomHTMLElement>(config: ComponentConfig):
 
             static get observedAttributes(): string[] {
             	// @ts-ignore
-            	return (Object.values(
-            		defaultObservedAttributes) as string[]).concat(
-            		config.observedAttributes ? config.observedAttributes : [],
-            	);
+            	return (Object.values(defaultObservedAttributes) as string[])
+					.concat(
+            			config.observedAttributes ? config.observedAttributes : [],
+            		).concat(
+						Clazz.observedAttributes ? Clazz.observedAttributes : [],
+					);
             }
 
             attributeChangedCallback(
@@ -129,6 +135,6 @@ export function component<T extends CustomHTMLElement>(config: ComponentConfig):
 
 		customElements.define(config.name, CustomElement);
 
-		return <new () => T><unknown>CustomElement;
+		return <new () => Component>CustomElement;
 	};
 }

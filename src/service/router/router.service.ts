@@ -35,8 +35,8 @@ export class RouterService<Query extends {[key: string]: string}> {
     public get $path(): Observable<string> {
     	return this.$popstate
     		.map(urlParams => urlParams.pathname)
-    		.uniqueNext()
-    		.startWith(this.urlParams.pathname);
+    		.startWith(this.urlParams.pathname)
+			.uniqueNext();
     }
 
     public get $queryParams(): Observable<Query> {
@@ -47,7 +47,6 @@ export class RouterService<Query extends {[key: string]: string}> {
     }
 
     public get urlParams(): urlParams<Query> {
-		console.log(window.location);
     	let {hash, pathname, search} = window.location;
     	const queryParams = (search.match(/[^?&]*/g) || [])
     		.filter(value => value)

@@ -7,20 +7,28 @@ import {pages} from '../../../../service/router/pages.config';
 import {template} from './user-data.tmpl';
 
 import './user-data.less';
+import { ProfileContent } from '../../elements/profile-content';
 
-@component<UserData>({
+//@ts-ignore
+@component({
 	name: 'user-data',
 	template,
 })
-export class UserData implements CustomHTMLElement {
+export class UserData extends ProfileContent {
         public userData: userData;
 
         private readonly profileManagerService: ProfileManagerService;
         private readonly routerService: RouterService<{}>;
 
         constructor() {
+                super();
+
         	this.profileManagerService = new ProfileManagerService();
         	this.routerService = new RouterService();
+        }
+
+        static get observedAttributes(): string[] {
+                return super.observedAttributes;
         }
 
         public onInit(): void {

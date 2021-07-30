@@ -23,6 +23,7 @@ export class AppRoot implements CustomHTMLElement {
 
     public get content(): Observable<HTMLElement[]> {
     	return this.router.$path
+			.uniqueNext()
     		.map(pathname => this.router.getPageByPath(pathname))
     		// TODO: Проблема с типизацией. HTMLPage !== HTMLElement (
     		.map(
