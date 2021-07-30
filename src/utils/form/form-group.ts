@@ -12,8 +12,15 @@ type formStatus<Form> = {
 	status: FormStatusType.valid;
 };
 
+type formFieldValidator<Form> = {
+	targets: Array<keyof Form>;
+	validators: Array<(form: Form) => ValidatorError | null>;
+}
+
 export interface FormGroupConfig<Form extends {[key: string]: formValue}> {
     controls?: Record<keyof Form, FormControlOptions>;
+	fieldValidators?: formFieldValidator<Form>[];
+	
 }
 
 export class FormGroup<Form extends {[key: string]: formValue}> {
@@ -26,7 +33,26 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 
     	if (config.controls) {
     		for (const name of Object.keys(config.controls)) {
-    			controls[name as keyof Form] = new FormControl({name, ...config.controls[name]});
+				const formConfig = Object.assign({}, config.controls[name]);
+
+				if(config.fieldValidators) {
+					const formFieldValidators = config.fieldValidators
+						.filter(fieldValidator => fieldValidator.targets.includes(name))
+						.map(fieldValidator => fieldValidator.validators)
+						.reduce((out, validators) => out.concat(validators), []);
+
+					if (formFieldValidators.length !== 0) {
+						const asyncValidators = [];
+
+						for (const validator of formFieldValidators) {
+							asyncValidators.push(() => this.$valueChanged.map(validator));
+						}
+
+						formConfig.asyncValidators = (formConfig.asyncValidators || []).concat(asyncValidators);
+					}
+				}
+
+    			controls[name as keyof Form] = new FormControl({name, ...formConfig});
     		}
     	}
 
@@ -104,6 +130,12 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 
 	public submit(value: Record<keyof Form, formValue>): void {
 		this._$submit.next(value);
+	}
+
+	public next(formValue: Record<keyof Form, formValue>): void {
+		for (const [key, value] of Object.entries(formValue)) {
+			if (this.controls[key]) this.controls[key].next(value);
+		}
 	}
 
 	public shakingFirstInvalidField(): void {

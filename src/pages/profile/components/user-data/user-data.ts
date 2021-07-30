@@ -1,8 +1,5 @@
-import {component, CustomHTMLElement} from '../../../../utils/component';
-
+import {component} from '../../../../utils/component';
 import {ProfileManagerService, userData} from '../../service/profile-manager.service';
-import {RouterService} from '../../../../service/router/router.service';
-import {pages} from '../../../../service/router/pages.config';
 
 import {template} from './user-data.tmpl';
 
@@ -18,13 +15,11 @@ export class UserData extends ProfileContent {
         public userData: userData;
 
         private readonly profileManagerService: ProfileManagerService;
-        private readonly routerService: RouterService<{}>;
 
         constructor() {
                 super();
 
         	this.profileManagerService = new ProfileManagerService();
-        	this.routerService = new RouterService();
         }
 
         static get observedAttributes(): string[] {
@@ -35,15 +30,16 @@ export class UserData extends ProfileContent {
         	this.userData = this.profileManagerService.userData;
         }
 
+        //TODO: Вынести в manager
         public onChangeData(): void {
-        	this.routerService.navigateTo(pages.profile, {type: 'changeData'});
+        	this.profileManagerService.goToFormData();
         }
 
         public onChangePassword(): void {
-        	this.routerService.navigateTo(pages.profile, {type: 'changePassword'});
+        	this.profileManagerService.goToFormPassword();
         }
 
         public onExit(): void {
-        	this.routerService.navigateTo(pages.chats);
+        	this.profileManagerService.goToChats();
         }
 }

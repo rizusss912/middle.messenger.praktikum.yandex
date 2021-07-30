@@ -6,8 +6,9 @@ import './app-input.less';
 import {FormControl} from '../../utils/form/form-control';
 import {Observable} from '../../utils/observeble/observeble';
 import {ValidationErrorType} from '../../utils/form/validator-error';
+import { playAnimation } from '../../utils/animation/animation-utils/play-animation';
 
-@component<AppInput>({
+@component({
 	name: 'app-input',
 	template,
 })
@@ -25,7 +26,7 @@ export class AppInput implements CustomHTMLElement {
 
     	if (this.formControl) {
     		this.formControl.$valueChanged.subscribe(value => {
-    			this.input.value = value || '';
+    			this.input.value = value as string || '';
     		});
     	} else {
     		this.formControl = new FormControl({name: ''});
@@ -33,9 +34,7 @@ export class AppInput implements CustomHTMLElement {
 
 		Observable.event(element, 'click').subscribe(() => this.setFocusForInput());
 
-		this.formControl.$animations.subscribe(
-			animation => element.animate(animation.keyFrames, animation.keyframeAnimationOptions),
-		);
+		this.formControl.$animations.subscribe(animation => playAnimation(element, animation));
     }
 
 	public get $hasFocus(): Observable<boolean> {

@@ -2,9 +2,6 @@ import {component} from '../../../../utils/component';
 
 import {template} from './form-user-data.tmpl';
 
-import {RouterService} from '../../../../service/router/router.service';
-import {pages} from '../../../../service/router/pages.config';
-
 import '../../../../components/form/app-form';
 import '../../../../components/input/app-input';
 import '../../../../components/button/app-button';
@@ -13,7 +10,8 @@ import './form-user-data.less';
 import {FormGroup} from '../../../../utils/form/form-group';
 import {Observable} from '../../../../utils/observeble/observeble';
 import {formValidators} from '../../../../const/form-validators';
-import { ProfileContent } from '../../elements/profile-content';
+import {ProfileContent} from '../../elements/profile-content';
+import {ProfileManagerService} from '../../service/profile-manager.service';
 
 //@ts-ignore
 @component({
@@ -32,13 +30,17 @@ export class FormUserData extends ProfileContent {
     	},
     });
 
-    private readonly routerService: RouterService<{}>;
+	private readonly profileManagerService: ProfileManagerService;
 
     constructor() {
 		super();
 
-    	this.routerService = new RouterService();
+    	this.profileManagerService = new ProfileManagerService();
     }
+
+	public onInit(): void {
+		this.form.next(this.profileManagerService.userData);
+	}
 
     public get $isInvalidForm(): Observable<boolean> {
     	return this.form.$isValid.map(isValid => !isValid);
@@ -49,7 +51,7 @@ export class FormUserData extends ProfileContent {
 	}
 
     public onBack(): void {
-    	this.routerService.navigateTo(pages.profile);
+    	this.profileManagerService.goToUserData();
     }
 
     public onChangeData(): void {
@@ -58,5 +60,6 @@ export class FormUserData extends ProfileContent {
 
     public onDisabledClick(): void {
     	this.form.touch();
+		this.form.shakingFirstInvalidField();
     }
 }

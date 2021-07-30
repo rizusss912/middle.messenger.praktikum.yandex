@@ -1,6 +1,3 @@
-import {RouterService} from '../../../../service/router/router.service';
-import {pages} from '../../../../service/router/pages.config';
-
 import {FormGroup} from '../../../../utils/form/form-group';
 import {Observable} from '../../../../utils/observeble/observeble';
 import {component} from '../../../../utils/component';
@@ -11,6 +8,8 @@ import {template} from './form-password.tmpl';
 
 import './form-password.less';
 import {ProfileContent} from '../../elements/profile-content';
+import { ProfileManagerService } from '../../service/profile-manager.service';
+import { ValidatorError } from '../../../../utils/form/validator-error';
 
 //@ts-ignore никак не могу написать типы для component (
 @component({
@@ -24,14 +23,40 @@ export class FormPassword extends ProfileContent {
         		next: {validators: formValidators.password},
         		repeat: {validators: formValidators.password},
         	},
+                fieldValidators: [
+                        {
+                                targets: ['repeat'],
+                                validators: [
+                                        ({next, repeat}) => next !== repeat
+                                                ? new ValidatorError('Пароли не совпадают')
+                                                : null,
+                                ],
+                        },
+                        {
+                                targets: ['repeat'],
+                                validators: [
+                                        ({last, repeat}) => last === repeat
+                                                ? new ValidatorError('Новый пароль не отличается от старого')
+                                                : null,
+                                ],
+                        },
+                        {
+                                targets: ['next'],
+                                validators: [
+                                        ({last, next}) => last === next
+                                                ? new ValidatorError('Новый пароль не отличается от старого')
+                                                : null,
+                                ],
+                        },
+                ]
         });
 
-        private readonly routerService: RouterService<{}>;
+        private readonly profileManagerService: ProfileManagerService;
 
         constructor() {
                 super();
 
-        	this.routerService = new RouterService();
+        	this.profileManagerService = new ProfileManagerService();
         }
 
         static get observedAttributes(): string[] {
@@ -45,7 +70,7 @@ export class FormPassword extends ProfileContent {
         public onInit(): void {}
 
         public onBack(): void {
-        	this.routerService.navigateTo(pages.profile);
+        	this.profileManagerService.goToUserData();
         }
 
         public onChangePassword(): void {
@@ -54,5 +79,6 @@ export class FormPassword extends ProfileContent {
 
         public onDisabledClick(): void {
         	this.form.touch();
+                this.form.shakingFirstInvalidField();
         }
 }

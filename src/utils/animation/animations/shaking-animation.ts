@@ -1,14 +1,15 @@
-import { AppAnimation } from "../animation";
+import { AppAnimation } from "../app-animation";
+import { transform } from "../animation-utils/transform.functions";
 
 export class ShakingAnimation implements AppAnimation {
-    keyFrames = [
-        { transform: 'rotate(0deg)' },
-        { transform: 'rotate(1deg)' },
-        { transform: 'rotate(-1deg)' },
-        { transform: 'rotate(0deg)' },
+    public readonly keyFrames = [
+        { transform: transform.rotate(0) },
+        { transform: transform.rotate(1) },
+        { transform: transform.rotate(-1) },
+        { transform: transform.rotate(0) },
     ];
 
-    keyframeAnimationOptions = {
+    public readonly keyframeAnimationOptions = {
         duration: 70,
         iterations: 10
     };

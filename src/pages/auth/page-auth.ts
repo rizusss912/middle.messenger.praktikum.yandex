@@ -30,7 +30,7 @@ const FORM_TITLE = {
 	authorization: 'Вход',
 };
 
-@component<PageAuth>({
+@component({
 	name: 'page-auth',
 	template,
 })
