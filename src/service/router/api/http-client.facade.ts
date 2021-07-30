@@ -1,4 +1,4 @@
-import {AuthApiModule} from "./modules/auth-api-module";
+import {AuthApiModule} from './modules/auth-api-module';
 
 let instance: HTTPClientFacade;
 
@@ -9,10 +9,12 @@ export class HTTPClientFacade {
     private readonly origin = 'https://yandex.ru';
 
     constructor() {
-        if (instance) return instance;
+    	if (instance) {
+    		return instance;
+    	}
 
-        instance = this;
+    	instance = this;
 
-        this.auth = new AuthApiModule(this.origin, this.mutualPathname);
+    	this.auth = new AuthApiModule(this.origin, this.mutualPathname);
     }
 }

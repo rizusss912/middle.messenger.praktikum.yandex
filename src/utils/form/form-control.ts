@@ -1,4 +1,4 @@
-import { AppAnimation } from '../animation/app-animation';
+import {AppAnimation} from '../animation/app-animation';
 import {Observable} from '../observeble/observeble';
 import {Subject} from '../observeble/subject';
 import {ValidatorError} from './validator-error';
@@ -6,7 +6,8 @@ import {ValidatorError} from './validator-error';
 export type formValue = unknown;
 
 export type formValidator = (value: formValue) => null | ValidatorError;
-export type asyncFormValidator = ($value: Observable<formValue>) => Observable<null | ValidatorError>;
+export type asyncFormValidator =
+	($value: Observable<formValue>) => Observable<null | ValidatorError>;
 
 export interface FormControlOptions {
     value?: string;
@@ -46,7 +47,7 @@ export class FormControl {
     	this._value = config.value;
     	this.name = config.name;
     	this.validators = config.validators || [];
-		this.asyncValidators = config.asyncValidators || [];
+    	this.asyncValidators = config.asyncValidators || [];
     }
 
     public get value(): formValue {
@@ -59,12 +60,15 @@ export class FormControl {
 
     public get $statusChanged(): Observable<FormStatus> {
     	return Observable.all([
-			this.$valueChanged,
-			...this.asyncValidators.map(validate => validate(this.$valueChanged))
-		])
-			.map(([value, ...asyncValidatorsResults]) => 
-				this.mapValueToStatus(value, asyncValidatorsResults as Array<null | ValidatorError>),
-			)
+    		this.$valueChanged,
+    		...this.asyncValidators.map(validate => validate(this.$valueChanged)),
+    	])
+    		.map(([value, ...asyncValidatorsResults]) =>
+    			this.mapValueToStatus(
+    				value,
+					asyncValidatorsResults as Array<null | ValidatorError>,
+    			),
+    		)
     		.uniqueNext(true, (last, next) => FormControl.hasDiffInStatuses(last, next));
     }
 
@@ -72,9 +76,9 @@ export class FormControl {
     	return this.touched.asObserveble();
     }
 
-	public get $changeFocus(): Observable<boolean> {
+    public get $changeFocus(): Observable<boolean> {
     	return this.hasFocus.asObserveble()
-			.uniqueNext();
+    		.uniqueNext();
     }
 
     public get $isValid(): Observable<boolean> {
@@ -82,14 +86,14 @@ export class FormControl {
     		.uniqueNext();
     }
 
-	public get $disabled(): Observable<boolean> {
-		return this.disabled.asObserveble()
-			.uniqueNext();
-	}
+    public get $disabled(): Observable<boolean> {
+    	return this.disabled.asObserveble()
+    		.uniqueNext();
+    }
 
-	public get $animations(): Observable<AppAnimation> {
-		return this.animations.asObserveble();
-	}
+    public get $animations(): Observable<AppAnimation> {
+    	return this.animations.asObserveble();
+    }
 
     public next(value: formValue): void {
     	this._value = value;
@@ -100,17 +104,17 @@ export class FormControl {
     	this.touched.next(true);
     }
 
-	public disable(disabled: boolean): void {
-		this.disabled.next(disabled);
-	}
+    public disable(disabled: boolean): void {
+    	this.disabled.next(disabled);
+    }
 
     public changeFocus(hasFocus: boolean): void {
     	this.hasFocus.next(hasFocus);
     }
 
-	public animate(animations: AppAnimation): void {
-		this.animations.next(animations);
-	}
+    public animate(animations: AppAnimation): void {
+    	this.animations.next(animations);
+    }
 
     private static hasDiffInStatuses(last: FormStatus, next: FormStatus): boolean {
     	const hasStatusDiff = last.status !== next.status;
@@ -133,16 +137,18 @@ export class FormControl {
     	}
 
     	for (let index = 0; index < last!.length; index++) {
-    		if (!last![index].equals(next![index])) return true;
+    		if (!last![index].equals(next![index])) {
+    			return true;
+    		}
     	}
 
     	return false;
     }
 
     private mapValueToStatus(
-			value: formValue,
-			asyncValidatorsResults: Array<ValidatorError | null>,
-		): FormStatus {
+    	value: formValue,
+    	asyncValidatorsResults: Array<ValidatorError | null>,
+    ): FormStatus {
     	let errors = [];
 
     	for (const validator of this.validators) {
@@ -153,7 +159,9 @@ export class FormControl {
     		}
     	}
 
-		errors = errors.concat(asyncValidatorsResults.filter(error => Boolean(error)) as ValidatorError[]);
+    	errors = errors.concat(
+			asyncValidatorsResults.filter(error => Boolean(error)) as ValidatorError[],
+    	);
 
     	if (errors.length === 0) {
     		return {status: FormStatusType.valid};

@@ -13,7 +13,7 @@ import {formValidators} from '../../../../const/form-validators';
 import {ProfileContent} from '../../elements/profile-content';
 import {ProfileManagerService} from '../../service/profile-manager.service';
 
-//@ts-ignore
+// @ts-ignore
 @component({
 	name: 'form-user-data',
 	template,
@@ -32,34 +32,34 @@ export class FormUserData extends ProfileContent {
 
 	private readonly profileManagerService: ProfileManagerService;
 
-    constructor() {
+	constructor() {
 		super();
 
     	this.profileManagerService = new ProfileManagerService();
-    }
+	}
 
 	public onInit(): void {
 		this.form.next(this.profileManagerService.userData);
 	}
 
-    public get $isInvalidForm(): Observable<boolean> {
+	public get $isInvalidForm(): Observable<boolean> {
     	return this.form.$isValid.map(isValid => !isValid);
-    }
+	}
 
 	static get observedAttributes(): string[] {
 		return super.observedAttributes;
 	}
 
-    public onBack(): void {
+	public onBack(): void {
     	this.profileManagerService.goToUserData();
-    }
+	}
 
-    public onChangeData(): void {
+	public onChangeData(): void {
     	console.log(this.form.value);
-    }
+	}
 
-    public onDisabledClick(): void {
+	public onDisabledClick(): void {
     	this.form.touch();
 		this.form.shakingFirstInvalidField();
-    }
+	}
 }

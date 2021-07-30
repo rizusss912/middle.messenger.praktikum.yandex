@@ -4,9 +4,9 @@ import {ProfileManagerService, userData} from '../../service/profile-manager.ser
 import {template} from './user-data.tmpl';
 
 import './user-data.less';
-import { ProfileContent } from '../../elements/profile-content';
+import {ProfileContent} from '../../elements/profile-content';
 
-//@ts-ignore
+// @ts-ignore
 @component({
 	name: 'user-data',
 	template,
@@ -17,20 +17,20 @@ export class UserData extends ProfileContent {
         private readonly profileManagerService: ProfileManagerService;
 
         constructor() {
-                super();
+        	super();
 
         	this.profileManagerService = new ProfileManagerService();
         }
 
         static get observedAttributes(): string[] {
-                return super.observedAttributes;
+        	return super.observedAttributes;
         }
 
         public onInit(): void {
         	this.userData = this.profileManagerService.userData;
         }
 
-        //TODO: Вынести в manager
+        // TODO: Вынести в manager
         public onChangeData(): void {
         	this.profileManagerService.goToFormData();
         }

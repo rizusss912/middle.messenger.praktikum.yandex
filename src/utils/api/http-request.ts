@@ -1,4 +1,4 @@
-import {HTTPMethod} from "./http-method";
+import {HTTPMethod} from './http-method';
 
 export interface HTTPRequest {
     origin: string;
@@ -7,5 +7,5 @@ export interface HTTPRequest {
     queryParams?: {[key: string]: string};
     headers?: {[key: string]: string};
     timeout?: number;
-    body?: object | string; 
+    body?: object | string;
 }

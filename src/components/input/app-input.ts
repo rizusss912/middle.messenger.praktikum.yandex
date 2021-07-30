@@ -6,7 +6,7 @@ import './app-input.less';
 import {FormControl} from '../../utils/form/form-control';
 import {Observable} from '../../utils/observeble/observeble';
 import {ValidationErrorType} from '../../utils/form/validator-error';
-import { playAnimation } from '../../utils/animation/animation-utils/play-animation';
+import {playAnimation} from '../../utils/animation/animation-utils/play-animation';
 
 @component({
 	name: 'app-input',
@@ -20,7 +20,8 @@ export class AppInput implements CustomHTMLElement {
     public onInit(): void {
     	this.name = this.formControl ? this.formControl.name : false;
     }
-	// TODO: Разбить на методы
+
+    // TODO: Разбить на методы
     public onRendered(element: HTMLElement): void {
     	this.input = element.querySelector('input')!;
 
@@ -32,14 +33,14 @@ export class AppInput implements CustomHTMLElement {
     		this.formControl = new FormControl({name: ''});
     	}
 
-		Observable.event(element, 'click').subscribe(() => this.setFocusForInput());
+    	Observable.event(element, 'click').subscribe(() => this.setFocusForInput());
 
-		this.formControl.$animations.subscribe(animation => playAnimation(element, animation));
+    	this.formControl.$animations.subscribe(animation => playAnimation(element, animation));
     }
 
-	public get $hasFocus(): Observable<boolean> {
-		return this.formControl.$changeFocus;
-	}
+    public get $hasFocus(): Observable<boolean> {
+    	return this.formControl.$changeFocus;
+    }
 
     public get $hasErrors(): Observable<boolean> {
     	return this.formControl.$statusChanged.map(
@@ -51,63 +52,74 @@ export class AppInput implements CustomHTMLElement {
     	);
     }
 
-	public get $disabled(): Observable<boolean> {
-		return this.formControl.$disabled;
-	}
+    public get $disabled(): Observable<boolean> {
+    	return this.formControl.$disabled;
+    }
 
     public get $errorMessage(): Observable<string> {
     	return this.formControl.$statusChanged
-			.map(
-				status =>
-					status.errors?.find(error => error.type === ValidationErrorType.shown)?.message
+    		.map(
+    			status =>
+    				status.errors?.find(error => error.type === ValidationErrorType.shown)?.message
 					|| '',
-			)
-			// WARNING: Благодаря этому, текст ошибки не исчезает мгновенно,
-			// а становится прозрачным c анимацией.
-			.filter(message => Boolean(message));
+    		)
+    	// WARNING: Благодаря этому, текст ошибки не исчезает мгновенно,
+    	// а становится прозрачным c анимацией.
+    		.filter(message => Boolean(message));
     }
 
     public get $needHiddenErrors(): Observable<boolean> {
     	return Observable.all([
-				this.$hasErrors,
-				this.formControl.$touched,
-				this.formControl.$disabled,
-			])
+    		this.$hasErrors,
+    		this.formControl.$touched,
+    		this.formControl.$disabled,
+    	])
     		.map(([hasErrors, touched, disabled]) => !hasErrors || !touched || disabled);
     }
 
-	public get $inputStatus(): Observable<string> {
-		return Observable.all([
-				this.$hasErrors,
-				this.formControl.$changeFocus,
-				this.formControl.$touched,
-				this.formControl.$disabled,
-			])
-			.map(([hasErrors, hasFocus, touched, disabled]) => {
-				if (disabled) return 'disabled';
-				if (!touched) return hasFocus ? 'focus' : '';
-				if (hasErrors) return 'error';
-				if (hasFocus) return 'focus';
+    public get $inputStatus(): Observable<string> {
+    	return Observable.all([
+    		this.$hasErrors,
+    		this.formControl.$changeFocus,
+    		this.formControl.$touched,
+    		this.formControl.$disabled,
+    	])
+    		.map(([hasErrors, hasFocus, touched, disabled]) => {
+    			if (disabled) {
+    				return 'disabled';
+    			}
 
-				return 'valid';
-			})
-			.uniqueNext();
-	}
+    			if (!touched) {
+    				return hasFocus ? 'focus' : '';
+    			}
 
-	public get $labelIsInsteadOfText(): Observable<boolean> {
-		return Observable.all([
-				this.formControl.$changeFocus,
-				this.formControl.$valueChanged.map(value => Boolean(value)),
-			])
-			.map(([hasFocus, hasValue]) => !hasFocus && !hasValue);
-	}
+    			if (hasErrors) {
+    				return 'error';
+    			}
+
+    			if (hasFocus) {
+    				return 'focus';
+    			}
+
+    			return 'valid';
+    		})
+    		.uniqueNext();
+    }
+
+    public get $labelIsInsteadOfText(): Observable<boolean> {
+    	return Observable.all([
+    		this.formControl.$changeFocus,
+    		this.formControl.$valueChanged.map(value => Boolean(value)),
+    	])
+    		.map(([hasFocus, hasValue]) => !hasFocus && !hasValue);
+    }
 
     public onFocus(): void {
     	this.formControl.changeFocus(true);
     }
 
     public onBlur(): void {
-		this.formControl.changeFocus(false);
+    	this.formControl.changeFocus(false);
     	this.formControl.touch();
     }
 
@@ -115,8 +127,8 @@ export class AppInput implements CustomHTMLElement {
     	this.formControl.next((event.target as HTMLInputElement).value);
     }
 
-	public setFocusForInput(): void {
-		this.input.focus();
-	}
+    public setFocusForInput(): void {
+    	this.input.focus();
+    }
 }
 

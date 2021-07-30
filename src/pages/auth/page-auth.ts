@@ -14,8 +14,8 @@ import '../../components/form/app-form';
 import '../../components/button/app-button';
 
 import './page-auth.less';
-import { HTTPClientFacade } from '../../service/router/api/http-client.facade';
-import { AuthorizationData } from '../../service/router/api/modules/auth-api-module';
+import {HTTPClientFacade} from '../../service/router/api/http-client.facade';
+import {AuthorizationData} from '../../service/router/api/modules/auth-api-module';
 
 enum authPageType {
     registration = 'registration',
@@ -38,9 +38,10 @@ export class PageAuth implements CustomHTMLElement {
     public readonly authForm = new FormGroup({
     	controls: {
         	login: {validators: formValidators.login},
-			password: {validators: formValidators.password},
+    		password: {validators: formValidators.password},
     	},
     });
+
     public readonly registrationForm = new FormGroup({
     	controls: {
         	first_name: {validators: formValidators.first_name},
@@ -55,31 +56,31 @@ export class PageAuth implements CustomHTMLElement {
     private readonly routerService: RouterService<authPageQueryParams>;
 	private readonly httpClientFacade: HTTPClientFacade;
 
-    constructor() {
+	constructor() {
     	this.routerService = new RouterService();
 		this.httpClientFacade = new HTTPClientFacade();
-    }
+	}
 
-    public onInit(): void {
+	public onInit(): void {
 		this.authForm.$submit.subscribe(v => console.log('автризация:', this.httpClientFacade.auth.authorization(v as unknown as AuthorizationData)));
 		this.registrationForm.$submit.subscribe(v => console.log('регистрация:', v));
 	}
 
-    public get $title(): Observable<string> {
+	public get $title(): Observable<string> {
     	return this.$isRegistration.map(
     		isRegistration => isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization,
     	);
-    }
+	}
 
-    public get $isRegistration(): Observable<boolean> {
+	public get $isRegistration(): Observable<boolean> {
     	return this.routerService.$queryParams.map(query =>
     		query.type === authPageType.registration,
     	);
-    }
+	}
 
-    public get $isAuthorization(): Observable<boolean> {
+	public get $isAuthorization(): Observable<boolean> {
     	return this.$isRegistration.map(isAuthorization => !isAuthorization);
-    }
+	}
 
 	public get $isDisabledAuthorizationForm(): Observable<boolean> {
 		return this.authForm.$isValid.map(isValid => !isValid);

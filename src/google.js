@@ -7460,20 +7460,20 @@ this.default_IdentityPasswordsUi = this.default_IdentityPasswordsUi || {}; (func
 			}
 
 			_.Rta(a, this.g);
-            const c = {};
-            const d = {};
-            const e = new Tta();
-            let f;
-            let h = {};
-            let k = !0;
-            let m = !1;
-            const p = new Map();
+			const c = {};
+			const d = {};
+			const e = new Tta();
+			let f;
+			let h = {};
+			let k = !0;
+			let m = !1;
+			const p = new Map();
 
-            _.ab(a, (E, F) => {
+			_.ab(a, (E, F) => {
 				const L = E.Ef.Mc(); let H = E.uc().toString() + L; p.has(H) ? (E = p.get(H), d[F] = d[E], c[F] = c[E]) : (c[F] = _.ji(), d[F] = c[F].promise, p.set(H, F), H = new _.lH(), F = _.u(H, 4, F), H = E.uc().toString(), F = _.u(F, 1, H), E.Ef && _.pta(F, L), _.Cw(e, 1, F, _.lH), k && (h = Uta(E), k = !1, m = b.o.g, f = _.Jm(E, _.pca)));
 			});
 
-            const q = _.ly(this.i, _.bc('eptZe') + 'data/batchexecute', e, [_.mH], {xj: this.U.bind(this, a, c)});
+			const q = _.ly(this.i, _.bc('eptZe') + 'data/batchexecute', e, [_.mH], {xj: this.U.bind(this, a, c)});
 
 			_.ky(q, {rpcids: Array.from(new Set(Object.values(a).map(E => E.uc().toString()))).join()}); const y = q.g.s; _.jb(h) || _.il(y, h); if (f != null) {
 				for (const z in f) {
@@ -7486,9 +7486,9 @@ this.default_IdentityPasswordsUi = this.default_IdentityPasswordsUi || {}; (func
 					F.reject(E);
 				});
 			}, this);
-            
-            let A = !1;
-            let C = _.eb(d); _.ab(d, (E, F) => {
+
+			let A = !1;
+			let C = _.eb(d); _.ab(d, (E, F) => {
 				_.yc(E, L => {
 					L instanceof _.ni && (A = !0, _.kb(a, F));
 				}); _.mi(E, () => {
@@ -7496,7 +7496,7 @@ this.default_IdentityPasswordsUi = this.default_IdentityPasswordsUi || {}; (func
 				});
 			});
 
-            return d;
+			return d;
 		};
 
 		const Vta = function (a) {

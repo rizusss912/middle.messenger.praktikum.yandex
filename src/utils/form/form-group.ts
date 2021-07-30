@@ -1,6 +1,6 @@
 import {ShakingAnimation} from '../animation/animations/shaking-animation';
 import {Observable} from '../observeble/observeble';
-import { Subject } from '../observeble/subject';
+import {Subject} from '../observeble/subject';
 import {FormControl, FormControlOptions, FormStatusType, formValue} from './form-control';
 import {ValidatorError} from './validator-error';
 
@@ -20,58 +20,40 @@ type formFieldValidator<Form> = {
 export interface FormGroupConfig<Form extends {[key: string]: formValue}> {
     controls?: Record<keyof Form, FormControlOptions>;
 	fieldValidators?: formFieldValidator<Form>[];
-	
+
 }
 
 export class FormGroup<Form extends {[key: string]: formValue}> {
     public readonly controls: Record<keyof Form, FormControl>;
 
-	private readonly _$submit: Subject<Record<keyof Form, formValue>> = new Subject<Record<keyof Form, formValue>>();
+	private readonly _$submit: Subject<Record<keyof Form, formValue>> =
+		new Subject<Record<keyof Form, formValue>>();
 
-    constructor(config: FormGroupConfig<Form>) {
+	constructor(config: FormGroupConfig<Form>) {
     	const controls = {} as Record<keyof Form, FormControl>;
 
     	if (config.controls) {
-    		for (const name of Object.keys(config.controls)) {
-				const formConfig = Object.assign({}, config.controls[name]);
-
-				if(config.fieldValidators) {
-					const formFieldValidators = config.fieldValidators
-						.filter(fieldValidator => fieldValidator.targets.includes(name))
-						.map(fieldValidator => fieldValidator.validators)
-						.reduce((out, validators) => out.concat(validators), []);
-
-					if (formFieldValidators.length !== 0) {
-						const asyncValidators = [];
-
-						for (const validator of formFieldValidators) {
-							asyncValidators.push(() => this.$valueChanged.map(validator));
-						}
-
-						formConfig.asyncValidators = (formConfig.asyncValidators || []).concat(asyncValidators);
-					}
-				}
-
-    			controls[name as keyof Form] = new FormControl({name, ...formConfig});
+    		for (const [name, formConfig] of Object.entries(config.controls)) {
+    			controls[name as keyof Form] = this.initFormControl(name, formConfig, config);
     		}
     	}
 
     	this.controls = controls;
-    }
+	}
 
-    get value(): Record<keyof Form, formValue> {
+	get value(): Record<keyof Form, formValue> {
     	return Object.values(this.controls).reduce((out, control) => {
     		(out[control.name] as keyof Form) = String(control.value);
 
     		return out;
     	}, {} as Record<keyof Form, formValue>);
-    }
+	}
 
 	public get $submit(): Observable<Record<keyof Form, formValue>> {
 		return this._$submit.asObserveble();
 	}
 
-    public get $valueChanged(): Observable<Form> {
+	public get $valueChanged(): Observable<Form> {
     	return Observable.concat(
     		Object.values(this.controls).map(control =>
     			control.$valueChanged
@@ -84,9 +66,9 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 
     		return out;
     	}, {} as Form));
-    }
+	}
 
-    public get $statusChanged(): Observable<formStatus<Form>> {
+	public get $statusChanged(): Observable<formStatus<Form>> {
     	return Observable.concat(
     		Object.values(this.controls).map(control =>
     			control.$statusChanged
@@ -109,18 +91,18 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 
     		return {status: FormStatusType.invalid, errors};
     	});
-    }
+	}
 
-    public get $isValid(): Observable<boolean> {
+	public get $isValid(): Observable<boolean> {
     	return Observable.concat(Object.values(this.controls).map(control => control.$isValid))
     		.map(isValidFieldsArray => isValidFieldsArray.every(isValid => isValid));
-    }
+	}
 
-    public touch(): void {
+	public touch(): void {
     	for (const control of Object.values(this.controls)) {
     		control.touch();
     	}
-    }
+	}
 
 	public disable(disabled: boolean): void {
     	for (const control of Object.values(this.controls)) {
@@ -134,7 +116,9 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 
 	public next(formValue: Record<keyof Form, formValue>): void {
 		for (const [key, value] of Object.entries(formValue)) {
-			if (this.controls[key]) this.controls[key].next(value);
+			if (this.controls[key]) {
+				this.controls[key].next(value);
+			}
 		}
 	}
 
@@ -143,13 +127,40 @@ export class FormGroup<Form extends {[key: string]: formValue}> {
 			Object.values(this.controls)
 				.map(control => control.$isValid.map(isValid => ({isValid, name: control.name}))),
 		)
-		.only(1)
-		.subscribe(isValidObjArray => {
-			const firstInvalidControlsName = isValidObjArray.find(isValidObj => !isValidObj.isValid)?.name;
+			.only(1)
+			.subscribe(isValidObjArray => {
+				const firstInvalidControlsName
+					= isValidObjArray.find(isValidObj => !isValidObj.isValid)?.name;
 
-			if (firstInvalidControlsName) {
-				this.controls[firstInvalidControlsName].animate(new ShakingAnimation());
+				if (firstInvalidControlsName) {
+					this.controls[firstInvalidControlsName].animate(new ShakingAnimation());
+				}
+			});
+	}
+
+	public initFormControl(
+		name: string,
+		formConfig: FormControlOptions,
+		config: FormGroupConfig<Form>,
+	): FormControl {
+		if (config.fieldValidators) {
+			const formFieldValidators = config.fieldValidators
+				.filter(fieldValidator => fieldValidator.targets.includes(name))
+				.map(fieldValidator => fieldValidator.validators)
+				.reduce((out, validators) => out.concat(validators), []);
+
+			if (formFieldValidators.length !== 0) {
+				const asyncValidators = [];
+
+				for (const validator of formFieldValidators) {
+					asyncValidators.push(() => this.$valueChanged.map(validator));
+				}
+
+				formConfig.asyncValidators
+					= (formConfig.asyncValidators || []).concat(asyncValidators);
 			}
-		});
+		}
+
+		return new FormControl({name, ...formConfig});
 	}
 }

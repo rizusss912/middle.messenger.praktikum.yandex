@@ -1,6 +1,6 @@
-import { pages } from "../../../service/router/pages.config";
-import { RouterService } from "../../../service/router/router.service";
-import { Observable } from "../../../utils/observeble/observeble";
+import {pages} from '../../../service/router/pages.config';
+import {RouterService} from '../../../service/router/router.service';
+import {Observable} from '../../../utils/observeble/observeble';
 
 export interface userData {
     first_name: string;
@@ -45,7 +45,7 @@ export class ProfileManagerService {
 	public get $profilePageContent(): Observable<profilePageContent> {
 		return this.routerService.$queryParams
 			.map(query => {
-				switch(query.form) {
+				switch (query.form) {
 					case profilePageFormType.changeData:
 						return profilePageContent.formUserData;
 					case profilePageFormType.changePassword:

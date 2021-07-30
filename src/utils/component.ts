@@ -21,7 +21,7 @@ enum defaultObservedAttributes {
     style = 'style',
 }
 
-//@ts-ignore тут вообще никак не получается без any (
+// @ts-ignore тут вообще никак не получается без any (
 export type Component = CustomHTMLElement & any;
 export type Clazz = Partial<{observedAttributes: string}> & (new () => Component);
 
@@ -58,11 +58,11 @@ export function component(config: ComponentConfig):
             static get observedAttributes(): string[] {
             	// @ts-ignore
             	return (Object.values(defaultObservedAttributes) as string[])
-					.concat(
+            		.concat(
             			config.observedAttributes ? config.observedAttributes : [],
             		).concat(
-						Clazz.observedAttributes ? Clazz.observedAttributes : [],
-					);
+            			Clazz.observedAttributes ? Clazz.observedAttributes : [],
+            		);
             }
 
             attributeChangedCallback(

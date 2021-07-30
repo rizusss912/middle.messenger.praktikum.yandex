@@ -21,7 +21,7 @@ export class RouterService<Query extends {[key: string]: string}> {
 
     	instance = this as RouterService<{}>;
 
-		Observable.event(window, "popstate").subscribe(() => this.onPopState());
+    	Observable.event(window, 'popstate').subscribe(() => this.onPopState());
     }
 
     public get config(): Record<pages, HTMLPageConstructor> {
@@ -36,7 +36,7 @@ export class RouterService<Query extends {[key: string]: string}> {
     	return this.$popstate
     		.map(urlParams => urlParams.pathname)
     		.startWith(this.urlParams.pathname)
-			.uniqueNext();
+    		.uniqueNext();
     }
 
     public get $queryParams(): Observable<Query> {
@@ -54,7 +54,7 @@ export class RouterService<Query extends {[key: string]: string}> {
     			const param: string[] = str.split('=');
 
     			if (param[1]) {
-					//@ts-ignore
+    				// @ts-ignore
     				out[param[0]] = param[1];
     			}
 
@@ -104,9 +104,9 @@ export class RouterService<Query extends {[key: string]: string}> {
     	return this.getPageByPath(this.urlParams.pathname);
     }
 
-	private onPopState(): void {
-		this._popstate.next(this.urlParams);
-	}
+    private onPopState(): void {
+    	this._popstate.next(this.urlParams);
+    }
 
     private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
     	if (pathname[0] !== '/') {

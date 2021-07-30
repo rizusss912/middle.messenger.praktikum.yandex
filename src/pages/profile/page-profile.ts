@@ -33,25 +33,25 @@ export class PageProfile implements CustomHTMLElement {
 
     public onInit(): void {}
 
-    // костыльно, но мы ограничены возможностями шаблонзатора
+    // Костыльно, но мы ограничены возможностями шаблонзатора
     public get $hideDataList(): Observable<hiddenWithAnimtionValue> {
-        return this.$getIsHideContent(profilePageContent.userData);
+    	return this.$getIsHideContent(profilePageContent.userData);
     }
 
     public get $hideFormPassword(): Observable<hiddenWithAnimtionValue> {
-        return this.$getIsHideContent(profilePageContent.formPassword);
+    	return this.$getIsHideContent(profilePageContent.formPassword);
     }
 
     public get $hideFormUserData(): Observable<hiddenWithAnimtionValue> {
-        return this.$getIsHideContent(profilePageContent.formUserData);
+    	return this.$getIsHideContent(profilePageContent.formUserData);
     }
 
     private $getIsHideContent(content: profilePageContent): Observable<hiddenWithAnimtionValue> {
     	return this.profileManagerService.$profilePageContent
-            .map(pageContent => 
-                pageContent === content
-                    ? hiddenWithAnimtionValue.false
-                    : hiddenWithAnimtionValue.true,
-                );
+    		.map(pageContent =>
+    			pageContent === content
+    				? hiddenWithAnimtionValue.false
+    				: hiddenWithAnimtionValue.true,
+    		);
     }
 }

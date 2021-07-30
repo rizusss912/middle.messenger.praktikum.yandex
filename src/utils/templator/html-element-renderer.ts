@@ -22,7 +22,7 @@ interface Conponent extends HTMLElement {
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
 
-//TODO: не может читать значение атрибута с пробелом
+// TODO: не может читать значение атрибута с пробелом
 const TEG_ATTRIBUTES = /([(<|</)\w\-@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
 
 export class HTMLElementRenderer
