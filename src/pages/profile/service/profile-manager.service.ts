@@ -1,16 +1,9 @@
 import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
+import { UploadErrorUserDataAction, UploadUserDataAction } from '../../../store/actions/user-data.actions';
+import { userData } from '../../../store/interfaces/user-data-state.interface';
+import { Store } from '../../../store/store';
 import {Observable} from '../../../utils/observeble/observeble';
-
-export interface userData {
-    first_name: string;
-    second_name: string;
-    display_name: string;
-    avatarUrl: string;
-    email: string;
-    login: string;
-    phone: string;
-}
 
 export enum profilePageContent {
 	userData,
@@ -31,6 +24,7 @@ let instance: ProfileManagerService;
 
 export class ProfileManagerService {
 	private readonly routerService: RouterService<profilePageQueryParams>;
+	private readonly store: Store;
 
 	constructor() {
 		if (instance) {
@@ -40,6 +34,7 @@ export class ProfileManagerService {
 		instance = this;
 
 		this.routerService = new RouterService();
+		this.store = new Store();
 	}
 
 	public get $profilePageContent(): Observable<profilePageContent> {
