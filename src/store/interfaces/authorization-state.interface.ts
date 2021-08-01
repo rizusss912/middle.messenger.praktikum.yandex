@@ -10,4 +10,7 @@ export interface userData {
     phone: string;
 }
 
-export type UserDataState = Data<userData>;
+export type AuthorizationState = {
+    isAuthorized: boolean;
+    userData: Data<userData>;
+}

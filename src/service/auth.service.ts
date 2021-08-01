@@ -1,4 +1,4 @@
-import { UploadedUserDataAction, UploadErrorUserDataAction, UploadUserDataAction } from "../store/actions/user-data.actions";
+import { UploadedUserDataAction, UploadErrorUserDataAction, UploadUserDataAction } from "../store/actions/authorization.actions";
 import { Store } from "../store/store";
 import { HTTPClientFacade } from "./api/http-client.facade";
 import { AuthorizationData, RegistrationData } from "./api/modules/auth-http-client-module";
@@ -24,6 +24,7 @@ export class AuthService {
 		await this.httpClientFacade.auth.authorization(authData)
             .then(() => this.httpClientFacade.auth.getUserData())
             .then(response => this.store.dispatch(new UploadedUserDataAction(response.body)))
+            .catch(() => this.logout())
 			.catch(error => this.store.dispatch(new UploadErrorUserDataAction(error)));
     }
 
@@ -36,7 +37,7 @@ export class AuthService {
 			.catch(error => this.store.dispatch(new UploadErrorUserDataAction(error)));
     }
 
-    public logoout(): void {
-
+    public async logout(): Promise<void> {
+        await this.httpClientFacade.auth.logout();
     }
 }

@@ -1,6 +1,7 @@
+import { Data } from "../interfaces/data.interface";
 import { State } from "../interfaces/state.interface"
-import { UserDataState } from "../interfaces/user-data-state.interface";
+import { userData } from "../interfaces/authorization-state.interface";
 
-export function selectUserData(state: State): UserDataState {
-    return state.userData;
+export function selectUserData(state: State): Data<userData> {
+    return state.authorization.userData;
 }

@@ -43,6 +43,8 @@ export class HTTPClient {
             }
 
             xhr.responseType =	"json";
+            xhr.withCredentials = true;
+
             xhr.onabort = this.getXMLHttpRequestHandler<body>(resolve, reject);
             xhr.onerror = this.getXMLHttpRequestHandler<body>(resolve, reject);
             xhr.ontimeout = this.getXMLHttpRequestHandler<body>(resolve, reject);

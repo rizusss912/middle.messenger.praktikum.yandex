@@ -4,7 +4,7 @@ import {template} from './user-data.tmpl';
 
 import './user-data.less';
 import {ProfileContent} from '../../elements/profile-content';
-import { userData } from '../../../../store/interfaces/user-data-state.interface';
+import { userData } from '../../../../store/interfaces/authorization-state.interface';
 import { ProfilePageManager } from '../../service/profile-page-manager';
 
 // @ts-ignore

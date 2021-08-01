@@ -11,7 +11,7 @@ import './components/form-password/form-password';
 import './page-profile.less';
 import {Observable} from '../../utils/observeble/observeble';
 import { profilePageContent, ProfilePageManager } from './service/profile-page-manager';
-import { userData } from '../../store/interfaces/user-data-state.interface';
+import { userData } from '../../store/interfaces/authorization-state.interface';
 
 export enum hiddenWithAnimtionValue {
     true = 'true',

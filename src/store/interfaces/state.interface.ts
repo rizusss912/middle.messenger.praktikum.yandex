@@ -1,5 +1,5 @@
-import { UserDataState } from "./user-data-state.interface";
+import { AuthorizationState } from "./authorization-state.interface";
 
 export interface State {
-    userData: UserDataState;
+    authorization: AuthorizationState;
 }

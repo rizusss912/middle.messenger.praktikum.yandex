@@ -1,7 +1,7 @@
 import {HTTPMethod} from '../../../utils/api/http-method';
 import { HTTPClientModule } from '../../../utils/api/http-client-module';
 import { HTTPResponse } from '../../../utils/api/http-client';
-import { userData } from '../../../store/interfaces/user-data-state.interface';
+import { userData } from '../../../store/interfaces/authorization-state.interface';
 
 export interface RegistrationData {
     first_name: string,
@@ -40,10 +40,10 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 		});
 	}
 
-	public logoout(): Promise<HTTPResponse<undefined>> {
+	public logout(): Promise<HTTPResponse<undefined>> {
 		return this.upload({
 			method: HTTPMethod.POST,
-			pathname: ['logoout'],
+			pathname: ['logout'],
 		});
 	}
 

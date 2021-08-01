@@ -1,6 +1,6 @@
-import { userDataActionType } from "../enums/user-data.enum";
+import { authorizationActionType } from "../enums/authorization-action-type.enum";
 
-export type actionType = userDataActionType;
+export type actionType = authorizationActionType;
 
 export interface Action {
     type: actionType;
