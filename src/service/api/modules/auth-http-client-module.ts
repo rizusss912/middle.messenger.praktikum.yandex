@@ -1,5 +1,7 @@
 import {HTTPMethod} from '../../../utils/api/http-method';
 import { HTTPClientModule } from '../../../utils/api/http-client-module';
+import { HTTPResponse } from '../../../utils/api/http-client';
+import { userData } from '../../../store/interfaces/user-data-state.interface';
 
 export interface RegistrationData {
     first_name: string,
@@ -22,7 +24,7 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 		super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname));
 	}
 
-	public registration(body: RegistrationData): Promise<XMLHttpRequest> {
+	public registration(body: RegistrationData): Promise<HTTPResponse<{id: number}>> {
 		return this.upload({
 			method: HTTPMethod.POST,
 			pathname: ['signup'],
@@ -30,11 +32,25 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 		});
 	}
 
-	public authorization(body: AuthorizationData): Promise<XMLHttpRequest> {
+	public authorization(body: AuthorizationData): Promise<HTTPResponse<undefined>> {
 		return this.upload({
 			method: HTTPMethod.POST,
 			pathname: ['signin'],
 			body,
 		});
 	}
+
+	public logoout(): Promise<HTTPResponse<undefined>> {
+		return this.upload({
+			method: HTTPMethod.POST,
+			pathname: ['logoout'],
+		});
+	}
+
+	public getUserData(): Promise<HTTPResponse<userData>> {
+		return this.upload({
+			method: HTTPMethod.GET,
+			pathname: ['user'],
+		});
+    }
 }

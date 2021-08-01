@@ -1,4 +1,4 @@
-import {AppHTTPRequest, HTTPClient} from './http-client';
+import {AppHTTPRequest, HTTPClient, HTTPResponse} from './http-client';
 
 export class HTTPClientModule {
     private readonly httpClient: HTTPClient;
@@ -9,11 +9,11 @@ export class HTTPClientModule {
     	this.mutualPathname = mutualPathname;
     }
 
-    protected upload(request: AppHTTPRequest): Promise<XMLHttpRequest> {
+    protected upload<body>(request: AppHTTPRequest): Promise<HTTPResponse<body>> {
     	const moduleRequest = {...request};
 
     	moduleRequest.pathname = this.mutualPathname.concat(moduleRequest.pathname);
 
-    	return this.httpClient.upload(moduleRequest);
+    	return this.httpClient.upload<body>(moduleRequest);
     }
 }
