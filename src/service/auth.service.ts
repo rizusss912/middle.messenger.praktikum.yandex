@@ -18,19 +18,19 @@ export class AuthService {
         this.store = new Store();
     }
 
-    public authorization(authData: AuthorizationData): void {
+    public async authorization(authData: AuthorizationData): Promise<void> {
         this.store.dispatch(new UploadUserDataAction());
 
-		this.httpClientFacade.auth.authorization(authData)
+		await this.httpClientFacade.auth.authorization(authData)
             .then(() => this.httpClientFacade.auth.getUserData())
             .then(response => this.store.dispatch(new UploadedUserDataAction(response.body)))
 			.catch(error => this.store.dispatch(new UploadErrorUserDataAction(error)));
     }
 
-    public registration(registrationData: RegistrationData): void {
+    public async registration(registrationData: RegistrationData): Promise<void> {
         this.store.dispatch(new UploadUserDataAction());
 
-        this.httpClientFacade.auth.registration(registrationData)
+        await this.httpClientFacade.auth.registration(registrationData)
             .then(() => this.httpClientFacade.auth.getUserData())
             .then(response => this.store.dispatch(new UploadedUserDataAction(response.body)))
 			.catch(error => this.store.dispatch(new UploadErrorUserDataAction(error)));

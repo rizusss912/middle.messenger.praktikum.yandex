@@ -60,7 +60,6 @@ export class HTTPClient {
             }
 
             xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.setRequestHeader('Referer', 'https://ya-praktikum.tech');
 
             const body = typeof request.body === 'object'
                 ? JSON.stringify(request.body)
