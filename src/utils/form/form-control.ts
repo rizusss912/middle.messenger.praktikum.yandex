@@ -43,7 +43,7 @@ export class FormControl {
     private _value: formValue;
 
     constructor(config: FormControlConfig) {
-    	this.$value = new Subject<string>(config.value || '');
+    	this.$value = new Subject<formValue>(config.value || '');
     	this._value = config.value;
     	this.name = config.name;
     	this.validators = config.validators || [];

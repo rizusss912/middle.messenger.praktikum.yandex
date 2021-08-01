@@ -1,0 +1,52 @@
+
+import { AuthorizationData, RegistrationData } from "../../../service/api/modules/auth-http-client-module";
+import { AuthService } from "../../../service/auth.service";
+import { pages } from "../../../service/router/pages.config";
+import { RouterService } from "../../../service/router/router.service";
+import { Observable } from "../../../utils/observeble/observeble";
+
+enum authPageType {
+    registration = 'registration',
+}
+
+type authPageQueryParams = {
+    type?: authPageType,
+}
+
+let instance: AuthPageManager;
+
+export class AuthPageManager {
+    private readonly routerService: RouterService<authPageQueryParams>;
+    private readonly authService: AuthService;
+
+    constructor() {
+        if (instance) return instance;
+
+        instance = this;
+
+        this.routerService = new RouterService();
+		this.authService = new AuthService();
+    }
+
+    public get $isRegistration(): Observable<boolean> {
+    	return this.routerService.$queryParams.map(query =>
+    		query.type === authPageType.registration,
+    	);
+	}
+
+    public navigateToAuthorization(): void {
+		this.routerService.navigateTo(pages.auth, {type: authPageType.registration});
+	}
+
+	public navigateToRegistration(): void {
+		this.routerService.navigateTo(pages.auth);
+	}
+
+	public authorization(authData: AuthorizationData): void {
+		this.authService.authorization(authData);
+	}
+
+	public registration(registrationData: RegistrationData): void {
+		this.authService.registration(registrationData);
+	}
+}

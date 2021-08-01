@@ -1,7 +1,9 @@
 import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
-import { UploadErrorUserDataAction, UploadUserDataAction } from '../../../store/actions/user-data.actions';
+import { UploadedUserDataAction } from '../../../store/actions/user-data.actions';
 import { userData } from '../../../store/interfaces/user-data-state.interface';
+import { selectDataValue } from '../../../store/selectors/select-data';
+import { selectUserData } from '../../../store/selectors/select-user-data';
 import { Store } from '../../../store/store';
 import {Observable} from '../../../utils/observeble/observeble';
 
@@ -20,9 +22,9 @@ type profilePageQueryParams = {
     form?: profilePageFormType,
 }
 
-let instance: ProfileManagerService;
+let instance: ProfilePageManager;
 
-export class ProfileManagerService {
+export class ProfilePageManager {
 	private readonly routerService: RouterService<profilePageQueryParams>;
 	private readonly store: Store;
 
@@ -35,6 +37,14 @@ export class ProfileManagerService {
 
 		this.routerService = new RouterService();
 		this.store = new Store();
+
+		this.store.dispatch(new UploadedUserDataAction(this.userData));
+	}
+
+	public get $userData(): Observable<userData | undefined> {
+		return this.store.$state
+			.select(selectUserData)
+			.select(selectDataValue);
 	}
 
 	public get $profilePageContent(): Observable<profilePageContent> {

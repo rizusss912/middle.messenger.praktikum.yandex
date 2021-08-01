@@ -12,7 +12,7 @@ export const template = `
                 <span slot="label">Пароль</span>
             </app-input>
 
-            <app-button slot="submit" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance="primary">
+            <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance="primary">
                 <span slot="label">
                     Авторизация
                 </span>
@@ -39,7 +39,7 @@ export const template = `
                 <span slot="label">Телефон</span> 
             </app-input>
 
-            <app-button slot="submit" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance="primary">
+            <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance="primary">
                 <span slot="label">
                     Регистрация
                 </span>

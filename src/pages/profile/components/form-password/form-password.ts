@@ -8,8 +8,8 @@ import {template} from './form-password.tmpl';
 
 import './form-password.less';
 import {ProfileContent} from '../../elements/profile-content';
-import {ProfileManagerService} from '../../service/profile-manager.service';
 import {ValidatorError} from '../../../../utils/form/validator-error';
+import { ProfilePageManager } from '../../service/profile-page-manager';
 
 // @ts-ignore никак не могу написать типы для component (
 @component({
@@ -51,12 +51,12 @@ export class FormPassword extends ProfileContent {
         	],
         });
 
-        private readonly profileManagerService: ProfileManagerService;
+        private readonly profilePageManager: ProfilePageManager;
 
         constructor() {
         	super();
 
-        	this.profileManagerService = new ProfileManagerService();
+        	this.profilePageManager = new ProfilePageManager();
         }
 
         static get observedAttributes(): string[] {
@@ -70,7 +70,7 @@ export class FormPassword extends ProfileContent {
         public onInit(): void {}
 
         public onBack(): void {
-        	this.profileManagerService.goToUserData();
+        	this.profilePageManager.goToUserData();
         }
 
         public onChangePassword(): void {

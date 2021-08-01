@@ -7,7 +7,7 @@ import {HTMLPageConstructor} from './service/router/router.config';
 
 import './app-root.less';
 
-@component<AppRoot>({
+@component({
 	name: 'app-root',
 	template,
 

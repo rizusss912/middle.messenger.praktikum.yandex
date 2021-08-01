@@ -11,7 +11,7 @@ import {FormGroup} from '../../../../utils/form/form-group';
 import {Observable} from '../../../../utils/observeble/observeble';
 import {formValidators} from '../../../../const/form-validators';
 import {ProfileContent} from '../../elements/profile-content';
-import {ProfileManagerService} from '../../service/profile-manager.service';
+import { ProfilePageManager } from '../../service/profile-page-manager';
 
 // @ts-ignore
 @component({
@@ -30,16 +30,16 @@ export class FormUserData extends ProfileContent {
     	},
     });
 
-	private readonly profileManagerService: ProfileManagerService;
+	private readonly profilePageManager: ProfilePageManager;
 
 	constructor() {
 		super();
 
-    	this.profileManagerService = new ProfileManagerService();
+    	this.profilePageManager = new ProfilePageManager();
 	}
 
 	public onInit(): void {
-		this.form.next(this.profileManagerService.userData);
+		this.form.next(this.profilePageManager.userData);
 	}
 
 	public get $isInvalidForm(): Observable<boolean> {
@@ -51,7 +51,7 @@ export class FormUserData extends ProfileContent {
 	}
 
 	public onBack(): void {
-    	this.profileManagerService.goToUserData();
+    	this.profilePageManager.goToUserData();
 	}
 
 	public onChangeData(): void {

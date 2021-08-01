@@ -141,6 +141,10 @@ export class Observable<T> {
     		.filter(() => count-- > 0);
     }
 
+	public select<R>(selector: (value: T) => R): Observable<R> {
+		return this.map(selector).uniqueNext();
+	}
+
     private static combine<T>(
     	observebles: Observable<T>[], waitAll: boolean): Observable<(T | undefined)[]> {
     	const subject: Subject<(T | undefined)[]> = new Subject<(T | undefined)[]>();

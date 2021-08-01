@@ -6,6 +6,6 @@ export function getDefaultData<T>(): Data<T> {
         status: dataStatus.default,
         time: undefined,
         error: undefined,
-        data: undefined,
+        value: undefined,
     }
 }

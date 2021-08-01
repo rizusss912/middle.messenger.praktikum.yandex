@@ -1,10 +1,10 @@
 import {AppHTTPRequest, HTTPClient} from './http-client';
 
-export class ApiModule {
+export class HTTPClientModule {
     private readonly httpClient: HTTPClient;
     private readonly mutualPathname: string[];
 
-    constructor(origin?: string, mutualPathname: string[] = []) {
+    constructor(origin: string, mutualPathname: string[] = []) {
     	this.httpClient = new HTTPClient(origin);
     	this.mutualPathname = mutualPathname;
     }

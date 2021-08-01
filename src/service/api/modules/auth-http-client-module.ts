@@ -1,5 +1,5 @@
-import {HTTPMethod} from '../../../../utils/api/http-method';
-import {ApiModule} from '../../../../utils/api/api-module';
+import {HTTPMethod} from '../../../utils/api/http-method';
+import { HTTPClientModule } from '../../../utils/api/http-client-module';
 
 export interface RegistrationData {
     first_name: string,
@@ -15,11 +15,17 @@ export interface AuthorizationData {
     password: string,
 }
 
-export class AuthApiModule extends ApiModule {
+export class AuthHTTPClientModule extends HTTPClientModule {
+	private static readonly moduleMutualPathname = ['auth'];
+
+	constructor(origin: string, mutualPathname: string[]) {
+		super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname));
+	}
+
 	public registration(body: RegistrationData): Promise<XMLHttpRequest> {
 		return this.upload({
 			method: HTTPMethod.POST,
-			pathname: ['registration'],
+			pathname: ['signup'],
 			body,
 		});
 	}
@@ -27,7 +33,7 @@ export class AuthApiModule extends ApiModule {
 	public authorization(body: AuthorizationData): Promise<XMLHttpRequest> {
 		return this.upload({
 			method: HTTPMethod.POST,
-			pathname: ['auth'],
+			pathname: ['signin'],
 			body,
 		});
 	}

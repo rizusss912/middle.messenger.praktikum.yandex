@@ -2,7 +2,7 @@ app-button {
     display: block;
 
     &[appearance="primary"] {
-        --button-color: #3369f3;
+        --button-color: var(--primary-color);
         --button-color-hover: #1d53db;
         --button-color-active: #0b36a1;
         --button-text-color: white;
@@ -12,7 +12,7 @@ app-button {
         --button-color: white;
         --button-color-hover: #f1f1f1;
         --button-color-active: #ddd;
-        --button-text-color: #3369f3;
+        --button-text-color: var(--primary-color);
     }
 
     &[appearance="error"] {

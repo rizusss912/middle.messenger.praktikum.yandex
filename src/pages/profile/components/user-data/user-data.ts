@@ -1,10 +1,11 @@
 import {component} from '../../../../utils/component';
-import {ProfileManagerService, userData} from '../../service/profile-manager.service';
 
 import {template} from './user-data.tmpl';
 
 import './user-data.less';
 import {ProfileContent} from '../../elements/profile-content';
+import { userData } from '../../../../store/interfaces/user-data-state.interface';
+import { ProfilePageManager } from '../../service/profile-page-manager';
 
 // @ts-ignore
 @component({
@@ -14,12 +15,12 @@ import {ProfileContent} from '../../elements/profile-content';
 export class UserData extends ProfileContent {
         public userData: userData;
 
-        private readonly profileManagerService: ProfileManagerService;
+        private readonly profilePageManager: ProfilePageManager;
 
         constructor() {
         	super();
 
-        	this.profileManagerService = new ProfileManagerService();
+        	this.profilePageManager = new ProfilePageManager();
         }
 
         static get observedAttributes(): string[] {
@@ -27,19 +28,18 @@ export class UserData extends ProfileContent {
         }
 
         public onInit(): void {
-        	this.userData = this.profileManagerService.userData;
+        	this.userData = this.profilePageManager.userData;
         }
 
-        // TODO: Вынести в manager
         public onChangeData(): void {
-        	this.profileManagerService.goToFormData();
+        	this.profilePageManager.goToFormData();
         }
 
         public onChangePassword(): void {
-        	this.profileManagerService.goToFormPassword();
+        	this.profilePageManager.goToFormPassword();
         }
 
         public onExit(): void {
-        	this.profileManagerService.goToChats();
+        	this.profilePageManager.goToChats();
         }
 }

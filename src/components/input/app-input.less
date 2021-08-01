@@ -3,6 +3,15 @@ app-input {
     width: 100%;
     height: 100%;
 
+    --app-input-color-default: var(--text-secondary);
+    --app-input-color-focus: var(--primary-color);
+    --app-input-color-error: red;
+    --app-input-color-valid: rgb(147, 233, 147);
+    --app-input-color-disabled: rgb(175, 175, 175);
+
+    --app-input-text-color-enabled: var(--text-primary);
+    --app-input-text-color-disabled: var(--text-secondary);
+
     slot[name="title"] {
         display: block;
     }
@@ -17,10 +26,10 @@ app-input {
         font-size: 18px;
 
         background-color: white;
-        color: var(--text-primary);
+        color: var(--app-input-text-color-enabled);
 
         &[disabled] {
-            color: var(--text-secondary);
+            color: var(--app-input-text-color-disabled);
         }
     }
 
@@ -30,14 +39,14 @@ app-input {
         font-size: 14px;
         min-height: 21px;
 
-        color: var(--text-secondary);
+        color: var(--app-input-color-default);
 
         &[status="focus"] {
-            color: rgb(255, 145, 0);
+            color: var(--app-input-color-focus);
         }
 
         &[status="error"] {
-            color: red;
+            color: var(--app-input-color-error);
         }
 
         & > slot {
@@ -59,7 +68,7 @@ app-input {
     .error {
         opacity: 1;
         transition: 0.4s;
-        color: red;
+        color: var(--app-input-color-error);
 
         min-height: 15px;
         font-size: 13px;
@@ -77,27 +86,27 @@ app-input {
         height: 1px;
         width: 100%;
 
-        background-color: rgb(200, 200, 200);
+        background-color: var(--app-input-color-default);
         transition: 0.3s;
 
         &[underline="error"] {
             margin-bottom: 1px;
             height: 2px;
-            background-color: red;
+            background-color: var(--app-input-color-error);
         }
 
         &[underline="focus"] {
             margin-bottom: 1px;
             height: 2px;
-            background-color: rgb(255, 145, 0);
+            background-color: var(--app-input-color-focus);
         }
 
         &[underline="valid"] {
-            background-color: rgb(147, 233, 147);
+            background-color: var(--app-input-color-valid);
         }
 
         &[underline="disabled"] {
-            background-color: rgb(175, 175, 175);
+            background-color: var(--app-input-color-disabled);
         }
     }
 }

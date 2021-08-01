@@ -14,21 +14,23 @@ export const template = `
 </section>
 
 <section id="footer-buttons">
-    <ul class="field-list">
-        <li>
-            <app-button @click={{onChangePassword()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} appearance="primary">
-                <span slot="label">
-                    Сохранить
-                </span>
-            </app-button>
-        </li>
-        <li>
-            <app-button @click={{onBack()}} appearance="error">
-                <span slot="label">
-                    Назад
-                </span>
-            </app-button>
-        </li>
-    </ul>
+    <div class="buttons">
+        <ul class="field-list">
+            <li>
+                <app-button @click={{onChangePassword()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} appearance="primary">
+                    <span slot="label">
+                        Сохранить
+                    </span>
+                </app-button>
+            </li>
+            <li>
+                <app-button @click={{onBack()}} appearance="error">
+                    <span slot="label">
+                        Назад
+                    </span>
+                </app-button>
+            </li>
+        </ul>
+    </div>
 </section>
 `;

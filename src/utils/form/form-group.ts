@@ -23,7 +23,7 @@ export interface FormGroupConfig<Form extends {[key: string]: formValue}> {
 
 }
 
-export class FormGroup<Form extends {[key: string]: formValue}> {
+export class FormGroup<Form extends {[key: string]: string}> {
     public readonly controls: Record<keyof Form, FormControl>;
 
 	private readonly _$submit: Subject<Record<keyof Form, formValue>> =

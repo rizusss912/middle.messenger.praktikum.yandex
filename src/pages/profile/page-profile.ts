@@ -1,5 +1,4 @@
 import {component, CustomHTMLElement} from '../../utils/component';
-import {ProfileManagerService, profilePageContent, userData} from './service/profile-manager.service';
 
 import {template} from './page-profile.tmpl';
 
@@ -11,6 +10,8 @@ import './components/form-password/form-password';
 
 import './page-profile.less';
 import {Observable} from '../../utils/observeble/observeble';
+import { profilePageContent, ProfilePageManager } from './service/profile-page-manager';
+import { userData } from '../../store/interfaces/user-data-state.interface';
 
 export enum hiddenWithAnimtionValue {
     true = 'true',
@@ -23,12 +24,12 @@ export enum hiddenWithAnimtionValue {
 })
 export class PageProfile implements CustomHTMLElement {
     public userData: userData;
-    public profileManagerService: ProfileManagerService;
+    public profilePageManager: ProfilePageManager;
 
     constructor() {
-    	this.profileManagerService = new ProfileManagerService();
+    	this.profilePageManager = new ProfilePageManager();
 
-    	this.userData = this.profileManagerService.userData;
+    	this.userData = this.profilePageManager.userData;
     }
 
     public onInit(): void {}
@@ -47,7 +48,7 @@ export class PageProfile implements CustomHTMLElement {
     }
 
     private $getIsHideContent(content: profilePageContent): Observable<hiddenWithAnimtionValue> {
-    	return this.profileManagerService.$profilePageContent
+    	return this.profilePageManager.$profilePageContent
     		.map(pageContent =>
     			pageContent === content
     				? hiddenWithAnimtionValue.false

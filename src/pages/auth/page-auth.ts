@@ -1,6 +1,3 @@
-import {RouterService} from '../../service/router/router.service';
-import {pages} from '../../service/router/pages.config';
-
 import {template} from './page-auth.tmpl';
 
 import {Observable} from '../../utils/observeble/observeble';
@@ -14,16 +11,9 @@ import '../../components/form/app-form';
 import '../../components/button/app-button';
 
 import './page-auth.less';
-import {HTTPClientFacade} from '../../service/router/api/http-client.facade';
-import {AuthorizationData} from '../../service/router/api/modules/auth-api-module';
-
-enum authPageType {
-    registration = 'registration',
-}
-
-type authPageQueryParams = {
-    type?: authPageType,
-}
+import { Subscription } from '../../utils/observeble/subscription';
+import { AuthPageManager } from './services/auth-page-manager';
+import { AuthorizationData, RegistrationData } from '../../service/api/modules/auth-http-client-module';
 
 const FORM_TITLE = {
 	registration: 'Регистрация',
@@ -41,7 +31,6 @@ export class PageAuth implements CustomHTMLElement {
     		password: {validators: formValidators.password},
     	},
     });
-
     public readonly registrationForm = new FormGroup({
     	controls: {
         	first_name: {validators: formValidators.first_name},
@@ -52,18 +41,25 @@ export class PageAuth implements CustomHTMLElement {
         	phone: {validators: formValidators.phone},
     	},
     });
+    private readonly authPageManager: AuthPageManager;
 
-    private readonly routerService: RouterService<authPageQueryParams>;
-	private readonly httpClientFacade: HTTPClientFacade;
+	private authorizationSubscription: Subscription<AuthorizationData>;
+	private registrationSubscription: Subscription<RegistrationData>;
 
 	constructor() {
-    	this.routerService = new RouterService();
-		this.httpClientFacade = new HTTPClientFacade();
+		this.authPageManager = new AuthPageManager();
 	}
 
 	public onInit(): void {
-		this.authForm.$submit.subscribe(v => console.log('автризация:', this.httpClientFacade.auth.authorization(v as unknown as AuthorizationData)));
-		this.registrationForm.$submit.subscribe(v => console.log('регистрация:', v));
+		this.authorizationSubscription =  this.authForm.$submit
+			.subscribe(formData => this.onAuthorization(formData as AuthorizationData));
+		this.registrationSubscription = this.registrationForm.$submit
+			.subscribe(formData => this.onRegistration(formData as RegistrationData));
+	}
+
+	public onDestroy(): void {
+		if (this.authorizationSubscription) this.authorizationSubscription.unsubscribe();
+		if (this.registrationSubscription) this.registrationSubscription.unsubscribe();
 	}
 
 	public get $title(): Observable<string> {
@@ -73,9 +69,7 @@ export class PageAuth implements CustomHTMLElement {
 	}
 
 	public get $isRegistration(): Observable<boolean> {
-    	return this.routerService.$queryParams.map(query =>
-    		query.type === authPageType.registration,
-    	);
+		return this.authPageManager.$isRegistration;
 	}
 
 	public get $isAuthorization(): Observable<boolean> {
@@ -101,10 +95,18 @@ export class PageAuth implements CustomHTMLElement {
 	}
 
 	public navigateToAuthorization(): void {
-		this.routerService.navigateTo(pages.auth, {type: authPageType.registration});
+		this.authPageManager.navigateToAuthorization();
 	}
 
 	public navigateToRegistration(): void {
-		this.routerService.navigateTo(pages.auth);
+		this.authPageManager.navigateToRegistration();
+	}
+
+	private onAuthorization(authData: AuthorizationData): void {
+		this.authPageManager.authorization(authData);
+	}
+
+	private onRegistration(registrationData: RegistrationData): void {
+		this.authPageManager.registration(registrationData);
 	}
 }
