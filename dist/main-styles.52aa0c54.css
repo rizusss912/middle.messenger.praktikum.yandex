@@ -1,0 +1,71 @@
+body,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  font-style: normal;
+}
+[hidden] {
+  display: none;
+}
+:root {
+  --text-primary: #1e1e1e;
+  --text-secondary: #999;
+  --primary-color: #3369f3;
+}
+.text-primary {
+  color: #1e1e1e;
+}
+.text-secondary {
+  color: #999;
+}
+ul.field-list,
+dl.field-list {
+  margin-left: 0;
+  padding-left: 0;
+}
+ul.field-list li:not(:last-child)::after,
+dl.field-list li:not(:last-child)::after,
+ul.field-list dd:not(:last-child)::after,
+dl.field-list dd:not(:last-child)::after {
+  border: none;
+  content: '';
+  display: block;
+  width: 100%;
+  height: 2px;
+  margin: 12px 0;
+  background-color: #eaeaea;
+}
+ul.field-list dd:not(:last-child)::after,
+dl.field-list dd:not(:last-child)::after {
+  width: 199%;
+  transform: translateX(-50%);
+}
+ul.field-list dt,
+dl.field-list dt,
+ul.field-list dd,
+dl.field-list dd {
+  display: inline-block;
+}
+ul.field-list dt,
+dl.field-list dt {
+  width: 49%;
+}
+ul.field-list dd,
+dl.field-list dd {
+  width: 50%;
+  margin: 0;
+  text-align: right;
+}
+ul.field-list li,
+dl.field-list li {
+  list-style: none;
+}
+
+
+/*# sourceMappingURL=/main-styles.52aa0c54.css.map */

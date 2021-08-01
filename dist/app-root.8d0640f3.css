@@ -1,0 +1,295 @@
+page-main {
+  display: block;
+}
+
+app-input {
+  display: block;
+  width: 100%;
+  height: 100%;
+  --app-input-color-default: var(--text-secondary);
+  --app-input-color-focus: var(--primary-color);
+  --app-input-color-error: red;
+  --app-input-color-valid: #93e993;
+  --app-input-color-disabled: #afafaf;
+  --app-input-text-color-enabled: var(--text-primary);
+  --app-input-text-color-disabled: var(--text-secondary);
+}
+app-input slot[name="title"] {
+  display: block;
+}
+app-input input {
+  outline: none;
+  border: none;
+  box-sizing: border-box;
+  width: 100%;
+  font-size: 18px;
+  background-color: white;
+  color: var(--app-input-text-color-enabled);
+}
+app-input input[disabled] {
+  color: var(--app-input-text-color-disabled);
+}
+app-input label {
+  display: block;
+  font-size: 14px;
+  min-height: 21px;
+  color: var(--app-input-color-default);
+}
+app-input label[status="focus"] {
+  color: var(--app-input-color-focus);
+}
+app-input label[status="error"] {
+  color: var(--app-input-color-error);
+}
+app-input label > slot {
+  display: block;
+  transition: 0.3s;
+  padding-top: 4px;
+}
+app-input label > slot[instead-of-text] {
+  padding-top: 0px;
+  transform: translateY(100%);
+  font-size: 18px;
+}
+app-input .error {
+  opacity: 1;
+  transition: 0.4s;
+  color: var(--app-input-color-error);
+  min-height: 15px;
+  font-size: 13px;
+}
+app-input .error[transparent] {
+  opacity: 0;
+}
+app-input [underline] {
+  margin-top: 3px;
+  margin-bottom: 2px;
+  display: block;
+  height: 1px;
+  width: 100%;
+  background-color: var(--app-input-color-default);
+  transition: 0.3s;
+}
+app-input [underline][underline="error"] {
+  margin-bottom: 1px;
+  height: 2px;
+  background-color: var(--app-input-color-error);
+}
+app-input [underline][underline="focus"] {
+  margin-bottom: 1px;
+  height: 2px;
+  background-color: var(--app-input-color-focus);
+}
+app-input [underline][underline="valid"] {
+  background-color: var(--app-input-color-valid);
+}
+app-input [underline][underline="disabled"] {
+  background-color: var(--app-input-color-disabled);
+}
+
+app-form {
+  display: block;
+}
+
+app-button {
+  display: block;
+}
+app-button[appearance="primary"] {
+  --button-color: var(--primary-color);
+  --button-color-hover: #1d53db;
+  --button-color-active: #0b36a1;
+  --button-text-color: white;
+}
+app-button[appearance="secondary"] {
+  --button-color: white;
+  --button-color-hover: #f1f1f1;
+  --button-color-active: #ddd;
+  --button-text-color: var(--primary-color);
+}
+app-button[appearance="error"] {
+  --button-color: white;
+  --button-color-hover: #f1f1f1;
+  --button-color-active: #ddd;
+  --button-text-color: red;
+}
+app-button button {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: 0.2s;
+  background-color: var(--button-color);
+  width: 100%;
+  border-radius: 8px;
+  padding: 10px;
+}
+app-button button slot[name="label"] {
+  font-family: Inter, sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 15px;
+  color: var(--button-text-color);
+}
+app-button button:hover {
+  background-color: var(--button-color-hover);
+}
+app-button button:active {
+  background-color: var(--button-color-active);
+}
+app-button button[button-disabled] {
+  opacity: 0.7;
+  background-color: #ececec;
+  cursor: default;
+}
+app-button button[button-disabled] slot[name="label"] {
+  color: #646464;
+}
+
+page-auth {
+  display: block;
+}
+page-auth main {
+  max-width: 480px;
+  min-width: 320px;
+  padding: 40px;
+  margin: 0 auto;
+  margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+}
+page-auth main > * {
+  margin-bottom: 8px;
+}
+page-auth main h1 {
+  font-family: Inter, sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 26px;
+  line-height: 20px;
+  color: #1e1e1e;
+  text-align: center;
+}
+
+user-data {
+  width: 100%;
+  display: block;
+}
+user-data section {
+  width: 100%;
+}
+user-data section dl {
+  width: 100%;
+}
+user-data section#data-list {
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 18px;
+}
+user-data section#data-list p {
+  width: 50%;
+  display: inline-block;
+}
+user-data section#data-list p.text-secondary {
+  text-align: right;
+}
+
+form-user-data {
+  display: block;
+  width: 100%;
+}
+form-user-data section {
+  width: 100%;
+}
+form-user-data section > * {
+  min-width: 400px;
+  max-width: 480px;
+}
+
+form-password {
+  display: block;
+  width: 100%;
+}
+form-password section {
+  width: 100%;
+}
+form-password section > * {
+  min-width: 400px;
+  max-width: 480px;
+}
+
+page-profile {
+  display: block;
+}
+page-profile main {
+  margin: 0 auto;
+  min-width: 400px;
+  max-width: 1024px;
+  padding: 10px;
+  padding-top: 40px;
+}
+page-profile main section,
+page-profile main .content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 auto;
+  margin-bottom: 24px;
+}
+page-profile main section#label {
+  margin-bottom: 30px;
+}
+page-profile main section#label img {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  margin-bottom: 18px;
+}
+page-profile main section#label h1 {
+  align-items: center;
+  font-size: 32px;
+  line-height: 28px;
+}
+page-profile main .content {
+  position: absolute;
+  min-width: 380px;
+  max-width: 780px;
+}
+page-profile .buttons {
+  min-width: 360px;
+}
+
+page-default {
+  display: block;
+}
+page-default main {
+  width: 380px;
+  margin: 0 auto;
+  margin-top: 180px;
+  font-family: Inter, sans-serif;
+  font-style: normal;
+  font-weight: 500;
+}
+page-default main h1,
+page-default main p {
+  text-align: center;
+}
+page-default main h1 {
+  font-size: 40px;
+  line-height: 40px;
+  margin-bottom: 12px;
+}
+page-default main p {
+  font-size: 20px;
+  line-height: 20px;
+  margin-bottom: 40px;
+}
+
+app-root {
+  display: block;
+}
+
+
+/*# sourceMappingURL=/app-root.8d0640f3.css.map */
