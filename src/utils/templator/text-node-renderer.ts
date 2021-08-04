@@ -53,7 +53,7 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
     	}
 
     	if (!this.subscription) {
-    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
+    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values as contextValue[]));
     	}
 
     	this.$staticValues.next(staticValues);
