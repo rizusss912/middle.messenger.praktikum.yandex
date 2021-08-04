@@ -9,7 +9,7 @@ import './page-main.less';
 import {Subject} from '../../utils/observeble/subject';
 import {Observable} from '../../utils/observeble/observeble';
 
-@component<PageMain>({
+@component({
 	name: 'page-main',
 	template,
 })
@@ -18,6 +18,8 @@ export class PageMain implements CustomHTMLElement {
         private s: Subject<Date> = new Subject<Date>(new Date());
         private hidden: Subject<boolean> = new Subject<boolean>(false);
         public text = 'Шаблонизатор умеет получать значения из класса';
+
+        private readonly isOpenDialog: Subject<boolean> = new Subject<boolean>(false);
 
         constructor() {
         	this.routerService = new RouterService();
@@ -43,5 +45,17 @@ export class PageMain implements CustomHTMLElement {
 
         public navigateToProfile(): void {
         	this.routerService.navigateTo(pages.profile);
+        }
+
+        public open(): void {
+                this.isOpenDialog.next(true);
+        }
+
+        public close(): void {
+                this.isOpenDialog.next(false);
+        }
+
+        public get $isOpenDialog(): Observable<boolean> {
+                return this.isOpenDialog.asObserveble();
         }
 }

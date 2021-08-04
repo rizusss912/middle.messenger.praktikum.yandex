@@ -6,6 +6,8 @@ import './user-data.less';
 import {ProfileContent} from '../../elements/profile-content';
 import { userData } from '../../../../store/interfaces/authorization-state.interface';
 import { ProfilePageManager } from '../../service/profile-page-manager';
+import { Subject } from '../../../../utils/observeble/subject';
+import { Observable } from '../../../../utils/observeble/observeble';
 
 // @ts-ignore
 @component({
@@ -14,6 +16,7 @@ import { ProfilePageManager } from '../../service/profile-page-manager';
 })
 export class UserData extends ProfileContent {
         public userData: userData;
+        private _$userData: Subject<userData> = new Subject<userData>();
 
         private readonly profilePageManager: ProfilePageManager;
 
@@ -29,6 +32,11 @@ export class UserData extends ProfileContent {
 
         public onInit(): void {
         	this.userData = this.profilePageManager.userData;
+                this._$userData.next(this.userData);
+        }
+
+        public get $userData(): Observable<userData> {
+                return this._$userData.asObserveble();
         }
 
         public onChangeData(): void {

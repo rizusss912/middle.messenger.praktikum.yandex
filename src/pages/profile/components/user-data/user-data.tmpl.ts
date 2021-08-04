@@ -2,22 +2,22 @@ export const template = `
 <section id="data-list">
     <dl class="field-list">
         <dt class="text-primary">Почта</dt>
-        <dd class="text-secondary">{{ userData.email }}</dd>
+        <dd class="text-secondary">{{ $userData.email }}</dd>
 
         <dt class="text-primary">Логин</dt>
-        <dd class="text-secondary">{{ userData.login }}</dd>
+        <dd class="text-secondary">{{ $userData.login }}</dd>
 
         <dt class="text-primary">Имя</dt>
-        <dd class="text-secondary">{{ userData.first_name }}</dd>
+        <dd class="text-secondary">{{ $userData.first_name }}</dd>
 
         <dt class="text-primary">Фамилия</dt>
-        <dd class="text-secondary">{{ userData.second_name }}</dd>
+        <dd class="text-secondary">{{ $userData.second_name }}</dd>
 
         <dt class="text-primary">Имя в чате</dt>
-        <dd class="text-secondary">{{ userData.display_name }}</dd>
+        <dd class="text-secondary">{{ $userData.display_name }}</dd>
 
         <dt class="text-primary">Телефон</dt>
-        <dd class="text-secondary">{{ userData.phone }}</dd>
+        <dd class="text-secondary">{{ $userData.phone }}</dd>
     </dl>
 </section>
 
