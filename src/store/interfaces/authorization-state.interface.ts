@@ -1,5 +1,8 @@
 import { Data } from "./data.interface";
 
+export type authToken = undefined;
+export type logout = undefined;
+
 export interface userData {
     first_name: string;
     second_name: string;
@@ -11,6 +14,7 @@ export interface userData {
 }
 
 export type AuthorizationState = {
-    isAuthorized: boolean;
+    authToken: Data<authToken>;
+    logout: Data<logout>;
     userData: Data<userData>;
 }

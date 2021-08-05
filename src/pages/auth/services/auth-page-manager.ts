@@ -43,10 +43,16 @@ export class AuthPageManager {
 	}
 
 	public authorization(authData: AuthorizationData): void {
-		this.authService.authorization(authData);
+		this.authService.authorization(authData)
+			.then(() => this.navigateToChats());
 	}
 
 	public registration(registrationData: RegistrationData): void {
-		this.authService.registration(registrationData);
+		this.authService.registration(registrationData)
+			.then(() => this.navigateToChats());
+	}
+
+	private navigateToChats(): void {
+		this.routerService.navigateTo(pages.chats);
 	}
 }

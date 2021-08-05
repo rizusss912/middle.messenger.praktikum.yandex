@@ -7,30 +7,105 @@ import { reducerAdapt } from "../functions/reduser-adaptor";
 import { AuthorizationState } from "../interfaces/authorization-state.interface";
 import { reducer } from "./reducer";
 
+//TODO: кажется, нужно создавать редьюсеры для изменения состояния Data в одном месте,
+// иначе изменить интерфейс Data потом будет нереально
 const _authorizationReducers: Record<authorizationActionType, reducer<AuthorizationState>> = {
-    [authorizationActionType.upload]:
+    [authorizationActionType.authTokenUpload]:
         (state: AuthorizationState) => 
             ({
                 ...state,
-                userData: {
-                    ...state.userData,
+                authToken: {
+                    ...state.authToken,
                     status: dataStatus.loading,
                 },
             }),
 
-    [authorizationActionType.uploaded]:
+    [authorizationActionType.authTokenUploaded]:
         (state: AuthorizationState, action: UploadedUserDataAction) =>
             ({
                 ...state,
-                userData: {
-                    ...state.userData,
+                authToken: {
+                    ...state.authToken,
+                    error: undefined,
                     status: dataStatus.valid,
                     data: action.payload,
                     time: Date.now(),
                 },
             }),
 
-    [authorizationActionType.uploadError]:
+    [authorizationActionType.authTokenUploadError]:
+        (state: AuthorizationState, action: UploadErrorUserDataAction) =>
+            ({
+                ...state,
+                authToken: {
+                    ...state.authToken,
+                    status: dataStatus.error,
+                    error: action.payload,
+                },
+            }),
+
+    [authorizationActionType.logoutUpload]:
+        (state: AuthorizationState) => 
+            ({
+                ...state,
+                authToken: {
+                    ...state.authToken,
+                    status: dataStatus.loading,
+                },
+            }),
+
+    [authorizationActionType.logoutUploaded]:
+        (state: AuthorizationState, action: UploadedUserDataAction) =>
+            ({
+                ...state,
+                logout: {
+                    ...state.logout,
+                    error: undefined,
+                    status: dataStatus.valid,
+                    data: action.payload,
+                    time: Date.now(),
+                },
+                authToken: {
+                    ...state.authToken,
+                    status: dataStatus.invalid,
+                }
+            }),
+
+    [authorizationActionType.logoutUploadError]:
+        (state: AuthorizationState, action: UploadErrorUserDataAction) =>
+            ({
+                ...state,
+                logout: {
+                    ...state.logout,
+                    status: dataStatus.error,
+                    error: action.payload,
+                },
+            }),
+
+    [authorizationActionType.userDataUpload]:
+        (state: AuthorizationState) => 
+            ({
+                ...state,
+                logout: {
+                    ...state.logout,
+                    status: dataStatus.loading,
+                },
+            }),
+
+    [authorizationActionType.userDataUploaded]:
+        (state: AuthorizationState, action: UploadedUserDataAction) =>
+            ({
+                ...state,
+                userData: {
+                    ...state.userData,
+                    error: undefined,
+                    status: dataStatus.valid,
+                    data: action.payload,
+                    time: Date.now(),
+                },
+            }),
+
+    [authorizationActionType.userDataUploadError]:
         (state: AuthorizationState, action: UploadErrorUserDataAction) =>
             ({
                 ...state,

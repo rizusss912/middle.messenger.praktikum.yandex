@@ -2,8 +2,8 @@ import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
 import { UploadedUserDataAction } from '../../../store/actions/authorization.actions';
 import { userData } from '../../../store/interfaces/authorization-state.interface';
-import { selectDataValue } from '../../../store/selectors/select-data';
-import { selectUserData } from '../../../store/selectors/select-user-data';
+import { selectUserData } from '../../../store/selectors/authorization/select-user-data';
+import { selectDataValue } from '../../../store/selectors/data/select-data-value';
 import { Store } from '../../../store/store';
 import {Observable} from '../../../utils/observeble/observeble';
 
