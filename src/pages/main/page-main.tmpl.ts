@@ -6,4 +6,7 @@ export const template = `
     <button @click={{navigateToProfile()}}>
         Перейти к страничке профиля
     </button>
+    <button @click={{logout()}}>
+        Выйти из аккаунта
+    </button>
 `;

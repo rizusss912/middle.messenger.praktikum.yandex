@@ -1,5 +1,9 @@
 import {
+    UploadedAuthTokenAction,
+    UploadedLogoutAction,
     UploadedUserDataAction,
+    UploadErrorAuthTokenAction,
+    UploadErrorLogoutAction,
     UploadErrorUserDataAction } from "../actions/authorization.actions";
 import { dataStatus } from "../enums/data-status.enum";
 import { authorizationActionType } from "../enums/authorization-action-type.enum";
@@ -21,20 +25,20 @@ const _authorizationReducers: Record<authorizationActionType, reducer<Authorizat
             }),
 
     [authorizationActionType.authTokenUploaded]:
-        (state: AuthorizationState, action: UploadedUserDataAction) =>
+        (state: AuthorizationState, action: UploadedAuthTokenAction) =>
             ({
                 ...state,
                 authToken: {
                     ...state.authToken,
                     error: undefined,
                     status: dataStatus.valid,
-                    data: action.payload,
+                    value: action.payload,
                     time: Date.now(),
                 },
             }),
 
     [authorizationActionType.authTokenUploadError]:
-        (state: AuthorizationState, action: UploadErrorUserDataAction) =>
+        (state: AuthorizationState, action: UploadErrorAuthTokenAction) =>
             ({
                 ...state,
                 authToken: {
@@ -55,14 +59,14 @@ const _authorizationReducers: Record<authorizationActionType, reducer<Authorizat
             }),
 
     [authorizationActionType.logoutUploaded]:
-        (state: AuthorizationState, action: UploadedUserDataAction) =>
+        (state: AuthorizationState, action: UploadedLogoutAction) =>
             ({
                 ...state,
                 logout: {
                     ...state.logout,
                     error: undefined,
                     status: dataStatus.valid,
-                    data: action.payload,
+                    value: action.payload,
                     time: Date.now(),
                 },
                 authToken: {
@@ -72,7 +76,7 @@ const _authorizationReducers: Record<authorizationActionType, reducer<Authorizat
             }),
 
     [authorizationActionType.logoutUploadError]:
-        (state: AuthorizationState, action: UploadErrorUserDataAction) =>
+        (state: AuthorizationState, action: UploadErrorLogoutAction) =>
             ({
                 ...state,
                 logout: {
@@ -100,7 +104,7 @@ const _authorizationReducers: Record<authorizationActionType, reducer<Authorizat
                     ...state.userData,
                     error: undefined,
                     status: dataStatus.valid,
-                    data: action.payload,
+                    value: action.payload,
                     time: Date.now(),
                 },
             }),

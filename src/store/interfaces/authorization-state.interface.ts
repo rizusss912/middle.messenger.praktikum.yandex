@@ -4,10 +4,11 @@ export type authToken = undefined;
 export type logout = undefined;
 
 export interface userData {
+    id: number;
     first_name: string;
     second_name: string;
-    display_name: string;
-    avatarUrl: string;
+    display_name: string | null;
+    avatarUrl: string | null;
     email: string;
     login: string;
     phone: string;

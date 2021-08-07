@@ -12,6 +12,8 @@ import {Observable} from '../../../../utils/observeble/observeble';
 import {formValidators} from '../../../../const/form-validators';
 import {ProfileContent} from '../../elements/profile-content';
 import { ProfilePageManager } from '../../service/profile-page-manager';
+import { Subscription } from '../../../../utils/observeble/subscription';
+import { userData } from '../../../../store/interfaces/authorization-state.interface';
 
 // @ts-ignore
 @component({
@@ -32,6 +34,8 @@ export class FormUserData extends ProfileContent {
 
 	private readonly profilePageManager: ProfilePageManager;
 
+	private userDataSubscription: Subscription<userData>;
+
 	constructor() {
 		super();
 
@@ -39,7 +43,12 @@ export class FormUserData extends ProfileContent {
 	}
 
 	public onInit(): void {
-		this.form.next(this.profilePageManager.userData);
+		this.userDataSubscription = this.profilePageManager.$userData
+			.subscribe(userData => this.form.next(userData));
+	}
+
+	public onDestroy(): void {
+		this.userDataSubscription.unsubscribe();
 	}
 
 	public get $isInvalidForm(): Observable<boolean> {
@@ -55,7 +64,7 @@ export class FormUserData extends ProfileContent {
 	}
 
 	public onChangeData(): void {
-    	console.log(this.form.value);
+    	this.profilePageManager.changeData(this.form.value as userData);
 	}
 
 	public onDisabledClick(): void {

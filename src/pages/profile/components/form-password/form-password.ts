@@ -19,31 +19,31 @@ import { ProfilePageManager } from '../../service/profile-page-manager';
 export class FormPassword extends ProfileContent {
         public readonly form = new FormGroup({
         	controls: {
-        		last: {validators: formValidators.password},
-        		next: {validators: formValidators.password},
-        		repeat: {validators: formValidators.password},
+        		oldPassword: {validators: formValidators.password},
+        		newPassword: {validators: formValidators.password},
+        		repeatPassword: {validators: formValidators.password},
         	},
         	fieldValidators: [
         		{
-        			targets: ['repeat'],
+        			targets: ['repeatPassword'],
         			validators: [
-        				({next, repeat}) => next === repeat
+        				({newPassword, repeatPassword}) => newPassword === repeatPassword
         					? null
         					: new ValidatorError('Пароли не совпадают'),
         			],
         		},
         		{
-        			targets: ['repeat'],
+        			targets: ['repeatPassword'],
         			validators: [
-        				({last, repeat}) => last === repeat
+        				({oldPassword, repeatPassword}) => oldPassword === repeatPassword
         					? new ValidatorError('Новый пароль не отличается от старого')
         					: null,
         			],
         		},
         		{
-        			targets: ['next'],
+        			targets: ['newPassword'],
         			validators: [
-        				({last, next}) => last === next
+        				({oldPassword, newPassword}) => oldPassword === newPassword
         					? new ValidatorError('Новый пароль не отличается от старого')
         					: null,
         			],
@@ -67,14 +67,13 @@ export class FormPassword extends ProfileContent {
         	return this.form.$isValid.map(isValid => !isValid);
         }
 
-        public onInit(): void {}
-
         public onBack(): void {
         	this.profilePageManager.goToUserData();
         }
 
         public onChangePassword(): void {
-        	console.log(this.form.value);
+        	const {newPassword, oldPassword} = this.form.value;
+			this.profilePageManager.changePassword({newPassword, oldPassword});
         }
 
         public onDisabledClick(): void {

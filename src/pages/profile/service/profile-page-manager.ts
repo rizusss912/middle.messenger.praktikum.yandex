@@ -1,6 +1,6 @@
+import { AuthService } from '../../../service/auth.service';
 import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
-import { UploadedUserDataAction } from '../../../store/actions/authorization.actions';
 import { userData } from '../../../store/interfaces/authorization-state.interface';
 import { selectUserData } from '../../../store/selectors/authorization/select-user-data';
 import { selectDataValue } from '../../../store/selectors/data/select-data-value';
@@ -26,6 +26,7 @@ let instance: ProfilePageManager;
 
 export class ProfilePageManager {
 	private readonly routerService: RouterService<profilePageQueryParams>;
+	private readonly authService: AuthService;
 	private readonly store: Store;
 
 	constructor() {
@@ -35,16 +36,16 @@ export class ProfilePageManager {
 
 		instance = this;
 
+		this.authService = new AuthService();
 		this.routerService = new RouterService();
 		this.store = new Store();
-
-		this.store.dispatch(new UploadedUserDataAction(this.userData));
 	}
 
-	public get $userData(): Observable<userData | undefined> {
+	public get $userData(): Observable<userData> {
 		return this.store.$state
 			.select(selectUserData)
-			.select(selectDataValue);
+			.select(selectDataValue)
+			.filter(userData => !!userData) as Observable<userData>;
 	}
 
 	public get $profilePageContent(): Observable<profilePageContent> {
@@ -62,6 +63,18 @@ export class ProfilePageManager {
 			.uniqueNext();
 	}
 
+	public uploadUserData(): void {
+		this.authService.uploadUserDataIfNot();
+	}
+
+	public changeData(changeUserData: userData): void {
+		console.log(changeUserData);
+	}
+
+	public changePassword(changePasswordData: changePasswordData): void {
+		console.log(changePasswordData);
+	}
+
 	public goToUserData(): void {
 		this.routerService.navigateTo(pages.profile);
 	}
@@ -76,17 +89,5 @@ export class ProfilePageManager {
 
 	public goToChats(): void {
 		this.routerService.navigateTo(pages.chats);
-	}
-
-	public get userData(): userData {
-		return {
-			first_name: 'Вадим',
-			second_name: 'Кошечкин',
-			display_name: 'Вадим',
-			avatarUrl: 'https://sun1-87.userapi.com/s/v1/if1/75kO7SiwUAoiofoYlkEX407eGBwbwRzlxVgqp-j8n_5kJZsBMSTOpA1BrMezYnl6lhaecWsP.jpg?size=400x0&quality=96&crop=6,335,1299,1299&ava=1',
-			email: 'Rizus912@yandex.ru',
-			login: 'rizus',
-			phone: '88005553535',
-		};
 	}
 }

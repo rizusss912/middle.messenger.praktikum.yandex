@@ -11,6 +11,7 @@ import './components/form-password/form-password';
 import './page-profile.less';
 import {Observable} from '../../utils/observeble/observeble';
 import { profilePageContent, ProfilePageManager } from './service/profile-page-manager';
+import { AuthGuard } from '../../guards/auth-guard';
 import { userData } from '../../store/interfaces/authorization-state.interface';
 
 export enum hiddenWithAnimtionValue {
@@ -21,18 +22,22 @@ export enum hiddenWithAnimtionValue {
 @component({
 	name: 'page-profile',
 	template,
+    guards: [AuthGuard],
 })
 export class PageProfile implements CustomHTMLElement {
-    public userData: userData;
-    public profilePageManager: ProfilePageManager;
+    private readonly profilePageManager: ProfilePageManager;
 
     constructor() {
     	this.profilePageManager = new ProfilePageManager();
-
-    	this.userData = this.profilePageManager.userData;
     }
 
-    public onInit(): void {}
+    public onInit(): void {
+        this.profilePageManager.uploadUserData();
+    }
+
+    public get $userData(): Observable<userData> {
+        return this.profilePageManager.$userData;
+    }
 
     // Костыльно, но мы ограничены возможностями шаблонзатора
     public get $hideDataList(): Observable<hiddenWithAnimtionValue> {

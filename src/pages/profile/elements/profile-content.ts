@@ -10,7 +10,7 @@ enum profileContentAttributes {
 }
 
 export class ProfileContent implements CustomHTMLElement {
-    private element: HTMLElement;
+    private element: HTMLElement | undefined;
     private isInitHiddenStatus: boolean = true;
 
     public onRendered(element: HTMLElement): void {
@@ -32,6 +32,10 @@ export class ProfileContent implements CustomHTMLElement {
     				return false;
     			}
 
+				if (!this.element) {
+					return false;
+				}
+
     			if (this.isInitHiddenStatus) {
     				this.isInitHiddenStatus = false;
     				if (newValue === hiddenWithAnimtionValue.false) {
@@ -44,9 +48,9 @@ export class ProfileContent implements CustomHTMLElement {
     			}
 
     			if (newValue === hiddenWithAnimtionValue.false) {
-    				this.show();
+    				this.show(this.element);
     			} else {
-    				this.hide();
+    				this.hide(this.element);
     			}
 
     			return false;
@@ -54,11 +58,11 @@ export class ProfileContent implements CustomHTMLElement {
     	}
     }
 
-    private hide(): void {
-    	playAnimation(this.element, new HideAnimation());
+    private hide(element: HTMLElement): void {
+    	playAnimation(element, new HideAnimation());
     }
 
-    private show(): void {
-    	playAnimation(this.element, new ShowAnimation());
+    private show(element: HTMLElement): void {
+    	playAnimation(element, new ShowAnimation());
     }
 }

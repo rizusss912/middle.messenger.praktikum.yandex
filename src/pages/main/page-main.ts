@@ -1,12 +1,9 @@
 import {component, CustomHTMLElement} from '../../utils/component';
-import {RouterService} from '../../service/router/router.service';
-
-import {pages} from '../../service/router/pages.config';
-
 import {template} from './page-main.tmpl';
 
 import './page-main.less';
-import { AuthGuard } from '../../utils/guard/auth-guard';
+import { AuthGuard } from '../../guards/auth-guard';
+import { MainPageManager } from './service/main-page-manager';
 
 @component({
 	name: 'page-main',
@@ -14,20 +11,24 @@ import { AuthGuard } from '../../utils/guard/auth-guard';
         guards: [AuthGuard],
 })
 export class PageMain implements CustomHTMLElement {
-        private routerService: RouterService<{}>;
+        private readonly mainPageManager: MainPageManager;
 
         constructor() {
-        	this.routerService = new RouterService();
+                this.mainPageManager = new MainPageManager();
         }
 
         public onInit(): void {
         }
 
         public navigateToAuth(): void {
-        	this.routerService.navigateTo(pages.auth);
+        	this.mainPageManager.navigateToAuth();
         }
 
         public navigateToProfile(): void {
-        	this.routerService.navigateTo(pages.profile);
+                this.mainPageManager.navigateToProfile();
+        }
+
+        public logout(): void {
+                this.mainPageManager.logout();
         }
 }
