@@ -2,6 +2,7 @@ import {HTTPMethod} from '../../../utils/api/http-method';
 import { HTTPClientModule } from '../../../utils/api/http-client-module';
 import { HTTPResponse } from '../../../utils/api/http-client';
 import { userData } from '../../../store/interfaces/authorization-state.interface';
+import { Interceptor } from '../../../utils/interfaces/interceptor';
 
 export interface RegistrationData {
     first_name: string,
@@ -20,8 +21,8 @@ export interface AuthorizationData {
 export class AuthHTTPClientModule extends HTTPClientModule {
 	private static readonly moduleMutualPathname = ['auth'];
 
-	constructor(origin: string, mutualPathname: string[]) {
-		super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname));
+	constructor(origin: string, mutualPathname: string[], interseptors: Interceptor[] = []) {
+		super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname), interseptors);
 	}
 
 	public registration(body: RegistrationData): Promise<HTTPResponse<{id: number}>> {

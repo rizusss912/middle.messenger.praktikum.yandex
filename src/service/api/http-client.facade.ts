@@ -1,3 +1,4 @@
+import { AuthInterceptor } from '../../interceptor/auth-interceptor';
 import { AuthHTTPClientModule } from './modules/auth-http-client-module';
 
 let instance: HTTPClientFacade;
@@ -7,6 +8,9 @@ export class HTTPClientFacade {
 
     private readonly mutualPathname = ['api', 'v2'];
     private readonly origin = ' https://ya-praktikum.tech';
+    private readonly interseptors = [
+        new AuthInterceptor(),
+    ];
 
     constructor() {
     	if (instance) {
@@ -15,6 +19,8 @@ export class HTTPClientFacade {
 
     	instance = this;
 
-    	this.auth = new AuthHTTPClientModule(this.origin, this.mutualPathname);
+
+
+    	this.auth = new AuthHTTPClientModule(this.origin, this.mutualPathname, this.interseptors);
     }
 }

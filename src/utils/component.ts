@@ -1,4 +1,5 @@
-import { Guard } from './guard/guard';
+
+import { Guard } from './interfaces/guard';
 import {Observable} from './observeble/observeble';
 import {Templator, RenderOptions} from './templator/templator';
 
