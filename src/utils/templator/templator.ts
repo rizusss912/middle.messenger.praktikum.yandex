@@ -105,7 +105,7 @@ export class Templator<Context extends object> {
     	};
 
     	// Получаем массив, который содержит один тег и контент до следующего тега
-    	const htmlConfig = str.match(HTML_TAG_AND_CONTENT)
+    	const htmlConfig = (str.match(HTML_TAG_AND_CONTENT) || [])
     		.map(str => {
     			// Выбираем только тег
     			const tagStr = str.match(TEG)[0];

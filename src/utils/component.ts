@@ -1,3 +1,4 @@
+import { Guard } from './guard/guard';
 import {Observable} from './observeble/observeble';
 import {Templator, RenderOptions} from './templator/templator';
 
@@ -5,6 +6,7 @@ export interface ComponentConfig {
     name: string;
     template: string;
     observedAttributes?: string[];
+	guards?: Array<new () => Guard>;
 }
 
 export interface CustomHTMLElement {
@@ -30,32 +32,39 @@ export function component(config: ComponentConfig):
 	return function (Clazz: Clazz): Clazz {
 		class CustomElement extends HTMLElement {
             private templator: Templator<Component> | undefined;
-            private readonly clazz: Component;
+            private clazz: Component;
+			private template: string;
 
             constructor() {
             	super();
 
+				this.template = config.template;
             	this.clazz = new Clazz();
             }
 
-            connectedCallback(): void {
+            public connectedCallback(): void {
+				if (config.guards) {
+					this.checkGuards(config.guards);
+				}
+
             	if (this.clazz.onInit) {
             		this.clazz.onInit();
             	}
 
             	this.render();
+
             	if (this.clazz.onRendered) {
             		this.clazz.onRendered(this);
             	}
             }
 
-            disconnectedCallback(): void {
+            public disconnectedCallback(): void {
             	if (this.clazz.onDestroy) {
             		this.clazz.onDestroy();
             	}
             }
 
-            static get observedAttributes(): string[] {
+            public static get observedAttributes(): string[] {
             	// @ts-ignore
             	return (Object.values(defaultObservedAttributes) as string[])
             		.concat(
@@ -65,7 +74,7 @@ export function component(config: ComponentConfig):
             		);
             }
 
-            attributeChangedCallback(
+            public attributeChangedCallback(
             	name: string, oldValue: string | null, newValue: string | null): void {
             	let needRender = false;
 
@@ -84,7 +93,13 @@ export function component(config: ComponentConfig):
             	}
             }
 
-            render(): void {
+			// @ts-ignore используется внешними компонентами
+			public inject(fieldName: string, value: unknown): void {
+				// @ts-ignore
+				this.clazz[fieldName] = value;
+			}
+
+            private render(): void {
             	const options: RenderOptions = {};
             	const {content} = this.clazz;
 
@@ -99,20 +114,15 @@ export function component(config: ComponentConfig):
             	this.templator!.render(this.clazz);
             }
 
-            init(): void {
-            	this.templator = new Templator(this.clazz, config.template);
+            private init(): void {
+            	this.templator = new Templator(this.clazz, this.template);
 
             	for (const node of this.templator.nodes) {
             		this.appendChild(node);
             	}
             }
 
-            inject(fieldName: string, value: unknown): void {
-            	// @ts-ignore
-            	this.clazz[fieldName] = value;
-            }
-
-            onDefaultAttributeChanged(
+            private onDefaultAttributeChanged(
             	name: string, _oldValue: string | null, newValue: string | null): boolean {
             	switch (name) {
             		case defaultObservedAttributes.hidden:
@@ -131,6 +141,34 @@ export function component(config: ComponentConfig):
 
             	return false;
             }
+
+			private async checkGuards(guards: Array<new () => Guard>): Promise<void> {
+				for (let GuardConstructor of guards) {
+					const guard = new GuardConstructor();
+					const canOpen = guard.canOpen();
+
+					if (canOpen instanceof Promise) {
+						if (!await canOpen) {
+							guard.onOpenError();
+							this.fillsWithEmptiness();
+
+							return;
+						}
+					} else {
+						if (!canOpen) {
+							guard.onOpenError();
+							this.fillsWithEmptiness();
+
+							return;
+						}
+					}
+				}
+			}
+
+			private fillsWithEmptiness(): void {
+				this.template = '';
+				this.clazz = {};
+			}
 		}
 
 		customElements.define(config.name, CustomElement);
