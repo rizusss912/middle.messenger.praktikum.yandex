@@ -1,7 +1,7 @@
 import { Interceptor } from '../interfaces/interceptor';
 import {HTTPRequest} from './http-request';
 
-type query = {[key: string]: string} | undefined;
+type query = {[key: string]: string | number | boolean} | undefined;
 type requestHandler = (this: XMLHttpRequest, ev: ProgressEvent) => any;
 
 export interface HTTPResponse<Body> {
