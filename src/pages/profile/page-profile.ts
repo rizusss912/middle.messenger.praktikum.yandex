@@ -10,7 +10,7 @@ import './components/form-password/form-password';
 
 import './page-profile.less';
 import {Observable} from '../../utils/observeble/observeble';
-import { profilePageContent, ProfilePageManager } from './service/profile-page-manager';
+import { DEFAULT_USER_AVATAR_URL, profilePageContent, ProfilePageManager } from './service/profile-page-manager';
 import { AuthGuard } from '../../guards/auth-guard';
 import { userData } from '../../store/interfaces/authorization-state.interface';
 
@@ -37,6 +37,10 @@ export class PageProfile implements CustomHTMLElement {
 
     public get $userData(): Observable<userData> {
         return this.profilePageManager.$userData;
+    }
+
+    public get $avatar(): Observable<string> {
+        return this.$userData.map(userData => userData.avatarUrl || DEFAULT_USER_AVATAR_URL);
     }
 
     // Костыльно, но мы ограничены возможностями шаблонзатора

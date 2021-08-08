@@ -23,8 +23,6 @@ export class HTTPClientFacade {
 
     	instance = this;
 
-
-
     	this.auth = new AuthHTTPClientModule(this.origin, this.mutualPathname, this.interseptors);
         this.user = new UserHTTPClientModule(this.origin, this.mutualPathname, this.interseptors);
         this.chats = new ChatsHttpClientModule(this.origin, this.mutualPathname, this.interseptors);
