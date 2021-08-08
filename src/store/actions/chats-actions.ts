@@ -71,19 +71,19 @@ export class UploadChatTokenAction implements Action {
 
 export class UploadedChatTokenAction implements Action {
     public readonly type = chatsActionType.chatTokenUploaded;
-    public readonly payload: chatToken;
+    public readonly payload: {chatId: number, chatToken: chatToken};
 
-    constructor(chatToken: chatToken) {
-        this.payload = chatToken;
+    constructor(chatId: number, chatToken: chatToken) {
+        this.payload = {chatId, chatToken};
     }
 }
 
 export class UploadErrorChatTokenAction implements Action {
     public readonly type = chatsActionType.chatTokenUploadError;
-    public readonly payload: Error;
+    public readonly payload: {chatId: number, error: Error};
 
-    constructor(error: Error) {
-        this.payload = error;
+    constructor(chatId: number, error: Error) {
+        this.payload = {chatId, error};
     }
 }
 
