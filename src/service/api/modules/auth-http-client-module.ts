@@ -4,16 +4,10 @@ import { HTTPResponse } from '../../../utils/api/http-client';
 import { userData } from '../../../store/interfaces/authorization-state.interface';
 import { Interceptor } from '../../../utils/interfaces/interceptor';
 
-export interface RegistrationData {
-    first_name: string,
-    second_name: string,
-    login: string,
-    email: string,
-    password: string,
-    phone: string,
-}
+export type pushUserData = Omit<Omit<userData, 'id'>, 'avatarUrl'>;
+export type registrationData = Omit<pushUserData, 'display_name'>;
 
-export interface AuthorizationData {
+export interface authorizationData {
     login: string,
     password: string,
 }
@@ -25,7 +19,7 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 		super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname), interseptors);
 	}
 
-	public registration(body: RegistrationData): Promise<HTTPResponse<{id: number}>> {
+	public registration(body: registrationData): Promise<HTTPResponse<{id: number}>> {
 		return this.upload({
 			method: HTTPMethod.POST,
 			pathname: ['signup'],
@@ -33,7 +27,7 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 		});
 	}
 
-	public authorization(body: AuthorizationData): Promise<HTTPResponse<undefined>> {
+	public authorization(body: authorizationData): Promise<HTTPResponse<undefined>> {
 		return this.upload({
 			method: HTTPMethod.POST,
 			pathname: ['signin'],

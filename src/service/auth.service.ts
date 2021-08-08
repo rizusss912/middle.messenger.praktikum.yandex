@@ -14,7 +14,7 @@ import { selectUserData } from "../store/selectors/authorization/select-user-dat
 import { selectDataStatus } from "../store/selectors/data/select-status";
 import { Store } from "../store/store";
 import { HTTPClientFacade } from "./api/http-client.facade";
-import { AuthorizationData, RegistrationData } from "./api/modules/auth-http-client-module";
+import { authorizationData, registrationData } from "./api/modules/auth-http-client-module";
 
 let instance: AuthService;
 
@@ -31,7 +31,7 @@ export class AuthService {
         this.store = new Store();
     }
 
-    public authorization(authData: AuthorizationData): Promise<void> {
+    public authorization(authData: authorizationData): Promise<void> {
 		return (
                 selectIsAuthorized(this.store.state)
                     ? this.logout().catch()
@@ -47,7 +47,7 @@ export class AuthService {
             });
     }
 
-    public registration(registrationData: RegistrationData): Promise<void> {
+    public registration(registrationData: registrationData): Promise<void> {
         return (
                 selectIsAuthorized(this.store.state)
                     ? this.logout().catch()

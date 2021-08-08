@@ -13,7 +13,7 @@ import '../../components/button/app-button';
 import './page-auth.less';
 import { Subscription } from '../../utils/observeble/subscription';
 import { AuthPageManager } from './services/auth-page-manager';
-import { AuthorizationData, RegistrationData } from '../../service/api/modules/auth-http-client-module';
+import { authorizationData, registrationData } from '../../service/api/modules/auth-http-client-module';
 
 const FORM_TITLE = {
 	registration: 'Регистрация',
@@ -43,8 +43,8 @@ export class PageAuth implements CustomHTMLElement {
     });
     private readonly authPageManager: AuthPageManager;
 
-	private authorizationSubscription: Subscription<AuthorizationData>;
-	private registrationSubscription: Subscription<RegistrationData>;
+	private authorizationSubscription: Subscription<authorizationData>;
+	private registrationSubscription: Subscription<registrationData>;
 
 	constructor() {
 		this.authPageManager = new AuthPageManager();
@@ -52,9 +52,9 @@ export class PageAuth implements CustomHTMLElement {
 
 	public onInit(): void {
 		this.authorizationSubscription =  this.authForm.$submit
-			.subscribe(formData => this.onAuthorization(formData as AuthorizationData));
+			.subscribe(formData => this.onAuthorization(formData as authorizationData));
 		this.registrationSubscription = this.registrationForm.$submit
-			.subscribe(formData => this.onRegistration(formData as RegistrationData));
+			.subscribe(formData => this.onRegistration(formData as registrationData));
 	}
 
 	public onDestroy(): void {
@@ -102,11 +102,11 @@ export class PageAuth implements CustomHTMLElement {
 		this.authPageManager.navigateToRegistration();
 	}
 
-	private onAuthorization(authData: AuthorizationData): void {
+	private onAuthorization(authData: authorizationData): void {
 		this.authPageManager.authorization(authData);
 	}
 
-	private onRegistration(registrationData: RegistrationData): void {
+	private onRegistration(registrationData: registrationData): void {
 		this.authPageManager.registration(registrationData);
 	}
 }

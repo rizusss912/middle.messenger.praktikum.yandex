@@ -1,6 +1,8 @@
+import { changePasswordData } from '../../../service/api/modules/user-http-client-module';
 import { AuthService } from '../../../service/auth.service';
 import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
+import { UserService } from '../../../service/user.service';
 import { userData } from '../../../store/interfaces/authorization-state.interface';
 import { selectUserData } from '../../../store/selectors/authorization/select-user-data';
 import { selectDataValue } from '../../../store/selectors/data/select-data-value';
@@ -27,6 +29,7 @@ let instance: ProfilePageManager;
 export class ProfilePageManager {
 	private readonly routerService: RouterService<profilePageQueryParams>;
 	private readonly authService: AuthService;
+	private readonly userService: UserService;
 	private readonly store: Store;
 
 	constructor() {
@@ -37,6 +40,7 @@ export class ProfilePageManager {
 		instance = this;
 
 		this.authService = new AuthService();
+		this.userService = new UserService();
 		this.routerService = new RouterService();
 		this.store = new Store();
 	}
@@ -68,11 +72,11 @@ export class ProfilePageManager {
 	}
 
 	public changeData(changeUserData: userData): void {
-		console.log(changeUserData);
+		this.userService.changeUserData(changeUserData);
 	}
 
-	public changePassword(changePasswordData: changePasswordData): void {
-		console.log(changePasswordData);
+	public changePassword(passwordsData: changePasswordData): void {
+		this.userService.changePassword(passwordsData);
 	}
 
 	public goToUserData(): void {

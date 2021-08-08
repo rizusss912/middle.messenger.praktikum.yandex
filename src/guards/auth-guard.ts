@@ -14,7 +14,6 @@ export class AuthGuard implements Guard {
     }
 
     public canOpen(): boolean {
-        console.log(selectIsAuthorized(this.store.state));
         return selectIsAuthorized(this.store.state);
     }
 

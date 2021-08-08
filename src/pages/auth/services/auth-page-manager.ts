@@ -1,5 +1,5 @@
 
-import { AuthorizationData, RegistrationData } from "../../../service/api/modules/auth-http-client-module";
+import { authorizationData, registrationData } from "../../../service/api/modules/auth-http-client-module";
 import { AuthService } from "../../../service/auth.service";
 import { pages } from "../../../service/router/pages.config";
 import { RouterService } from "../../../service/router/router.service";
@@ -42,12 +42,12 @@ export class AuthPageManager {
 		this.routerService.navigateTo(pages.auth);
 	}
 
-	public authorization(authData: AuthorizationData): void {
+	public authorization(authData: authorizationData): void {
 		this.authService.authorization(authData)
 			.then(() => this.navigateToChats());
 	}
 
-	public registration(registrationData: RegistrationData): void {
+	public registration(registrationData: registrationData): void {
 		this.authService.registration(registrationData)
 			.then(() => this.navigateToChats());
 	}

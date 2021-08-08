@@ -10,6 +10,7 @@ import './form-password.less';
 import {ProfileContent} from '../../elements/profile-content';
 import {ValidatorError} from '../../../../utils/form/validator-error';
 import { ProfilePageManager } from '../../service/profile-page-manager';
+import { changePasswordData } from '../../../../service/api/modules/user-http-client-module';
 
 // @ts-ignore никак не могу написать типы для component (
 @component({
@@ -72,12 +73,17 @@ export class FormPassword extends ProfileContent {
         }
 
         public onChangePassword(): void {
-        	const {newPassword, oldPassword} = this.form.value;
-			this.profilePageManager.changePassword({newPassword, oldPassword});
+			this.profilePageManager.changePassword(this.getChangePasswordData());
         }
 
         public onDisabledClick(): void {
         	this.form.touch();
         	this.form.shakingFirstInvalidField();
         }
+
+		private getChangePasswordData(): changePasswordData {
+			const {newPassword, oldPassword} = this.form.value;
+
+			return {newPassword, oldPassword} as changePasswordData;
+		}
 }
