@@ -44,7 +44,7 @@ export class FormUserData extends ProfileContent {
 
 	public onInit(): void {
 		this.userDataSubscription = this.profilePageManager.$userData
-			.subscribe(userData => this.form.next(userData));
+			.subscribe(userData => this.form.next(userData));		
 	}
 
 	public onDestroy(): void {
