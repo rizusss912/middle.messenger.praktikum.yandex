@@ -29,6 +29,7 @@ export class MainPageManager {
 
     public logout(): void {
         this.authService.logout()
-            .catch();
+            .catch()
+            .then(() => this.navigateToAuth());
     }
 }
