@@ -16,6 +16,9 @@ export type chatPreview = {
 }
 
 export type chatsList = chatPreview[];
+export type chatTokens = {
+    [chatId: number]: Data<chatToken>,
+};
 
 export type chatToken = string;
 export type createChat = undefined;
@@ -27,9 +30,7 @@ export interface ChatsState {
     list: Data<chatsList>,
     createChat: Data<createChat>,
     deleteChat: Data<deleteChat>,
-    tokens: {
-        [chatId: number]: Data<chatToken>,
-    },
+    tokens: chatTokens,
     deleteChatUsers: Data<deleteChatUsers>,
     addChatUsers: Data<addChatUsers>,
 }

@@ -1,3 +1,4 @@
+import { ActiveChatsService } from "../../../service/active-chats.service";
 import { AuthService } from "../../../service/auth.service";
 import { pages } from "../../../service/router/pages.config";
 import { RouterService } from "../../../service/router/router.service";
@@ -7,6 +8,7 @@ let instance: MainPageManager;
 export class MainPageManager {
     private readonly routerService: RouterService<{}>;
     private readonly authService: AuthService;
+    private readonly activeChatsService: ActiveChatsService;
 
     constructor() {
         if (instance) {
@@ -17,6 +19,7 @@ export class MainPageManager {
 
         this.routerService = new RouterService();
         this.authService = new AuthService();
+        this.activeChatsService = new ActiveChatsService();
     }
 
     public navigateToAuth(): void {

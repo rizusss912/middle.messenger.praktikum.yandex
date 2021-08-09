@@ -22,4 +22,7 @@ export const defaultState: State = {
         deleteChatUsers: getDefaultData<deleteChatUsers>(),
         addChatUsers: getDefaultData<addChatUsers>(),
     },
+    activeChats: {
+        controllers: {},
+    }
 }

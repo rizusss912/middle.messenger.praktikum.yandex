@@ -1,6 +1,12 @@
 import { chatsActionType } from "../enums/chats-action-type.enum";
 import { Action } from "../interfaces/action.interface";
-import { addChatUsers, chatsList, chatToken, createChat, deleteChat, deleteChatUsers } from "../interfaces/chats-state.interface";
+import { 
+    addChatUsers,
+    chatsList,
+    chatToken,
+    createChat,
+    deleteChat,
+    deleteChatUsers } from "../interfaces/chats-state.interface";
 
 export class UploadChatListAction implements Action {
     public readonly type = chatsActionType.chatListUpload;

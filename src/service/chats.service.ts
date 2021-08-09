@@ -17,6 +17,7 @@ import {
     UploadErrorDeleteChatUsersAction,
     UploadErrorСreateChatAction,
     UploadСreateChatAction } from "../store/actions/chats-actions";
+import { selectChatToken } from "../store/selectors/chats/select-chat-token";
 import { Store } from "../store/store";
 import { HTTPClientFacade } from "./api/http-client.facade";
 import { uploadChatsQueryParams } from "./api/modules/chats-http-client-module";
@@ -84,7 +85,7 @@ export class ChatsService {
             });
     }
 
-    public getTokenForChat(chatId: number): Promise<void> {
+    public uploadTokenForChat(chatId: number): Promise<void> {
         this.store.dispatch(new UploadChatTokenAction(chatId));
 
         return this.httpClientFacade.chats.getTokenForChat(chatId)
@@ -110,5 +111,11 @@ export class ChatsService {
 
                 throw error;
             });
+    }
+
+    public uploadTokenForChatIfNot(chatId: number): Promise<void> {
+        return selectChatToken(this.store.state, chatId)
+            ? Promise.resolve()
+            : this.uploadTokenForChat(chatId);
     }
 }

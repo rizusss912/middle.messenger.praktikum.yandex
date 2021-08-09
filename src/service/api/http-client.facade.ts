@@ -5,13 +5,15 @@ import { UserHTTPClientModule } from './modules/user-http-client-module';
 
 let instance: HTTPClientFacade;
 
+export const API_SERVER = 'ya-praktikum.tech';
+
 export class HTTPClientFacade {
     public readonly auth: AuthHTTPClientModule;
     public readonly user: UserHTTPClientModule;
     public readonly chats: ChatsHttpClientModule;
 
     private readonly mutualPathname = ['api', 'v2'];
-    private readonly origin = ' https://ya-praktikum.tech';
+    private readonly origin = `https://${API_SERVER}`;
     private readonly interseptors = [
         new AuthInterceptor(),
     ];
