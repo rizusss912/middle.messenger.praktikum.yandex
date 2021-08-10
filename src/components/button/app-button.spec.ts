@@ -1,9 +1,9 @@
 import {AppButton} from './app-button';
-import sinon from 'sinon';
+//import sinon from 'sinon';
 
 describe('app-button', () => {
     const appButton = new AppButton();
-    const onDisabledStub = sinon.stub();
+    const onDisabledStub = () => {};//sinon.stub();
     
     appButton.$disabled.subscribe(onDisabledStub);
 
@@ -18,6 +18,6 @@ describe('app-button', () => {
     });
 
     afterEach(() => {
-        onDisabledStub.restore();
+ //       onDisabledStub.restore();
     });
 })
