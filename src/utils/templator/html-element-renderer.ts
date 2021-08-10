@@ -35,7 +35,7 @@ export class HTMLElementRenderer
     constructor(tagStr: string, context: Context) {
     	super(context);
 
-    	const tagArr = tagStr.match(TEG_ATTRIBUTES);
+    	const tagArr = tagStr.match(TEG_ATTRIBUTES) || [];
     	const tagName = tagArr[0].replace(/</g, '');
     	const tagAttributeStrs = tagArr.splice(1);
 
@@ -45,14 +45,14 @@ export class HTMLElementRenderer
     		const attribute: Attribute = this.mapStrToAttribute(attributeStr);
 
     		if (this.isCustomAttribute(attribute)) {
-    			this.customAttributes.set(attribute.name, attribute.value);
+    			this.customAttributes.set(attribute.name, attribute.value!);
     			// @ts-ignore
     		} else if (this.isInjectableAttribute(attribute) && this.element.inject) {
     			this.injectAttribute(attribute);
     		} else {
     			this.element.setAttribute(
     				attribute.name,
-    				this.mapAttributeValueToValue(attribute.value),
+    				this.mapAttributeValueToValue(attribute.value)!,
     			);
     		}
     	}
@@ -87,7 +87,7 @@ export class HTMLElementRenderer
     	}
 
     	if (!this.subscription) {
-    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
+    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values!));
     	}
 
     	this.$staticValues.next(staticValues);
@@ -107,13 +107,13 @@ export class HTMLElementRenderer
 
     		if (
     			this.eventListenersMap.has(attribute.name)
-                && this.eventListenersMap.get(attribute.name).includes(attribute.value as Function)
+                && this.eventListenersMap.get(attribute.name)!.includes(attribute.value as Function)
     		) {
     			return;
     		}
 
     		if (this.eventListenersMap.has(attribute.name)) {
-    			this.eventListenersMap.get(attribute.name).push(attribute.value);
+    			this.eventListenersMap.get(attribute.name)!.push(attribute.value);
     		} else {
     			this.eventListenersMap.set(attribute.name, [attribute.value]);
     		}
@@ -151,7 +151,7 @@ export class HTMLElementRenderer
 
     private injectAttribute(attribute: Attribute): void {
     	try {
-    		const value = this.getFieldValue(this.mapTemplateToField(attribute.value));
+    		const value = this.getFieldValue(this.mapTemplateToField(attribute.value!));
     		// @ts-ignore
     		this.element.inject(attribute.name, value);
     	} catch (e) {

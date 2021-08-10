@@ -38,10 +38,10 @@ export class WebSocketController<pushMessage, incomingMessage> {
         this.soket = new WebSocket(this.url);
         this.updateState();
 
-        this.soket.onopen = (event: Event) => this.onOpenHandler(event);
-        this.soket.onclose = (event: CloseEvent) => this.onCloseHandler(event);
-        this.soket.onmessage = (event: MessageEvent) => this.onMessageHandler(event);
-        this.soket.onerror = (event: Event) => this.onErrorHandler(event);
+        this.soket.onopen = this.onOpenHandler.bind(this);
+        this.soket.onclose = this.onCloseHandler.bind(this);
+        this.soket.onmessage = this.onMessageHandler.bind(this);
+        this.soket.onerror = this.onErrorHandler.bind(this);
     }
 
     public send(message: pushMessage): void {
