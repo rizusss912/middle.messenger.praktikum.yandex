@@ -1,7 +1,7 @@
 import { Observable } from "../observeble/observeble";
 import { Subject } from "../observeble/subject";
 
-enum webSocketReadyState {
+export enum webSocketReadyState {
     CONNECTING = 0,
     OPEN = 1,
     CLOSING = 2,
@@ -10,15 +10,17 @@ enum webSocketReadyState {
 
 export class WebSocketController<pushMessage, incomingMessage> {
     private readonly url: string;
-    private _$isOpen: Subject<boolean> = new Subject<boolean>(false);
+    private readonly _$readyState: Subject<webSocketReadyState> = new Subject<webSocketReadyState>();
     private _$messages: Subject<incomingMessage> = new Subject<incomingMessage>();
     private soket: WebSocket;
     private messagesWaitingForOpening: pushMessage[] = [];
 
-    constructor(url: string, needOpen: boolean = true) {
+    constructor(url: string) {
         this.url = url;
+    }
 
-        if (needOpen) this.open();
+    public get $readyState(): Observable<webSocketReadyState> {
+        return this._$readyState.asObserveble();
     }
 
     public get $messages(): Observable<incomingMessage> {
@@ -34,6 +36,7 @@ export class WebSocketController<pushMessage, incomingMessage> {
         ) return;
 
         this.soket = new WebSocket(this.url);
+        this.updateState();
 
         this.soket.onopen = (event: Event) => this.onOpenHandler(event);
         this.soket.onclose = (event: CloseEvent) => this.onCloseHandler(event);
@@ -57,7 +60,7 @@ export class WebSocketController<pushMessage, incomingMessage> {
     }
 
     private onOpenHandler(_event: Event): void {
-        console.log('onOpenHandler', _event);
+        this.updateState();
         if(this.messagesWaitingForOpening.length) {
             for (let message of this.messagesWaitingForOpening) {
                 this.send(message);
@@ -65,21 +68,21 @@ export class WebSocketController<pushMessage, incomingMessage> {
 
             this.messagesWaitingForOpening = [];
         }
-
-        this._$isOpen.next(true);
     }
 
     private onCloseHandler(_event: CloseEvent): void {
-        console.log('onCloseHandler', _event);
-        this._$isOpen.next(false);
+        this.updateState();
     }
 
     private onErrorHandler(_event: Event): void {
-        console.log('onErrorHandler', _event);
+        this.updateState();
     }
 
     private onMessageHandler(_event: MessageEvent<incomingMessage>): void {
-        console.log('onMessageHandler', _event);
         this._$messages.next(_event.data);
+    }
+
+    private updateState(): void {
+        if (this.soket) this._$readyState.next(this.soket.readyState);
     }
 }

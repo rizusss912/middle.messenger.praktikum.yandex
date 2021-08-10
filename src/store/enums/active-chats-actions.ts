@@ -1,4 +1,6 @@
 export enum activeChatsActionType {
-    addActiveChat = "chats-addActiveChat",
-    removeActiveChat = "chats-removeActiveChat",
+    addActiveChat = "activeChats-addActiveChat",
+    removeActiveChat = "activeChats-removeActiveChat",
+
+    changeChatReadyState = "activeChats-changeReadyState",
 }

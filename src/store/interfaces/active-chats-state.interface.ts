@@ -1,9 +1,19 @@
-import { WebSocketController } from "../../utils/api/web-socket-controller";
+import { ChatController } from "../../service/active-chats.service";
+import { ChatListener } from "../../service/helpers/chat-listener";
+import { webSocketReadyState } from "../../utils/api/web-socket-controller";
 
-export type activeChatsControllers = {
-    [chatId: number]: WebSocketController<{}, {}>,
+export type activeChatsManagers = {
+    [chatId: number]: {
+        controller: ChatController,
+        listener: ChatListener,
+    },
 };
 
+export type chatsReadyStates = {
+    [chatId: number]: webSocketReadyState,
+}
+
 export interface ActiveChatsState {
-    controllers: activeChatsControllers;
+    managers: activeChatsManagers;
+    chatsReadyStates: chatsReadyStates,
 }

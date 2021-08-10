@@ -23,6 +23,7 @@ export const defaultState: State = {
         addChatUsers: getDefaultData<addChatUsers>(),
     },
     activeChats: {
-        controllers: {},
+        managers: {},
+        chatsReadyStates: {},
     }
 }
