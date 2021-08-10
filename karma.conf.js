@@ -1,5 +1,5 @@
 // Karma configuration
-// Generated on Wed Aug 11 2021 01:48:55 GMT+0300 (GMT+03:00)
+// Generated on Wed Aug 11 2021 02:27:48 GMT+0300 (GMT+03:00)
 
 module.exports = function(config) {
   config.set({
@@ -10,7 +10,6 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://www.npmjs.com/search?q=keywords:karma-adapter
-    providers: ['karma-mocha'],
     frameworks: ['mocha'],
 
 
@@ -50,12 +49,18 @@ module.exports = function(config) {
 
 
     // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true,
+    autoWatch: false,
 
 
     // start these browsers
     // available browser launchers: https://www.npmjs.com/search?q=keywords:karma-launcher
-    browsers: ['Chrome'],
+    browsers: ['ChromeHeadlessNoSandbox'],
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox']
+      }
+    },
 
 
     // Continuous Integration mode
