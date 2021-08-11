@@ -10,7 +10,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": [
+       "puppeteer",
+       "jest-environment-puppeteer",
+       "expect-puppeteer"
+     ],
   },
   "exclude": [
     "node_modules/*",

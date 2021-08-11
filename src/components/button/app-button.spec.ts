@@ -1,23 +1,26 @@
-import {AppButton} from './app-button';
-//import sinon from 'sinon';
+import { Store } from "../../store/store";
 
-describe('app-button', () => {
-    const appButton = new AppButton();
-    const onDisabledStub = () => {};//sinon.stub();
-    
-    appButton.$disabled.subscribe(onDisabledStub);
+describe('Google', () => {
 
-    it('notifies about the disabled attribute change', () => {
-        appButton.onAttributeChanged('disabled', null, '');
-        expect(onDisabledStub).toBeCalledWith(true);
+    beforeAll(async () => {
+        await page.goto('https://google.com');
+    })
 
-        appButton.onAttributeChanged('disabled', '', null);
-        expect(onDisabledStub).toBeCalledWith(false);
+    it('should display "google" text on page', async () => {
+        await page.evaluate(() => {
+            document.body.innerHTML = '';
 
-        
-    });
+            document.body.appendChild(document.createElement('random-element-name-for-test'));
+        });
 
-    afterEach(() => {
- //       onDisabledStub.restore();
-    });
+        const hasElement = await page.evaluate(() => Boolean(document.body.querySelector('random-element-name-for-test')));
+
+        expect(hasElement).toEqual(true);
+    })
+
+    it('', async () => {
+        const store: Store = new Store();
+
+        expect(store.state).not.toBeNull();
+    })
 })
