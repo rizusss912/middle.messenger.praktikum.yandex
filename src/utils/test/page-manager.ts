@@ -11,7 +11,7 @@ export class PageManager {
     	this.page = page;
     }
 
-    open(pageUrl: pages = pages.main): Promise<void> {
+    open(pageUrl: pages | string = pages.main): Promise<void> {
     	return this.page.goto(`${testUrl}${pageUrl}`).then();
     }
 

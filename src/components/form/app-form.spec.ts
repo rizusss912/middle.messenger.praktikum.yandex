@@ -1,6 +1,6 @@
 import {PageManager} from '../../utils/test/page-manager';
 
-describe('app-form', () => {
+describe('component: app-form', () => {
 	const manager = new PageManager(page);
 
 	beforeAll(async () => {

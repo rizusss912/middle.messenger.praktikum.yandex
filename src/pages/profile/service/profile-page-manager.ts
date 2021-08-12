@@ -8,20 +8,18 @@ import {selectUserData} from '../../../store/selectors/authorization/select-user
 import {selectDataValue} from '../../../store/selectors/data/select-data-value';
 import {Store} from '../../../store/store';
 import {Observable} from '../../../utils/observeble/observeble';
+import { profilePageFormType } from '../enums/profile-page-form-type.enum';
+
 
 // @ts-ignore
 import defaultUserAvatarUrl from '../../../resources/img/default_avatar.png';
+
 export const DEFAULT_USER_AVATAR_URL = defaultUserAvatarUrl;
 
 export enum profilePageContent {
 	userData,
 	formUserData,
 	formPassword,
-}
-
-enum profilePageFormType {
-    changeData = 'changeData',
-	changePassword = 'changePassword',
 }
 
 type profilePageQueryParams = {

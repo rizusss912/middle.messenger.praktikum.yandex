@@ -1,6 +1,6 @@
 import {PageManager} from '../../utils/test/page-manager';
 
-describe('app-input', () => {
+describe('component: app-input', () => {
 	const manager = new PageManager(page);
 
 	beforeAll(async () => {
@@ -18,19 +18,5 @@ describe('app-input', () => {
 
 	it('there is a label in the app-input', async () => {
 		expect(await manager.hasElement('app-input label')).toBe(true);
-	});
-
-	describe('name attribute', () => {
-		beforeEach(async () => {
-			await manager.setAttribute('app-input', 'name', 'test');
-		});
-
-		it('the name attribute is inherited for the input', async () => {
-			expect(await manager.getAttribute('app-input input', 'name')).toBe('test');
-		});
-
-		it('the name attribute is inherited for the label', async () => {
-			expect(await manager.getAttribute('app-input label', 'name')).toBe('test');
-		});
 	});
 });

@@ -1,11 +1,11 @@
 import {component, CustomHTMLElement} from '../../utils/component';
 import {RouterService} from '../../service/router/router.service';
+import { defaultDescription } from './consts/default-description.const';
 
 import '../../components/input/app-input';
 import '../../components/button/app-button';
 
 import {pages} from '../../service/router/pages.config';
-
 import {template} from './page-default.tmpl';
 
 import './page-default.less';
@@ -22,8 +22,6 @@ export class PageDefault implements CustomHTMLElement {
         public code: number;
         public routerService: RouterService<defaultPageQueryParams>;
 
-        private readonly defaultDescription = 'Кажется, что-то пошло не так :(';
-
         constructor() {
         	this.routerService = new RouterService<defaultPageQueryParams>();
         }
@@ -35,7 +33,7 @@ export class PageDefault implements CustomHTMLElement {
         public get description(): string {
         	return this.getDescriptionByCode(this.code)
                 || this.getDescriptionByCode(this.floorToHundreds(this.code))
-                || this.defaultDescription;
+                || defaultDescription;
         }
 
         public navigateToChats(): void {
