@@ -6,7 +6,7 @@ import './app-button.less';
 import {Subject} from '../../utils/observeble/subject';
 import {Observable} from '../../utils/observeble/observeble';
 
-@component<AppButton>({
+@component({
 	name: 'app-button',
 	template,
 	observedAttributes: ['disabled'],

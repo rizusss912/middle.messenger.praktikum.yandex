@@ -1,26 +1,18 @@
-import { Store } from "../../store/store";
+import { PageManager } from "../../utils/test/page-manager";
 
-describe('Google', () => {
+describe('app-button', () => {
+    const manager = new PageManager(page);
 
     beforeAll(async () => {
-        await page.goto('https://google.com');
+        await manager.open();
     })
 
-    it('should display "google" text on page', async () => {
-        await page.evaluate(() => {
-            document.body.innerHTML = '';
+    beforeEach(async () => {
+        await manager.clearBody();
+        await manager.appendChildToBody('app-button');
+    });
 
-            document.body.appendChild(document.createElement('random-element-name-for-test'));
-        });
-
-        const hasElement = await page.evaluate(() => Boolean(document.body.querySelector('random-element-name-for-test')));
-
-        expect(hasElement).toEqual(true);
-    })
-
-    it('', async () => {
-        const store: Store = new Store();
-
-        expect(store.state).not.toBeNull();
-    })
+    it('there is a button in the app-button', async () => {
+        expect(await manager.hasElement('app-button button')).toBe(true);
+    });
 })
