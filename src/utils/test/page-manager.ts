@@ -73,7 +73,7 @@ export class PageManager {
     	);
     }
 
-    async clickOnElement(selector: string) {
+    public async clickOnElement(selector: string) {
     	const rect = await this.page.evaluate(el => {
     		const {top, left, width, height} = el.getBoundingClientRect();
     		return {top, left, width, height};
@@ -85,4 +85,8 @@ export class PageManager {
 
     	await this.page.mouse.click(rect.left + _x, rect.top + _y);
     }
+
+	public async wait(ms: number): Promise<void> {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
 }
