@@ -1,6 +1,6 @@
-import { authorizationActionType } from "../enums/authorization-action-type.enum";
-import { Action } from "../interfaces/action.interface";
-import { authToken, logout, userData } from "../interfaces/authorization-state.interface";
+import {authorizationActionType} from '../enums/authorization-action-type.enum';
+import {Action} from '../interfaces/action.interface';
+import {authToken, logout, userData} from '../interfaces/authorization-state.interface';
 
 export class UploadAuthTokenAction implements Action {
     public readonly type = authorizationActionType.authTokenUpload;
@@ -16,7 +16,7 @@ export class UploadErrorAuthTokenAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }
 
@@ -34,7 +34,7 @@ export class UploadErrorLogoutAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }
 
@@ -47,7 +47,7 @@ export class UploadedUserDataAction implements Action {
     public readonly payload: userData;
 
     constructor(data: userData) {
-        this.payload = data;
+    	this.payload = data;
     }
 }
 
@@ -56,6 +56,6 @@ export class UploadErrorUserDataAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }

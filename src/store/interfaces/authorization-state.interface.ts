@@ -1,4 +1,4 @@
-import { Data } from "./data.interface";
+import {Data} from './data.interface';
 
 export type authToken = undefined;
 export type logout = undefined;

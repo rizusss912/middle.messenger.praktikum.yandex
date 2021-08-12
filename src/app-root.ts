@@ -1,4 +1,4 @@
-//for async/await
+// For async/await
 import 'regenerator-runtime/runtime';
 
 import {component, CustomHTMLElement} from './utils/component';

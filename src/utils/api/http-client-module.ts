@@ -1,4 +1,4 @@
-import { Interceptor } from '../interfaces/interceptor';
+import {Interceptor} from '../interfaces/interceptor';
 import {AppHTTPRequest, HTTPClient, HTTPResponse} from './http-client';
 
 export class HTTPClientModule {

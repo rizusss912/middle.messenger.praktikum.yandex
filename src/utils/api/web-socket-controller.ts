@@ -1,5 +1,5 @@
-import { Observable } from "../observeble/observeble";
-import { Subject } from "../observeble/subject";
+import {Observable} from '../observeble/observeble';
+import {Subject} from '../observeble/subject';
 
 export enum webSocketReadyState {
     CONNECTING = 0,
@@ -10,79 +10,87 @@ export enum webSocketReadyState {
 
 export class WebSocketController<pushMessage, incomingMessage> {
     private readonly url: string;
-    private readonly _$readyState: Subject<webSocketReadyState> = new Subject<webSocketReadyState>();
+    private readonly _$readyState: Subject<webSocketReadyState>
+		= new Subject<webSocketReadyState>();
+
     private _$messages: Subject<incomingMessage> = new Subject<incomingMessage>();
     private soket: WebSocket;
     private messagesWaitingForOpening: pushMessage[] = [];
 
     constructor(url: string) {
-        this.url = url;
+    	this.url = url;
     }
 
     public get $readyState(): Observable<webSocketReadyState> {
-        return this._$readyState.asObserveble();
+    	return this._$readyState.asObserveble();
     }
 
     public get $messages(): Observable<incomingMessage> {
-        return this._$messages.asObserveble();
+    	return this._$messages.asObserveble();
     }
 
     public open(): void {
-        if (this.soket
+    	if (this.soket
             && (
-                this.soket.readyState === webSocketReadyState.CONNECTING
+            	this.soket.readyState === webSocketReadyState.CONNECTING
                 || this.soket.readyState === webSocketReadyState.OPEN
             )
-        ) return;
+    	) {
+    		return;
+    	}
 
-        this.soket = new WebSocket(this.url);
-        this.updateState();
+    	this.soket = new WebSocket(this.url);
+    	this.updateState();
 
-        this.soket.onopen = this.onOpenHandler.bind(this);
-        this.soket.onclose = this.onCloseHandler.bind(this);
-        this.soket.onmessage = this.onMessageHandler.bind(this);
-        this.soket.onerror = this.onErrorHandler.bind(this);
+    	this.soket.onopen = this.onOpenHandler.bind(this);
+    	this.soket.onclose = this.onCloseHandler.bind(this);
+    	this.soket.onmessage = this.onMessageHandler.bind(this);
+    	this.soket.onerror = this.onErrorHandler.bind(this);
     }
 
     public send(message: pushMessage): void {
-        if(!this.soket || this.soket.readyState !== webSocketReadyState.OPEN) {
-            this.messagesWaitingForOpening.push(message);
-            this.open();
+    	if (!this.soket || this.soket.readyState !== webSocketReadyState.OPEN) {
+    		this.messagesWaitingForOpening.push(message);
+    		this.open();
 
-            return;
-        }
+    		return;
+    	}
 
-        this.soket.send(JSON.stringify(message));
+    	this.soket.send(JSON.stringify(message));
     }
 
     public close(): void {
-        if (this.soket) this.soket.close();
+    	if (this.soket) {
+    		this.soket.close();
+    	}
     }
 
-    private onOpenHandler(_event: Event): void {
-        this.updateState();
-        if(this.messagesWaitingForOpening.length) {
-            for (let message of this.messagesWaitingForOpening) {
-                this.send(message);
-            }
+    private onOpenHandler(): void {
+    	this.updateState();
+    	if (this.messagesWaitingForOpening.length) {
+    		for (const message of this.messagesWaitingForOpening) {
+    			this.send(message);
+    		}
 
-            this.messagesWaitingForOpening = [];
-        }
+    		this.messagesWaitingForOpening = [];
+    	}
     }
 
-    private onCloseHandler(_event: CloseEvent): void {
-        this.updateState();
+    private onCloseHandler(): void {
+    	this.updateState();
     }
 
-    private onErrorHandler(_event: Event): void {
-        this.updateState();
+    private onErrorHandler(): void {
+    	this.updateState();
     }
 
     private onMessageHandler(_event: MessageEvent<incomingMessage>): void {
-        this._$messages.next(_event.data);
+    	this._$messages.next(_event.data);
     }
 
     private updateState(): void {
-        if (this.soket) this._$readyState.next(this.soket.readyState);
+    	if (this.soket) {
+    		this._$readyState.next(this.soket.readyState);
+    	}
     }
 }

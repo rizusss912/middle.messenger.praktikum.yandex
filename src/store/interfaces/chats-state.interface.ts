@@ -1,5 +1,5 @@
-import { pushUserData } from "../../service/api/modules/auth-http-client-module";
-import { Data } from "./data.interface";
+import {pushUserData} from '../../service/api/modules/auth-http-client-module';
+import {Data} from './data.interface';
 
 export interface chatMessage {
     user: pushUserData,

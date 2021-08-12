@@ -32,9 +32,9 @@ export class ProfileContent implements CustomHTMLElement {
     				return false;
     			}
 
-				if (!this.element) {
-					return false;
-				}
+    			if (!this.element) {
+    				return false;
+    			}
 
     			if (this.isInitHiddenStatus) {
     				this.isInitHiddenStatus = false;

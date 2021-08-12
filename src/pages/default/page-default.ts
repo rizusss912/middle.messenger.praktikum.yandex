@@ -43,13 +43,14 @@ export class PageDefault implements CustomHTMLElement {
         }
 
         public getDescriptionByCode(code: number): string | undefined {
-                switch (code) {
-                        case 404: return 'Не туда попали';
-                        case 500: return 'Мы уже фиксим';
-                }
+        	switch (code) {
+        		case 404: return 'Не туда попали';
+        		case 500: return 'Мы уже фиксим';
+        		default: return undefined;
+        	}
         }
 
         public floorToHundreds(number: number): number {
-                return Math.floor(number / 100) * 100;
+        	return Math.floor(number / 100) * 100;
         }
 }

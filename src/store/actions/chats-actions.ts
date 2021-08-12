@@ -1,12 +1,12 @@
-import { chatsActionType } from "../enums/chats-action-type.enum";
-import { Action } from "../interfaces/action.interface";
-import { 
-    addChatUsers,
-    chatsList,
-    chatToken,
-    createChat,
-    deleteChat,
-    deleteChatUsers } from "../interfaces/chats-state.interface";
+import {chatsActionType} from '../enums/chats-action-type.enum';
+import {Action} from '../interfaces/action.interface';
+import {
+	addChatUsers,
+	chatsList,
+	chatToken,
+	createChat,
+	deleteChat,
+	deleteChatUsers} from '../interfaces/chats-state.interface';
 
 export class UploadChatListAction implements Action {
     public readonly type = chatsActionType.chatListUpload;
@@ -15,9 +15,9 @@ export class UploadChatListAction implements Action {
 export class UploadedChatListAction implements Action {
     public readonly type = chatsActionType.chatListUploaded;
     public readonly payload: chatsList;
-    
+
     constructor(chatsList: chatsList) {
-        this.payload = chatsList;
+    	this.payload = chatsList;
     }
 }
 
@@ -26,7 +26,7 @@ export class UploadErrorChatListAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }
 
@@ -44,7 +44,7 @@ export class UploadErrorСreateChatAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }
 
@@ -62,7 +62,7 @@ export class UploadErrorDeleteChatAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }
 
@@ -71,7 +71,7 @@ export class UploadChatTokenAction implements Action {
     public readonly payload: number;
 
     constructor(chatId: number) {
-        this.payload = chatId;
+    	this.payload = chatId;
     }
 }
 
@@ -80,7 +80,7 @@ export class UploadedChatTokenAction implements Action {
     public readonly payload: {chatId: number, chatToken: chatToken};
 
     constructor(chatId: number, chatToken: chatToken) {
-        this.payload = {chatId, chatToken};
+    	this.payload = {chatId, chatToken};
     }
 }
 
@@ -89,7 +89,7 @@ export class UploadErrorChatTokenAction implements Action {
     public readonly payload: {chatId: number, error: Error};
 
     constructor(chatId: number, error: Error) {
-        this.payload = {chatId, error};
+    	this.payload = {chatId, error};
     }
 }
 
@@ -107,7 +107,7 @@ export class UploadErrorDeleteChatUsersAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }
 
@@ -125,6 +125,6 @@ export class UploadErrorAddChatUsersAction implements Action {
     public readonly payload: Error;
 
     constructor(error: Error) {
-        this.payload = error;
+    	this.payload = error;
     }
 }

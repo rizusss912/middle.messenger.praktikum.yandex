@@ -1,6 +1,6 @@
-import { ChatController } from "../../service/active-chats.service";
-import { ChatListener } from "../../service/helpers/chat-listener";
-import { webSocketReadyState } from "../../utils/api/web-socket-controller";
+import {ChatController} from '../../service/active-chats.service';
+import {ChatListener} from '../../service/helpers/chat-listener';
+import {webSocketReadyState} from '../../utils/api/web-socket-controller';
 
 export type activeChatsManagers = {
     [chatId: number]: {

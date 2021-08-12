@@ -1,8 +1,8 @@
-import { ChatController } from "../../service/active-chats.service";
-import { ChatListener } from "../../service/helpers/chat-listener";
-import { webSocketReadyState } from "../../utils/api/web-socket-controller";
-import { activeChatsActionType } from "../enums/active-chats-actions";
-import { Action } from "../interfaces/action.interface";
+import {ChatController} from '../../service/active-chats.service';
+import {ChatListener} from '../../service/helpers/chat-listener';
+import {webSocketReadyState} from '../../utils/api/web-socket-controller';
+import {activeChatsActionType} from '../enums/active-chats-actions';
+import {Action} from '../interfaces/action.interface';
 
 export class AddActiveChatAction implements Action {
     public readonly type = activeChatsActionType.addActiveChat;
@@ -13,7 +13,7 @@ export class AddActiveChatAction implements Action {
     };
 
     constructor(chatId: number, controller: ChatController, listener: ChatListener) {
-        this.payload = {chatId, controller, listener};
+    	this.payload = {chatId, controller, listener};
     }
 }
 
@@ -22,7 +22,7 @@ export class RemoveActiveChatAction implements Action {
     public readonly payload: number;
 
     constructor(chatId: number) {
-        this.payload = chatId;
+    	this.payload = chatId;
     }
 }
 
@@ -34,6 +34,6 @@ export class ChangeChatReadyStateAction implements Action {
     };
 
     constructor(chatId: number, readyState: webSocketReadyState) {
-        this.payload = {chatId, readyState};
+    	this.payload = {chatId, readyState};
     }
 }

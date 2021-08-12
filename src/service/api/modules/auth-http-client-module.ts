@@ -1,8 +1,8 @@
 import {HTTPMethod} from '../../../utils/api/http-method';
-import { HTTPClientModule } from '../../../utils/api/http-client-module';
-import { HTTPResponse } from '../../../utils/api/http-client';
-import { userData } from '../../../store/interfaces/authorization-state.interface';
-import { Interceptor } from '../../../utils/interfaces/interceptor';
+import {HTTPClientModule} from '../../../utils/api/http-client-module';
+import {HTTPResponse} from '../../../utils/api/http-client';
+import {userData} from '../../../store/interfaces/authorization-state.interface';
+import {Interceptor} from '../../../utils/interfaces/interceptor';
 
 export type pushUserData = Omit<Omit<userData, 'id'>, 'avatarUrl'>;
 export type registrationData = Omit<pushUserData, 'display_name'>;
@@ -16,7 +16,11 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 	private static readonly moduleMutualPathname = ['auth'];
 
 	constructor(origin: string, mutualPathname: string[], interseptors: Interceptor[] = []) {
-		super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname), interseptors);
+		super(
+			origin,
+			mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname),
+			interseptors,
+		);
 	}
 
 	public registration(body: registrationData): Promise<HTTPResponse<{id: number}>> {
@@ -47,5 +51,5 @@ export class AuthHTTPClientModule extends HTTPClientModule {
 			method: HTTPMethod.GET,
 			pathname: ['user'],
 		});
-    }
+	}
 }

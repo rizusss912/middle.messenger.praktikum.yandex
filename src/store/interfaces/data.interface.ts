@@ -1,4 +1,4 @@
-import { dataStatus } from "../enums/data-status.enum";
+import {dataStatus} from '../enums/data-status.enum';
 
 export interface Data<T> {
     status: dataStatus;

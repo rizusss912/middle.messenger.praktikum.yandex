@@ -1,4 +1,4 @@
-import { Data } from "./data.interface";
+import {Data} from './data.interface';
 
 export type changePassword = undefined;
 export type changeUser = undefined;

@@ -9,8 +9,8 @@ import {template} from './form-password.tmpl';
 import './form-password.less';
 import {ProfileContent} from '../../elements/profile-content';
 import {ValidatorError} from '../../../../utils/form/validator-error';
-import { ProfilePageManager } from '../../service/profile-page-manager';
-import { changePasswordData } from '../../../../service/api/modules/user-http-client-module';
+import {ProfilePageManager} from '../../service/profile-page-manager';
+import {changePasswordData} from '../../../../service/api/modules/user-http-client-module';
 
 // @ts-ignore никак не могу написать типы для component (
 @component({
@@ -73,7 +73,7 @@ export class FormPassword extends ProfileContent {
         }
 
         public onChangePassword(): void {
-			this.profilePageManager.changePassword(this.getChangePasswordData());
+        	this.profilePageManager.changePassword(this.getChangePasswordData());
         }
 
         public onDisabledClick(): void {
@@ -81,9 +81,9 @@ export class FormPassword extends ProfileContent {
         	this.form.shakingFirstInvalidField();
         }
 
-		private getChangePasswordData(): changePasswordData {
-			const {newPassword, oldPassword} = this.form.value;
+        private getChangePasswordData(): changePasswordData {
+        	const {newPassword, oldPassword} = this.form.value;
 
-			return {newPassword, oldPassword} as changePasswordData;
-		}
+        	return {newPassword, oldPassword} as changePasswordData;
+        }
 }

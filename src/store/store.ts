@@ -1,9 +1,9 @@
-import { Observable } from "../utils/observeble/observeble";
-import { Subject } from "../utils/observeble/subject";
-import { defaultState } from "./consts/default-state.const";
-import { Action } from "./interfaces/action.interface";
-import { State } from "./interfaces/state.interface";
-import { getReducer, reducer } from "./reducers/reducer";
+import {Observable} from '../utils/observeble/observeble';
+import {Subject} from '../utils/observeble/subject';
+import {defaultState} from './consts/default-state.const';
+import {Action} from './interfaces/action.interface';
+import {State} from './interfaces/state.interface';
+import {getReducer, reducer} from './reducers/reducer';
 
 let instance: Store;
 
@@ -14,23 +14,25 @@ export class Store {
     private readonly reduser: reducer<State> = getReducer();
 
     constructor() {
-        if (instance) return instance;
+    	if (instance) {
+    		return instance;
+    	}
 
-        instance = this;
+    	instance = this;
     }
 
     get $state(): Observable<State> {
-        return this._$state.asObserveble();
+    	return this._$state.asObserveble();
     }
 
     get state(): State {
-        return this._state;
+    	return this._state;
     }
 
     dispatch(action: Action): void {
-        const nextState = this.reduser(this._state, action);
+    	const nextState = this.reduser(this._state, action);
 
-        this._state = nextState;
-        this._$state.next(nextState);
+    	this._state = nextState;
+    	this._$state.next(nextState);
     }
 }

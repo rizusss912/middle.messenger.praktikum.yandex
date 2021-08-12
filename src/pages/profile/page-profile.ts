@@ -10,9 +10,9 @@ import './components/form-password/form-password';
 
 import './page-profile.less';
 import {Observable} from '../../utils/observeble/observeble';
-import { DEFAULT_USER_AVATAR_URL, profilePageContent, ProfilePageManager } from './service/profile-page-manager';
-import { AuthGuard } from '../../guards/auth-guard';
-import { userData } from '../../store/interfaces/authorization-state.interface';
+import {DEFAULT_USER_AVATAR_URL, profilePageContent, ProfilePageManager} from './service/profile-page-manager';
+import {AuthGuard} from '../../guards/auth-guard';
+import {userData} from '../../store/interfaces/authorization-state.interface';
 
 export enum hiddenWithAnimtionValue {
     true = 'true',
@@ -22,7 +22,7 @@ export enum hiddenWithAnimtionValue {
 @component({
 	name: 'page-profile',
 	template,
-    guards: [AuthGuard],
+	guards: [AuthGuard],
 })
 export class PageProfile implements CustomHTMLElement {
     private readonly profilePageManager: ProfilePageManager;
@@ -32,15 +32,15 @@ export class PageProfile implements CustomHTMLElement {
     }
 
     public onInit(): void {
-        this.profilePageManager.uploadUserData();
+    	this.profilePageManager.uploadUserData();
     }
 
     public get $userData(): Observable<userData> {
-        return this.profilePageManager.$userData;
+    	return this.profilePageManager.$userData;
     }
 
     public get $avatar(): Observable<string> {
-        return this.$userData.map(userData => userData.avatarUrl || DEFAULT_USER_AVATAR_URL);
+    	return this.$userData.map(userData => userData.avatarUrl || DEFAULT_USER_AVATAR_URL);
     }
 
     // Костыльно, но мы ограничены возможностями шаблонзатора

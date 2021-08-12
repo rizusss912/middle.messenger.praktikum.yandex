@@ -1,5 +1,4 @@
-
-import { Guard } from './interfaces/guard';
+import {Guard} from './interfaces/guard';
 import {Observable} from './observeble/observeble';
 import {Templator, RenderOptions} from './templator/templator';
 
@@ -36,14 +35,14 @@ export function component(config: ComponentConfig):
             private clazz: Component;
 			private template: string;
 
-            constructor() {
+			constructor() {
             	super();
 
 				this.template = config.template;
             	this.clazz = new Clazz();
-            }
+			}
 
-            public connectedCallback(): void {
+			public connectedCallback(): void {
 				if (config.guards) {
 					this.checkGuards(config.guards);
 				}
@@ -57,15 +56,15 @@ export function component(config: ComponentConfig):
             	if (this.clazz.onRendered) {
             		this.clazz.onRendered(this);
             	}
-            }
+			}
 
-            public disconnectedCallback(): void {
+			public disconnectedCallback(): void {
             	if (this.clazz.onDestroy) {
             		this.clazz.onDestroy();
             	}
-            }
+			}
 
-            public static get observedAttributes(): string[] {
+			public static get observedAttributes(): string[] {
             	// @ts-ignore
             	return (Object.values(defaultObservedAttributes) as string[])
             		.concat(
@@ -73,9 +72,9 @@ export function component(config: ComponentConfig):
             		).concat(
             			Clazz.observedAttributes ? Clazz.observedAttributes : [],
             		);
-            }
+			}
 
-            public attributeChangedCallback(
+			public attributeChangedCallback(
             	name: string, oldValue: string | null, newValue: string | null): void {
             	let needRender = false;
 
@@ -92,7 +91,7 @@ export function component(config: ComponentConfig):
             	if (needRender) {
             		this.render();
             	}
-            }
+			}
 
 			// @ts-ignore используется внешними компонентами
 			public inject(fieldName: string, value: unknown): void {
@@ -100,7 +99,7 @@ export function component(config: ComponentConfig):
 				this.clazz[fieldName] = value;
 			}
 
-            private render(): void {
+			private render(): void {
             	const options: RenderOptions = {};
             	const {content} = this.clazz;
 
@@ -113,17 +112,17 @@ export function component(config: ComponentConfig):
             	}
 
             	this.templator!.render(this.clazz);
-            }
+			}
 
-            private init(): void {
+			private init(): void {
             	this.templator = new Templator(this.clazz, this.template);
 
             	for (const node of this.templator.nodes) {
             		this.appendChild(node);
             	}
-            }
+			}
 
-            private onDefaultAttributeChanged(
+			private onDefaultAttributeChanged(
             	name: string, _oldValue: string | null, newValue: string | null): boolean {
             	switch (name) {
             		case defaultObservedAttributes.hidden:
@@ -141,10 +140,10 @@ export function component(config: ComponentConfig):
             	}
 
             	return false;
-            }
+			}
 
 			private async checkGuards(guards: Array<new () => Guard>): Promise<void> {
-				for (let GuardConstructor of guards) {
+				for (const GuardConstructor of guards) {
 					const guard = new GuardConstructor();
 					const canOpen = guard.canOpen();
 
@@ -155,13 +154,11 @@ export function component(config: ComponentConfig):
 
 							return;
 						}
-					} else {
-						if (!canOpen) {
-							guard.onOpenError();
-							this.fillsWithEmptiness();
+					} else if (!canOpen) {
+						guard.onOpenError();
+						this.fillsWithEmptiness();
 
-							return;
-						}
+						return;
 					}
 				}
 			}

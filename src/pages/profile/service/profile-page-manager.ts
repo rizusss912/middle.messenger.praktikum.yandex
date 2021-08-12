@@ -1,15 +1,15 @@
-import { changePasswordData } from '../../../service/api/modules/user-http-client-module';
-import { AuthService } from '../../../service/auth.service';
-import { pages } from '../../../service/router/pages.config';
-import { RouterService } from '../../../service/router/router.service';
-import { UserService } from '../../../service/user.service';
-import { userData } from '../../../store/interfaces/authorization-state.interface';
-import { selectUserData } from '../../../store/selectors/authorization/select-user-data';
-import { selectDataValue } from '../../../store/selectors/data/select-data-value';
-import { Store } from '../../../store/store';
-import { Observable } from '../../../utils/observeble/observeble';
+import {changePasswordData} from '../../../service/api/modules/user-http-client-module';
+import {AuthService} from '../../../service/auth.service';
+import {pages} from '../../../service/router/pages.config';
+import {RouterService} from '../../../service/router/router.service';
+import {UserService} from '../../../service/user.service';
+import {userData} from '../../../store/interfaces/authorization-state.interface';
+import {selectUserData} from '../../../store/selectors/authorization/select-user-data';
+import {selectDataValue} from '../../../store/selectors/data/select-data-value';
+import {Store} from '../../../store/store';
+import {Observable} from '../../../utils/observeble/observeble';
 
-//@ts-ignore
+// @ts-ignore
 import defaultUserAvatarUrl from '../../../resources/img/default_avatar.png';
 export const DEFAULT_USER_AVATAR_URL = defaultUserAvatarUrl;
 
@@ -53,7 +53,7 @@ export class ProfilePageManager {
 		return this.store.$state
 			.select(selectUserData)
 			.select(selectDataValue)
-			.filter(userData => !!userData) as Observable<userData>;
+			.filter(userData => Boolean(userData)) as Observable<userData>;
 	}
 
 	public get $profilePageContent(): Observable<profilePageContent> {

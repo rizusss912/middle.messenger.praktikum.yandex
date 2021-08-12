@@ -5,7 +5,7 @@ import {template} from './app-form.tmpl';
 import './app-form.less';
 import {FormGroup} from '../../utils/form/form-group';
 import {Observable} from '../../utils/observeble/observeble';
-import { Subject } from '../../utils/observeble/subject';
+import {Subject} from '../../utils/observeble/subject';
 
 @component({
 	name: 'app-form',
@@ -16,9 +16,9 @@ export class AppForm implements CustomHTMLElement {
     private _$name: Subject<string | boolean> = new Subject<string | boolean>();
     public formGroup: FormGroup<{}> | undefined;
 
-	public get $name(): Observable<string | boolean> {
-		return this._$name.asObserveble();
-	}
+    public get $name(): Observable<string | boolean> {
+    	return this._$name.asObserveble();
+    }
 
     public onSubmit(event: Event): void {
     	event.preventDefault();
@@ -29,8 +29,8 @@ export class AppForm implements CustomHTMLElement {
 
     	Observable.all([this.formGroup.$isValid, this.formGroup.$valueChanged])
     		.only(1)
-    		.filter(([isValid, _value]) => Boolean(isValid))
-    		.on(([_isValid, value]) => this.formGroup?.submit(value));
+    		.filter(([isValid]) => Boolean(isValid))
+    		.on(args => this.formGroup?.submit(args[1]));
     }
 
     public onAttributeChanged(
@@ -43,8 +43,8 @@ export class AppForm implements CustomHTMLElement {
     			if (newValue) {
     				this._$name.next(newValue);
     			} else {
-					this._$name.next(false);
-				}
+    				this._$name.next(false);
+    			}
 
     			break;
     		default: break;

@@ -32,28 +32,35 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
 
     	for (const [fieldTemplate, fieldName] of this.variablesNames.entries()) {
     		try {
-				if (this.needSelectValueInObservable(fieldName)) {
-					this.addObservable(observebles, fieldTemplate, this.getSelectedObservable<contextValue>(fieldName));
-				} else {
-					let fieldValue = this.getFieldValue(fieldName);
+    			if (this.needSelectValueInObservable(fieldName)) {
+    				this.addObservable(
+    					observebles,
+    					fieldTemplate,
+    					this.getSelectedObservable<contextValue>(fieldName),
+    				);
+    			} else {
+    				let fieldValue = this.getFieldValue(fieldName);
 
-					if (typeof fieldValue === 'function') {
-						fieldValue = fieldValue.call(this.context);
-					}
+    				if (typeof fieldValue === 'function') {
+    					fieldValue = fieldValue.call(this.context);
+    				}
 
-					if (fieldValue instanceof Observable) {
-						this.addObservable(observebles, fieldTemplate, fieldValue);
-					} else {
-						staticValues.push({tempate: fieldTemplate, value: fieldValue});
-					}
-				}
+    				if (fieldValue instanceof Observable) {
+    					this.addObservable(observebles, fieldTemplate, fieldValue);
+    				} else {
+    					staticValues.push({tempate: fieldTemplate, value: fieldValue});
+    				}
+    			}
     		} catch (e) {
     			console.error(`Error when rendering text: ${e}`);
     		}
     	}
 
     	if (!this.subscription) {
-    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values as contextValue[]));
+    		this.initObserveblesSubscription(
+    			observebles,
+    			values => this.onValuesChanged(values as contextValue[]),
+    		);
     	}
 
     	this.$staticValues.next(staticValues);
@@ -77,7 +84,7 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
     }
 
     private onValuesChanged(values: contextValue[]): void {
-    	let content = this.content;
+    	let {content} = this;
 
     	for (const value of values) {
     		switch (typeof value.value) {

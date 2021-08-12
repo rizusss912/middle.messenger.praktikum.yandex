@@ -1,12 +1,12 @@
-import { UploadChangePasswordAction,
-    UploadChangeUserDataAction,
-    UploadedChangePasswordAction,
-    UploadedChangeUserDataAction,
-    UploadErrorChangePasswordAction,
-    UploadErrorChangeUserDataAction } from "../store/actions/user.actions";
-import { Store } from "../store/store";
-import { HTTPClientFacade } from "./api/http-client.facade";
-import { changePasswordData, changeUserData } from "./api/modules/user-http-client-module";
+import {UploadChangePasswordAction,
+	UploadChangeUserDataAction,
+	UploadedChangePasswordAction,
+	UploadedChangeUserDataAction,
+	UploadErrorChangePasswordAction,
+	UploadErrorChangeUserDataAction} from '../store/actions/user.actions';
+import {Store} from '../store/store';
+import {HTTPClientFacade} from './api/http-client.facade';
+import {changePasswordData, changeUserData} from './api/modules/user-http-client-module';
 
 let instance: UserService;
 
@@ -15,35 +15,37 @@ export class UserService {
     private readonly store: Store;
 
     constructor() {
-        if (instance) return instance;
+    	if (instance) {
+    		return instance;
+    	}
 
-        instance = this;
+    	instance = this;
 
-        this.httpClientFacade = new HTTPClientFacade();
-        this.store = new Store();
+    	this.httpClientFacade = new HTTPClientFacade();
+    	this.store = new Store();
     }
 
     public changeUserData(data: changeUserData): Promise<void> {
-        this.store.dispatch(new UploadChangeUserDataAction());
+    	this.store.dispatch(new UploadChangeUserDataAction());
 
-        return this.httpClientFacade.user.changeData(data)
-            .then(response => this.store.dispatch(new UploadedChangeUserDataAction(response.body)))
-            .catch(error => {
-                this.store.dispatch(new UploadErrorChangeUserDataAction(error))
+    	return this.httpClientFacade.user.changeData(data)
+    		.then(response => this.store.dispatch(new UploadedChangeUserDataAction(response.body)))
+    		.catch(error => {
+    			this.store.dispatch(new UploadErrorChangeUserDataAction(error));
 
-                throw error;
-            });
+    			throw error;
+    		});
     }
 
     public changePassword(data: changePasswordData): Promise<void> {
-        this.store.dispatch(new UploadChangePasswordAction());
+    	this.store.dispatch(new UploadChangePasswordAction());
 
-        return this.httpClientFacade.user.changePassword(data)
-            .then(() => this.store.dispatch(new UploadedChangePasswordAction()))
-            .catch(error => {
-                this.store.dispatch(new UploadErrorChangePasswordAction(error))
+    	return this.httpClientFacade.user.changePassword(data)
+    		.then(() => this.store.dispatch(new UploadedChangePasswordAction()))
+    		.catch(error => {
+    			this.store.dispatch(new UploadErrorChangePasswordAction(error));
 
-                throw error;
-            });
+    			throw error;
+    		});
     }
 }

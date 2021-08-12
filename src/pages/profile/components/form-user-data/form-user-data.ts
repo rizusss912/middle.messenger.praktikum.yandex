@@ -11,9 +11,9 @@ import {FormGroup} from '../../../../utils/form/form-group';
 import {Observable} from '../../../../utils/observeble/observeble';
 import {formValidators} from '../../../../const/form-validators';
 import {ProfileContent} from '../../elements/profile-content';
-import { ProfilePageManager } from '../../service/profile-page-manager';
-import { Subscription } from '../../../../utils/observeble/subscription';
-import { userData } from '../../../../store/interfaces/authorization-state.interface';
+import {ProfilePageManager} from '../../service/profile-page-manager';
+import {Subscription} from '../../../../utils/observeble/subscription';
+import {userData} from '../../../../store/interfaces/authorization-state.interface';
 
 // @ts-ignore
 @component({
@@ -44,7 +44,7 @@ export class FormUserData extends ProfileContent {
 
 	public onInit(): void {
 		this.userDataSubscription = this.profilePageManager.$userData
-			.subscribe(userData => this.form.next(userData));		
+			.subscribe(userData => this.form.next(userData));
 	}
 
 	public onDestroy(): void {

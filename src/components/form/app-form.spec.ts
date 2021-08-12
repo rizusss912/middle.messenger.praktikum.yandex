@@ -1,26 +1,26 @@
-import { PageManager } from "../../utils/test/page-manager";
+import {PageManager} from '../../utils/test/page-manager';
 
 describe('app-form', () => {
-    const manager = new PageManager(page);
+	const manager = new PageManager(page);
 
-    beforeAll(async () => {
-        await manager.open();
-    })
+	beforeAll(async () => {
+		await manager.open();
+	});
 
-    beforeEach(async () => {
-        await manager.clearBody();
-        await manager.appendChildToBody('app-form');
-    });
+	beforeEach(async () => {
+		await manager.clearBody();
+		await manager.appendChildToBody('app-form');
+	});
 
-    it('there is a form in the app-form', async () => {
-        expect(await manager.hasElement('app-form form')).toBe(true);
-    });
+	it('there is a form in the app-form', async () => {
+		expect(await manager.hasElement('app-form form')).toBe(true);
+	});
 
-    it('the name attribute is inherited for the form', async () => {
-        await manager.setAttribute('app-form', 'name', 'test');
-        expect(await manager.getAttribute('app-form form', 'name')).toBe('test');
+	it('the name attribute is inherited for the form', async () => {
+		await manager.setAttribute('app-form', 'name', 'test');
+		expect(await manager.getAttribute('app-form form', 'name')).toBe('test');
 
-        await manager.removeAttribute('app-form', 'name');
-        expect(await manager.getAttribute('app-form form', 'name')).toBe(null);
-    })
-})
+		await manager.removeAttribute('app-form', 'name');
+		expect(await manager.getAttribute('app-form form', 'name')).toBe(null);
+	});
+});
