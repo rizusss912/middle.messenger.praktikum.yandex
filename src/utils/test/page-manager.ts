@@ -1,8 +1,6 @@
-
-import {Page} from 'puppeteer';
-import {pages} from '../../service/router/pages.config';
-
-const testUrl = 'http://localhost:3000';
+import { Page } from 'puppeteer';
+import { pages } from '../../service/router/pages.config';
+import { testConfig } from './test-config';
 
 export class PageManager {
     private readonly page: Page;
@@ -12,7 +10,7 @@ export class PageManager {
     }
 
     open(pageUrl: pages | string = pages.main): Promise<void> {
-    	return this.page.goto(`${testUrl}${pageUrl}`).then();
+    	return this.page.goto(`${testConfig.url}${pageUrl}`).then();
     }
 
     clearBody(): Promise<void> {
