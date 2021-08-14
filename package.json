@@ -12,7 +12,8 @@
     "eslint": "eslint . --ext .ts",
     "stylelint": "npx stylelint '**/*.less'",
     "lint": "npm run eslint && npm run stylelint",
-    "test": "jest --watch",
+    "test:integrations": "jest --config jest-integrations.config.js",
+    "test:components": "jest --config jest-components.config.js",
     "karma": "karma start --brower=Chrome karma.conf.js --auto-watch --coverage"
   },
   "repository": {
@@ -78,27 +79,5 @@
     "presets": [
       "@babel/preset-env"
     ]
-  },
-  "jest": {
-    "transform": {
-      ".+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$": "jest-transform-stub",
-      "^.+\\.(js|ts|tsx)$": "ts-jest"
-    },
-    "roots": [
-      "src"
-    ],
-    "testMatch": [
-      "**/?(*.)+(spec|test).+(ts|tsx|js)"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "tsconfig.json"
-      }
-    },
-    "preset": "ts-jest",
-    "globalSetup": "jest-environment-puppeteer/setup",
-    "globalTeardown": "jest-environment-puppeteer/teardown",
-    "testEnvironment": "jest-environment-puppeteer",
-    "setupTestFrameworkScriptFile": "expect-puppeteer"
   }
 }
