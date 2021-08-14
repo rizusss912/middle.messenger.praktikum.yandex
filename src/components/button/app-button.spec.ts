@@ -1,18 +1,20 @@
-import {PageManager} from '../../utils/test/page-manager';
+import {DomUtils} from '../../utils/test/dom-utils';
+import {PageUtils} from '../../utils/test/page-utils';
 
 describe('component: app-button', () => {
-	const manager = new PageManager(page);
+	const domUtils = new DomUtils(page);
+	const pageUtils = new PageUtils(page);
 
 	beforeAll(async () => {
-		await manager.open();
+		await pageUtils.open();
 	});
 
 	beforeEach(async () => {
-		await manager.clearBody();
-		await manager.appendChildToBody('app-button');
+		await domUtils.clearBody();
+		await domUtils.appendChildToBody('app-button');
 	});
 
 	it('there is a button in the app-button', async () => {
-		expect(await manager.hasElement('app-button button')).toBe(true);
+		expect(await domUtils.hasElement('app-button button')).toBe(true);
 	});
 });

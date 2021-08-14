@@ -14,7 +14,7 @@ import './page-auth.less';
 import {Subscription} from '../../utils/observeble/subscription';
 import {AuthPageManager} from './services/auth-page-manager';
 import {authorizationData, registrationData} from '../../service/api/modules/auth-http-client-module';
-import { authPageFormTitle } from './enums/form-title.enum';
+import {authPageFormTitle} from './enums/form-title.enum';
 
 @component({
 	name: 'page-auth',
@@ -67,9 +67,9 @@ export class PageAuth implements CustomHTMLElement {
 
 	public get $title(): Observable<string> {
     	return this.$isRegistration.map(
-    		isRegistration => isRegistration 
-			? authPageFormTitle.registration
-			: authPageFormTitle.authorization,
+    		isRegistration => isRegistration
+				? authPageFormTitle.registration
+				: authPageFormTitle.authorization,
     	);
 	}
 

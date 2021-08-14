@@ -1,31 +1,25 @@
-import { Page } from 'puppeteer';
-import { pages } from '../../service/router/pages.config';
-import { testConfig } from './test-config';
+import {Page} from 'puppeteer';
 
-export class PageManager {
+export class DomUtils {
     private readonly page: Page;
 
     constructor(page: Page) {
     	this.page = page;
     }
 
-    open(pageUrl: pages | string = pages.main): Promise<void> {
-    	return this.page.goto(`${testConfig.url}${pageUrl}`).then();
-    }
-
-    clearBody(): Promise<void> {
+    public clearBody(): Promise<void> {
     	return this.page.evaluate(() => {
     		document.body.innerHTML = '';
     	});
     }
 
-    appendChildToBody(tag: string): Promise<void> {
+    public appendChildToBody(tag: string): Promise<void> {
     	return this.page.evaluate(tag => {
     		document.body.appendChild(document.createElement(tag));
     	}, tag);
     }
 
-    setAttribute(selector: string, attributeName: string, attributeValue: string = ''): Promise<void> {
+    public setAttribute(selector: string, attributeName: string, attributeValue: string = ''): Promise<void> {
     	return this.page.evaluate(
     		(selector, attributeName, attributeValue) => {
     			document.body.querySelector(selector)?.setAttribute(attributeName, attributeValue);
@@ -36,7 +30,7 @@ export class PageManager {
     	);
     }
 
-    removeAttribute(selector: string, attributeName: string): Promise<void> {
+    public removeAttribute(selector: string, attributeName: string): Promise<void> {
     	return this.page.evaluate(
     		(selector, attributeName) => {
     			document.body.querySelector(selector)?.removeAttribute(attributeName);
@@ -46,14 +40,14 @@ export class PageManager {
     	);
     }
 
-    hasElement(selector: string): Promise<boolean> {
+    public hasElement(selector: string): Promise<boolean> {
     	return this.page.evaluate(
     		selector => Boolean(document.body.querySelector(selector)),
     		selector,
     	);
     }
 
-    hasAttribute(selector: string, attributeName: string): Promise<boolean> {
+    public hasAttribute(selector: string, attributeName: string): Promise<boolean> {
     	return this.page.evaluate(
     		(selector, attributeName) =>
     			Boolean(document.body.querySelector(selector)?.hasAttribute(attributeName)),
@@ -62,7 +56,7 @@ export class PageManager {
     	);
     }
 
-    getAttribute(selector: string, attributeName: string): Promise<string | null> {
+    public getAttribute(selector: string, attributeName: string): Promise<string | null> {
     	return this.page.evaluate(
     		(selector, attributeName) =>
     			document.body.querySelector(selector)?.getAttribute(attributeName),
@@ -83,8 +77,4 @@ export class PageManager {
 
     	await this.page.mouse.click(rect.left + _x, rect.top + _y);
     }
-
-	public async wait(ms: number): Promise<void> {
-		return new Promise(resolve => setTimeout(resolve, ms));
-	}
 }

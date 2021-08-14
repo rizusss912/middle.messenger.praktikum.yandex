@@ -4,7 +4,7 @@ import {AuthService} from '../../../service/auth.service';
 import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
 import {Observable} from '../../../utils/observeble/observeble';
-import { authPageType } from '../enums/auth-page-type.enum';
+import {authPageType} from '../enums/auth-page-type.enum';
 
 type authPageQueryParams = {
     type?: authPageType,

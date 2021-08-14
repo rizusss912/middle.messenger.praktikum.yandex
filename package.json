@@ -14,7 +14,7 @@
     "lint": "npm run eslint && npm run stylelint",
     "test:integrations": "jest --config jest-integrations.config.js",
     "test:components": "jest --config jest-components.config.js",
-    "karma": "karma start --brower=Chrome karma.conf.js --auto-watch --coverage"
+    "test": "npm run test:integrations && npm run test:components"
   },
   "repository": {
     "type": "git",

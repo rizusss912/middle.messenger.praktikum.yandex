@@ -1,6 +1,6 @@
 import {component, CustomHTMLElement} from '../../utils/component';
 import {RouterService} from '../../service/router/router.service';
-import { defaultDescription } from './consts/default-description.const';
+import {defaultDescription} from './consts/default-description.const';
 
 import '../../components/input/app-input';
 import '../../components/button/app-button';

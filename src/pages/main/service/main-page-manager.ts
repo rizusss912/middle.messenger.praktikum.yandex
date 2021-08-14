@@ -7,7 +7,7 @@ let instance: MainPageManager;
 export class MainPageManager {
     private readonly routerService: RouterService<{}>;
     private readonly authService: AuthService;
-    //private readonly activeChatsService: ActiveChatsService;
+    // Private readonly activeChatsService: ActiveChatsService;
 
     constructor() {
     	if (instance) {
@@ -18,7 +18,7 @@ export class MainPageManager {
 
     	this.routerService = new RouterService();
     	this.authService = new AuthService();
-    	//this.activeChatsService = new ActiveChatsService();
+    	// This.activeChatsService = new ActiveChatsService();
     }
 
     public navigateToAuth(): void {

@@ -1,22 +1,24 @@
-import {PageManager} from '../../utils/test/page-manager';
+import {DomUtils} from '../../utils/test/dom-utils';
+import {PageUtils} from '../../utils/test/page-utils';
 
 describe('component: app-input', () => {
-	const manager = new PageManager(page);
+	const domUtils = new DomUtils(page);
+	const pageUtils = new PageUtils(page);
 
 	beforeAll(async () => {
-		await manager.open();
+		await pageUtils.open();
 	});
 
 	beforeEach(async () => {
-		await manager.clearBody();
-		await manager.appendChildToBody('app-input');
+		await domUtils.clearBody();
+		await domUtils.appendChildToBody('app-input');
 	});
 
 	it('there is a input in the app-input', async () => {
-		expect(await manager.hasElement('app-input input')).toBe(true);
+		expect(await domUtils.hasElement('app-input input')).toBe(true);
 	});
 
 	it('there is a label in the app-input', async () => {
-		expect(await manager.hasElement('app-input label')).toBe(true);
+		expect(await domUtils.hasElement('app-input label')).toBe(true);
 	});
 });

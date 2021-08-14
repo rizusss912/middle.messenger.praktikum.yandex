@@ -1,21 +1,23 @@
-import { pages } from "../../service/router/pages.config";
-import { PageManager } from "../../utils/test/page-manager";
+import {pages} from '../../service/router/pages.config';
+import {DomUtils} from '../../utils/test/dom-utils';
+import {PageUtils} from '../../utils/test/page-utils';
 
 describe('component: page-profile', () => {
-	const manager = new PageManager(page);
+	const domUtils = new DomUtils(page);
+	const pageUtils = new PageUtils(page);
 
-    beforeAll(async () => {
-        await manager.open(pages.profile);
-    });
+	beforeAll(async () => {
+		await pageUtils.open(pages.profile);
+	});
 
-    it('has forms', async () => {
-        expect(await manager.hasElement('user-data')).toBe(true);
-        expect(await manager.hasElement('form-user-data')).toBe(true);
-        expect(await manager.hasElement('form-password')).toBe(true);
-    });
+	it('has forms', async () => {
+		expect(await domUtils.hasElement('user-data')).toBe(true);
+		expect(await domUtils.hasElement('form-user-data')).toBe(true);
+		expect(await domUtils.hasElement('form-password')).toBe(true);
+	});
 
-    //TODO: флакает... видимо, из-за анимаций
-    /*
+	// TODO: флакает... видимо, из-за анимаций
+	/*
     describe('user-data active', () => {
         beforeAll(async () => {
             await manager.open(pages.profile);
@@ -29,8 +31,8 @@ describe('component: page-profile', () => {
     });
     */
 
-    //TODO: флакает... видимо, из-за анимаций
-    /*
+	// TODO: флакает... видимо, из-за анимаций
+	/*
     describe('form-user-data active', () => {
         beforeAll(async () => {
             await manager.open(`${pages.profile}?form=${profilePageFormType.changeData}`);
@@ -44,8 +46,8 @@ describe('component: page-profile', () => {
     });
     */
 
-    //TODO: флакает... видимо, из-за анимаций
-    /*
+	// TODO: флакает... видимо, из-за анимаций
+	/*
     describe('form-password active', () => {
         beforeAll(async () => {
             await manager.open(`${pages.profile}?form=${profilePageFormType.changePassword}`);
