@@ -3,6 +3,7 @@
 
 первый спринт: https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/1
 второй спринт: https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/4
+третий спринт: https://github.com/rizusss912/middle.messenger.praktikum.yandex/pull/5
 
 netlify: https://60e600be67201d00071cf6c1--rizus.netlify.app/
 
