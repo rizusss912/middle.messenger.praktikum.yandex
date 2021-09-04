@@ -4,8 +4,9 @@ import {template} from './user-data.tmpl';
 
 import './user-data.less';
 import {ProfileContent} from '../../elements/profile-content';
-import { userData } from '../../../../store/interfaces/user-data-state.interface';
-import { ProfilePageManager } from '../../service/profile-page-manager';
+import {userData} from '../../../../store/interfaces/authorization-state.interface';
+import {ProfilePageManager} from '../../service/profile-page-manager';
+import {Observable} from '../../../../utils/observeble/observeble';
 
 // @ts-ignore
 @component({
@@ -13,8 +14,6 @@ import { ProfilePageManager } from '../../service/profile-page-manager';
 	template,
 })
 export class UserData extends ProfileContent {
-        public userData: userData;
-
         private readonly profilePageManager: ProfilePageManager;
 
         constructor() {
@@ -28,7 +27,10 @@ export class UserData extends ProfileContent {
         }
 
         public onInit(): void {
-        	this.userData = this.profilePageManager.userData;
+        }
+
+        public get $userData(): Observable<userData> {
+        	return this.profilePageManager.$userData;
         }
 
         public onChangeData(): void {

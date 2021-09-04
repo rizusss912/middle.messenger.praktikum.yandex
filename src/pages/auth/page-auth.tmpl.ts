@@ -14,7 +14,7 @@ export const template = `
 
             <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance="primary">
                 <span slot="label">
-                    Авторизация
+                    Авторизироваться
                 </span>
             </app-button>
         </app-form>

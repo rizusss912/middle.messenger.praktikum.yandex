@@ -1,47 +1,34 @@
 import {component, CustomHTMLElement} from '../../utils/component';
-import {RouterService} from '../../service/router/router.service';
-
-import {pages} from '../../service/router/pages.config';
-
 import {template} from './page-main.tmpl';
 
 import './page-main.less';
-import {Subject} from '../../utils/observeble/subject';
-import {Observable} from '../../utils/observeble/observeble';
+import {AuthGuard} from '../../guards/auth-guard';
+import {MainPageManager} from './service/main-page-manager';
 
-@component<PageMain>({
+@component({
 	name: 'page-main',
 	template,
+	guards: [AuthGuard],
 })
 export class PageMain implements CustomHTMLElement {
-        private routerService: RouterService<{}>;
-        private s: Subject<Date> = new Subject<Date>(new Date());
-        private hidden: Subject<boolean> = new Subject<boolean>(false);
-        public text = 'Шаблонизатор умеет получать значения из класса';
+        private readonly mainPageManager: MainPageManager;
 
         constructor() {
-        	this.routerService = new RouterService();
+        	this.mainPageManager = new MainPageManager();
         }
 
         public onInit(): void {
-        	setInterval(() => this.s.next(new Date()), 1000);
-        	let f = 0;
-        	setInterval(() => this.hidden.next(f++ % 2 === 0), 1000);
-        }
-
-        public get $data(): Observable<Date> {
-        	return this.s.asObserveble();
-        }
-
-        public get $hidden(): Observable<boolean> {
-        	return this.hidden.asObserveble();
         }
 
         public navigateToAuth(): void {
-        	this.routerService.navigateTo(pages.auth);
+        	this.mainPageManager.navigateToAuth();
         }
 
         public navigateToProfile(): void {
-        	this.routerService.navigateTo(pages.profile);
+        	this.mainPageManager.navigateToProfile();
+        }
+
+        public logout(): void {
+        	this.mainPageManager.logout();
         }
 }

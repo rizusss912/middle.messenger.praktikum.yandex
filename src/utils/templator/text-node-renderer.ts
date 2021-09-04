@@ -32,16 +32,24 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
 
     	for (const [fieldTemplate, fieldName] of this.variablesNames.entries()) {
     		try {
-    			let fieldValue = this.getFieldValue(fieldName);
-
-    			if (typeof fieldValue === 'function') {
-    				fieldValue = fieldValue.call(this.context);
-    			}
-
-    			if (fieldValue instanceof Observable) {
-    				this.addObservable(observebles, fieldTemplate, fieldValue);
+    			if (this.needSelectValueInObservable(fieldName)) {
+    				this.addObservable(
+    					observebles,
+    					fieldTemplate,
+    					this.getSelectedObservable<contextValue>(fieldName),
+    				);
     			} else {
-    				staticValues.push({tempate: fieldTemplate, value: fieldValue});
+    				let fieldValue = this.getFieldValue(fieldName);
+
+    				if (typeof fieldValue === 'function') {
+    					fieldValue = fieldValue.call(this.context);
+    				}
+
+    				if (fieldValue instanceof Observable) {
+    					this.addObservable(observebles, fieldTemplate, fieldValue);
+    				} else {
+    					staticValues.push({tempate: fieldTemplate, value: fieldValue});
+    				}
     			}
     		} catch (e) {
     			console.error(`Error when rendering text: ${e}`);
@@ -49,7 +57,10 @@ export class TextNodeRenderer<Context extends object> extends Renderer<Context, 
     	}
 
     	if (!this.subscription) {
-    		this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
+    		this.initObserveblesSubscription(
+    			observebles,
+    			values => this.onValuesChanged(values as contextValue[]),
+    		);
     	}
 
     	this.$staticValues.next(staticValues);

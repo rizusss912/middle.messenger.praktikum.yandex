@@ -7,18 +7,23 @@ import {FormControl} from '../../utils/form/form-control';
 import {Observable} from '../../utils/observeble/observeble';
 import {ValidationErrorType} from '../../utils/form/validator-error';
 import {playAnimation} from '../../utils/animation/animation-utils/play-animation';
+import {Subject} from '../../utils/observeble/subject';
 
 @component({
 	name: 'app-input',
 	template,
 })
 export class AppInput implements CustomHTMLElement {
-    public name: string | boolean;
+    private _$name: Subject<string | boolean> = new Subject<string | boolean>();
     public formControl: FormControl;
     private input: HTMLInputElement;
 
     public onInit(): void {
-    	this.name = this.formControl ? this.formControl.name : false;
+    	this._$name.next(this.formControl ? this.formControl.name : false);
+    }
+
+    public get $name(): Observable<string | boolean> {
+    	return this._$name.asObserveble();
     }
 
     // TODO: Разбить на методы
@@ -129,6 +134,26 @@ export class AppInput implements CustomHTMLElement {
 
     public setFocusForInput(): void {
     	this.input.focus();
+    }
+
+    public onAttributeChanged(
+    	name: string,
+    	_oldValue: string | null,
+    	newValue: string | null,
+    ): boolean {
+    	switch (name) {
+    		case 'name':
+    			if (newValue) {
+    				this._$name.next(newValue);
+    			} else {
+    				this._$name.next(false);
+    			}
+
+    			break;
+    		default: break;
+    	}
+
+    	return false;
     }
 }
 

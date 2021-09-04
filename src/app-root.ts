@@ -1,3 +1,6 @@
+// For async/await
+import 'regenerator-runtime/runtime';
+
 import {component, CustomHTMLElement} from './utils/component';
 import {template} from './app-root.tmpl';
 import {RouterService} from './service/router/router.service';

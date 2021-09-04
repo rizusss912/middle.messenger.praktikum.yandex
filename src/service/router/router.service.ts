@@ -108,7 +108,11 @@ export class RouterService<Query extends {[key: string]: string}> {
     	this._popstate.next(this.urlParams);
     }
 
-    private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
+    private emitUrl(
+		pathname: string = pages.main,
+		queryParams: Query = {} as Query,
+		hash: string = '',
+	): void {
     	if (pathname[0] !== '/') {
     		pathname = `/${pathname}`;
     	}

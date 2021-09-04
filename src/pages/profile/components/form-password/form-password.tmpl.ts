@@ -1,13 +1,13 @@
 export const template = `
 <section>
     <app-form name="password">
-        <app-input slot="field" formControl=[[form.controls.last]]>
+        <app-input slot="field" formControl=[[form.controls.oldPassword]]>
             <span slot="label">Старый пароль</span>
         </app-input>
-        <app-input slot="field" formControl=[[form.controls.next]]>
+        <app-input slot="field" formControl=[[form.controls.newPassword]]>
             <span slot="label">Новый пароль</span>    
         </app-input>
-        <app-input slot="field" formControl=[[form.controls.repeat]]>
+        <app-input slot="field" formControl=[[form.controls.repeatPassword]]>
             <span slot="label">Повторите пароль</span>
         </app-input>
     </app-form>

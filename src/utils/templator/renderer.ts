@@ -16,6 +16,7 @@ export class Renderer<Context extends object, value> {
 
     	for (const field of fieldName.split('.')) {
     		if (field in out) {
+    			// @ts-ignore
     			out = out[field];
     		} else {
     			// Только так мы можем понять что поле отсутствует
@@ -25,6 +26,27 @@ export class Renderer<Context extends object, value> {
     	}
 
     	return out;
+    }
+
+    protected needSelectValueInObservable(fieldName: string): boolean {
+    	const fieldPath = fieldName.split('.');
+
+    	return fieldPath.length > 1
+			&& fieldPath[0].length > 0
+			&& this.firstFieldIsObservable(fieldName);
+    }
+
+    protected firstFieldIsObservable(fieldName: string): boolean {
+    	return this.getFirstFieldByFieldName(fieldName) instanceof Observable;
+    }
+
+    protected getSelectedObservable<contextValue>(fieldName: string): Observable<contextValue> {
+    	if (!this.firstFieldIsObservable(fieldName)) {
+    		throw new Error(`first field is not observable: ${fieldName}`);
+    	}
+
+    	return (this.getFirstFieldByFieldName(fieldName) as Observable<contextValue>)
+    		.select<contextValue>(this.createSelectorByFieldName(fieldName));
     }
 
     protected initObserveblesSubscription(
@@ -58,5 +80,33 @@ export class Renderer<Context extends object, value> {
 
     protected mapTemplateToField(template: string): string {
     	return template.replace(/[\s{}()[\]]+/gim, '');
+    }
+
+    private getFirstFieldByFieldName(fieldName: string): unknown {
+    	// @ts-ignore
+    	return this.context[fieldName.split('.')[0]];
+    }
+
+    private createSelectorByFieldName<contextValue>(
+    	fieldName: string,
+    ): (value: contextValue) => contextValue {
+    	const fieldPath = fieldName.split('.');
+
+    	fieldPath.shift();
+
+    	return function (value: contextValue): contextValue {
+    		let out = value;
+
+    		for (const fieldName of fieldPath) {
+    			if (typeof out !== 'object') {
+    				throw new Error(`Templator: invalid selector (${fieldName}) or observeble value`);
+    			}
+
+    			// @ts-ignore
+    			out = out[fieldName];
+    		}
+
+    		return out;
+    	};
     }
 }

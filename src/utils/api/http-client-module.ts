@@ -1,11 +1,12 @@
+import {Interceptor} from '../interfaces/interceptor';
 import {AppHTTPRequest, HTTPClient, HTTPResponse} from './http-client';
 
 export class HTTPClientModule {
     private readonly httpClient: HTTPClient;
     private readonly mutualPathname: string[];
 
-    constructor(origin: string, mutualPathname: string[] = []) {
-    	this.httpClient = new HTTPClient(origin);
+    constructor(origin: string, mutualPathname: string[] = [], interceptors: Interceptor[] = []) {
+    	this.httpClient = new HTTPClient(origin, interceptors);
     	this.mutualPathname = mutualPathname;
     }
 

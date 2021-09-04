@@ -43,7 +43,7 @@ export type RenderOptions = {
 export class Templator<Context extends object> {
     slotsMap: Map<HTMLElement, HTMLElement[]> = new Map();
     contentElement: HTMLElement;
-    nodes: HTMLElement[];
+    nodes: Array<HTMLElement | Text>;
     contentSubscription: Subscription<HTMLElement[]> | undefined;
 
     private readonly template: string;
@@ -63,9 +63,9 @@ export class Templator<Context extends object> {
     	this.nodes = this.initTemplate(this.template);
     }
 
-    initTemplate(str): HTMLElement[] {
-    	const outNodes = [];
-    	const addToChain = (node, content) => {
+    initTemplate(str: string): Array<HTMLElement | Text> {
+    	const outNodes: Array<HTMLElement | Text> = [];
+    	const addToChain = (node: HTMLElement, content: string) => {
     		const getParent = () => {
     			// Из-за того что есть не закрывающиеся теги
     			const parentIndex = htmlElements[htmlElements.length - 1] === node
@@ -83,7 +83,7 @@ export class Templator<Context extends object> {
     			const parent = getParent();
 
     			if (this.slotsMap.has(parent)) {
-    				this.slotsMap.get(parent).push(node);
+    				this.slotsMap.get(parent)!.push(node);
     			} else {
     				this.slotsMap.set(parent, [node]);
     			}
@@ -105,24 +105,24 @@ export class Templator<Context extends object> {
     	};
 
     	// Получаем массив, который содержит один тег и контент до следующего тега
-    	const htmlConfig = str.match(HTML_TAG_AND_CONTENT)
+    	const htmlConfig = (str.match(HTML_TAG_AND_CONTENT) || [])
     		.map(str => {
     			// Выбираем только тег
-    			const tagStr = str.match(TEG)[0];
+    			const tagStr = str.match(TEG)![0];
     			const content = str.split(tagStr)[1];
     			// Разбиваем тег на массив из имени тега и атрибутов
-    			const tagArray = tagStr.match(TEG_ATTRIBUTES);
+    			const tagArray = tagStr.match(TEG_ATTRIBUTES) || [];
 
     			const tag = {
     				isOpen: !(OPEN_TEG.test(tagStr)),
-    				name: tagArray[0].match(TEG_NAME)[0],
+    				name: tagArray[0].match(TEG_NAME)![0],
     				str: tagStr,
     			};
 
     			return {tag, content};
     		});
 
-    	const htmlElements = [];
+    	const htmlElements: Array<HTMLElement> = [];
 
     	for (const item of htmlConfig) {
     		if (item.tag.isOpen) {
@@ -192,8 +192,8 @@ export class Templator<Context extends object> {
 
     setSlots(): void {
     	for (const parent of this.getMapKeys(this.slotsMap)) {
-    		for (const slot of this.slotsMap.get(parent)) {
-    			const slotNode = this.getSlotNode(parent, slot.getAttribute('slot'));
+    		for (const slot of this.slotsMap.get(parent)!) {
+    			const slotNode = this.getSlotNode(parent, slot.getAttribute('slot')!);
 
     			if (slotNode) {
     				slotNode.appendChild(slot);
@@ -204,9 +204,9 @@ export class Templator<Context extends object> {
 
     // TODO: вынести в утилиту
     getMapKeys<key, value>(map: Map<key, value>): key[] {
-    	const keys = [];
+    	const keys: key[] = [];
 
-    	map.forEach((value, key) => keys.push(key));
+    	map.forEach((_value, key) => keys.push(key));
 
     	return keys;
     }
@@ -244,11 +244,11 @@ export class Templator<Context extends object> {
     	for (let index = 0; index < node.children.length; index++) {
     		const child = node.children.item(index);
 
-    		if (child.tagName === 'SLOT' && child.getAttribute('name') === name) {
+    		if (child!.tagName === 'SLOT' && child!.getAttribute('name') === name) {
     			return child;
     		}
 
-    		const req = this.getSlotNode(child, name);
+    		const req = this.getSlotNode(child!, name);
 
     		if (req) {
     			return req;

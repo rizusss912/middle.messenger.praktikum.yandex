@@ -11,14 +11,10 @@ import '../../components/form/app-form';
 import '../../components/button/app-button';
 
 import './page-auth.less';
-import { Subscription } from '../../utils/observeble/subscription';
-import { AuthPageManager } from './services/auth-page-manager';
-import { AuthorizationData, RegistrationData } from '../../service/api/modules/auth-http-client-module';
-
-const FORM_TITLE = {
-	registration: 'Регистрация',
-	authorization: 'Вход',
-};
+import {Subscription} from '../../utils/observeble/subscription';
+import {AuthPageManager} from './services/auth-page-manager';
+import {authorizationData, registrationData} from '../../service/api/modules/auth-http-client-module';
+import {authPageFormTitle} from './enums/form-title.enum';
 
 @component({
 	name: 'page-auth',
@@ -31,6 +27,7 @@ export class PageAuth implements CustomHTMLElement {
     		password: {validators: formValidators.password},
     	},
     });
+
     public readonly registrationForm = new FormGroup({
     	controls: {
         	first_name: {validators: formValidators.first_name},
@@ -41,30 +38,38 @@ export class PageAuth implements CustomHTMLElement {
         	phone: {validators: formValidators.phone},
     	},
     });
+
     private readonly authPageManager: AuthPageManager;
 
-	private authorizationSubscription: Subscription<AuthorizationData>;
-	private registrationSubscription: Subscription<RegistrationData>;
+	private authorizationSubscription: Subscription<authorizationData>;
+	private registrationSubscription: Subscription<registrationData>;
 
 	constructor() {
 		this.authPageManager = new AuthPageManager();
 	}
 
 	public onInit(): void {
-		this.authorizationSubscription =  this.authForm.$submit
-			.subscribe(formData => this.onAuthorization(formData as AuthorizationData));
+		this.authorizationSubscription = this.authForm.$submit
+			.subscribe(formData => this.onAuthorization(formData as authorizationData));
 		this.registrationSubscription = this.registrationForm.$submit
-			.subscribe(formData => this.onRegistration(formData as RegistrationData));
+			.subscribe(formData => this.onRegistration(formData as registrationData));
 	}
 
 	public onDestroy(): void {
-		if (this.authorizationSubscription) this.authorizationSubscription.unsubscribe();
-		if (this.registrationSubscription) this.registrationSubscription.unsubscribe();
+		if (this.authorizationSubscription) {
+			this.authorizationSubscription.unsubscribe();
+		}
+
+		if (this.registrationSubscription) {
+			this.registrationSubscription.unsubscribe();
+		}
 	}
 
 	public get $title(): Observable<string> {
     	return this.$isRegistration.map(
-    		isRegistration => isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization,
+    		isRegistration => isRegistration
+				? authPageFormTitle.registration
+				: authPageFormTitle.authorization,
     	);
 	}
 
@@ -102,11 +107,11 @@ export class PageAuth implements CustomHTMLElement {
 		this.authPageManager.navigateToRegistration();
 	}
 
-	private onAuthorization(authData: AuthorizationData): void {
+	private onAuthorization(authData: authorizationData): void {
 		this.authPageManager.authorization(authData);
 	}
 
-	private onRegistration(registrationData: RegistrationData): void {
+	private onRegistration(registrationData: registrationData): void {
 		this.authPageManager.registration(registrationData);
 	}
 }

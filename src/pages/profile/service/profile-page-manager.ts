@@ -1,21 +1,24 @@
+import {changePasswordData} from '../../../service/api/modules/user-http-client-module';
+import {AuthService} from '../../../service/auth.service';
 import {pages} from '../../../service/router/pages.config';
 import {RouterService} from '../../../service/router/router.service';
-import { UploadedUserDataAction } from '../../../store/actions/user-data.actions';
-import { userData } from '../../../store/interfaces/user-data-state.interface';
-import { selectDataValue } from '../../../store/selectors/select-data';
-import { selectUserData } from '../../../store/selectors/select-user-data';
-import { Store } from '../../../store/store';
+import {UserService} from '../../../service/user.service';
+import {userData} from '../../../store/interfaces/authorization-state.interface';
+import {selectUserData} from '../../../store/selectors/authorization/select-user-data';
+import {selectDataValue} from '../../../store/selectors/data/select-data-value';
+import {Store} from '../../../store/store';
 import {Observable} from '../../../utils/observeble/observeble';
+import {profilePageFormType} from '../enums/profile-page-form-type.enum';
+
+// @ts-ignore
+import defaultUserAvatarUrl from '../../../resources/img/default_avatar.png';
+
+export const DEFAULT_USER_AVATAR_URL = defaultUserAvatarUrl;
 
 export enum profilePageContent {
 	userData,
 	formUserData,
 	formPassword,
-}
-
-enum profilePageFormType {
-    changeData = 'changeData',
-	changePassword = 'changePassword',
 }
 
 type profilePageQueryParams = {
@@ -26,6 +29,8 @@ let instance: ProfilePageManager;
 
 export class ProfilePageManager {
 	private readonly routerService: RouterService<profilePageQueryParams>;
+	private readonly authService: AuthService;
+	private readonly userService: UserService;
 	private readonly store: Store;
 
 	constructor() {
@@ -35,16 +40,17 @@ export class ProfilePageManager {
 
 		instance = this;
 
+		this.authService = new AuthService();
+		this.userService = new UserService();
 		this.routerService = new RouterService();
 		this.store = new Store();
-
-		this.store.dispatch(new UploadedUserDataAction(this.userData));
 	}
 
-	public get $userData(): Observable<userData | undefined> {
+	public get $userData(): Observable<userData> {
 		return this.store.$state
 			.select(selectUserData)
-			.select(selectDataValue);
+			.select(selectDataValue)
+			.filter(userData => Boolean(userData)) as Observable<userData>;
 	}
 
 	public get $profilePageContent(): Observable<profilePageContent> {
@@ -62,6 +68,18 @@ export class ProfilePageManager {
 			.uniqueNext();
 	}
 
+	public uploadUserData(): void {
+		this.authService.uploadUserDataIfNot();
+	}
+
+	public changeData(changeUserData: userData): void {
+		this.userService.changeUserData(changeUserData);
+	}
+
+	public changePassword(passwordsData: changePasswordData): void {
+		this.userService.changePassword(passwordsData);
+	}
+
 	public goToUserData(): void {
 		this.routerService.navigateTo(pages.profile);
 	}
@@ -76,17 +94,5 @@ export class ProfilePageManager {
 
 	public goToChats(): void {
 		this.routerService.navigateTo(pages.chats);
-	}
-
-	public get userData(): userData {
-		return {
-			first_name: 'Вадим',
-			second_name: 'Кошечкин',
-			display_name: 'Вадим',
-			avatarUrl: 'https://sun1-87.userapi.com/s/v1/if1/75kO7SiwUAoiofoYlkEX407eGBwbwRzlxVgqp-j8n_5kJZsBMSTOpA1BrMezYnl6lhaecWsP.jpg?size=400x0&quality=96&crop=6,335,1299,1299&ava=1',
-			email: 'Rizus912@yandex.ru',
-			login: 'rizus',
-			phone: '88005553535',
-		};
 	}
 }
