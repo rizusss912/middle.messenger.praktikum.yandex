@@ -12,7 +12,9 @@
                     "first_name",
                     "last_name",
                     "second_name",
-                    "display_name"
+                    "display_name",
+                    "unread_count",
+                    "last_message"
                 ]
             }
         ],
@@ -30,7 +32,9 @@
         "no-mixed-spaces-and-tabs": 0,
         "no-constructor-return": 0,
         "no-warning-comments": 0,
-        "func-call-spacing": 0
+        "func-call-spacing": 0,
+        "no-await-in-loop": 0,
+        "no-undef": 0
     },
     "env": {
         "browser": true

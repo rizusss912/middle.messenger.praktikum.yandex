@@ -1,41 +1,47 @@
-import {component, CustomHTMLElement} from '../../../../utils/component';
-
-import {ProfileManagerService, userData} from '../../service/profile-manager.service';
-import {RouterService} from '../../../../service/router/router.service';
-import {pages} from '../../../../service/router/pages.config';
+import {component} from '../../../../utils/component';
 
 import {template} from './user-data.tmpl';
 
 import './user-data.less';
+import {ProfileContent} from '../../elements/profile-content';
+import {userData} from '../../../../store/interfaces/authorization-state.interface';
+import {ProfilePageManager} from '../../service/profile-page-manager';
+import {Observable} from '../../../../utils/observeble/observeble';
 
-@component<UserData>({
+// @ts-ignore
+@component({
 	name: 'user-data',
 	template,
 })
-export class UserData implements CustomHTMLElement {
-        public userData: userData;
-
-        private readonly profileManagerService: ProfileManagerService;
-        private readonly routerService: RouterService<{}>;
+export class UserData extends ProfileContent {
+        private readonly profilePageManager: ProfilePageManager;
 
         constructor() {
-        	this.profileManagerService = new ProfileManagerService();
-        	this.routerService = new RouterService();
+        	super();
+
+        	this.profilePageManager = new ProfilePageManager();
+        }
+
+        static get observedAttributes(): string[] {
+        	return super.observedAttributes;
         }
 
         public onInit(): void {
-        	this.userData = this.profileManagerService.userData;
+        }
+
+        public get $userData(): Observable<userData> {
+        	return this.profilePageManager.$userData;
         }
 
         public onChangeData(): void {
-        	this.routerService.navigateTo(pages.profile, {type: 'changeData'});
+        	this.profilePageManager.goToFormData();
         }
 
         public onChangePassword(): void {
-        	this.routerService.navigateTo(pages.profile, {type: 'changePassword'});
+        	this.profilePageManager.goToFormPassword();
         }
 
         public onExit(): void {
-        	this.routerService.navigateTo(pages.chats);
+        	this.profilePageManager.goToChats();
         }
 }

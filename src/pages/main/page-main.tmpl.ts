@@ -3,11 +3,10 @@ export const template = `
     <button @click={{navigateToAuth()}}>
         Перейти к страничке авторизации
     </button>
-    <button @click={{navigateToProfile()}} hidden={{$hidden}}>
+    <button @click={{navigateToProfile()}}>
         Перейти к страничке профиля
     </button>
-
-    <p>{{text}}</p>
-    <p>Шаблонизатор умеет подписываться на observeble</p>
-    <p>Текущая дата: {{$data}}</p>
+    <button @click={{logout()}}>
+        Выйти из аккаунта
+    </button>
 `;

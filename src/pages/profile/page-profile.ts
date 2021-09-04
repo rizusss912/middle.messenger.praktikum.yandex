@@ -1,6 +1,4 @@
 import {component, CustomHTMLElement} from '../../utils/component';
-import {RouterService} from '../../service/router/router.service';
-import {ProfileManagerService, userData} from './service/profile-manager.service';
 
 import {template} from './page-profile.tmpl';
 
@@ -12,49 +10,58 @@ import './components/form-password/form-password';
 
 import './page-profile.less';
 import {Observable} from '../../utils/observeble/observeble';
+import {DEFAULT_USER_AVATAR_URL, profilePageContent, ProfilePageManager} from './service/profile-page-manager';
+import {AuthGuard} from '../../guards/auth-guard';
+import {userData} from '../../store/interfaces/authorization-state.interface';
 
-enum profilePageType {
-    changePassword = 'changePassword',
-    changeData = 'changeData',
+export enum hiddenWithAnimtionValue {
+    true = 'true',
+    false = 'false',
 }
 
-type profilePageQueryParams = {
-    type?: profilePageType,
-}
-
-@component<PageProfile>({
+@component({
 	name: 'page-profile',
 	template,
+	guards: [AuthGuard],
 })
 export class PageProfile implements CustomHTMLElement {
-    public routerService: RouterService<profilePageQueryParams>;
-    public userData: userData;
-    public profileManagerService;
+    private readonly profilePageManager: ProfilePageManager;
 
     constructor() {
-    	this.routerService = new RouterService();
-    	this.profileManagerService = new ProfileManagerService();
-
-    	this.userData = this.profileManagerService.userData;
+    	this.profilePageManager = new ProfilePageManager();
     }
 
-    public onInit() {
+    public onInit(): void {
+    	this.profilePageManager.uploadUserData();
     }
 
-    public get $isNotDataList(): Observable<boolean> {
-    	return Observable.concat<boolean>([this.$isNotFormPassword, this.$isNotFormUserData])
-        	.map(([isNotFormPassword, isNotFormUserData]) =>
-    			!isNotFormPassword || !isNotFormUserData,
+    public get $userData(): Observable<userData> {
+    	return this.profilePageManager.$userData;
+    }
+
+    public get $avatar(): Observable<string> {
+    	return this.$userData.map(userData => userData.avatarUrl || DEFAULT_USER_AVATAR_URL);
+    }
+
+    // Костыльно, но мы ограничены возможностями шаблонзатора
+    public get $hideDataList(): Observable<hiddenWithAnimtionValue> {
+    	return this.$getIsHideContent(profilePageContent.userData);
+    }
+
+    public get $hideFormPassword(): Observable<hiddenWithAnimtionValue> {
+    	return this.$getIsHideContent(profilePageContent.formPassword);
+    }
+
+    public get $hideFormUserData(): Observable<hiddenWithAnimtionValue> {
+    	return this.$getIsHideContent(profilePageContent.formUserData);
+    }
+
+    private $getIsHideContent(content: profilePageContent): Observable<hiddenWithAnimtionValue> {
+    	return this.profilePageManager.$profilePageContent
+    		.map(pageContent =>
+    			pageContent === content
+    				? hiddenWithAnimtionValue.false
+    				: hiddenWithAnimtionValue.true,
     		);
-    }
-
-    public get $isNotFormPassword(): Observable<boolean> {
-    	return this.routerService.$queryParams.map(
-    		query => query.type !== profilePageType.changePassword);
-    }
-
-    public get $isNotFormUserData(): Observable<boolean> {
-    	return this.routerService.$queryParams.map(
-    		query => query.type !== profilePageType.changeData);
     }
 }

@@ -3,7 +3,7 @@ import {pages} from './pages.config';
 import {Subject} from '../../utils/observeble/subject';
 import {Observable} from '../../utils/observeble/observeble';
 
-let instance: RouterService<unknown>;
+let instance: RouterService<{}>;
 
 export interface urlParams<Query> {
     pathname: string;
@@ -11,7 +11,7 @@ export interface urlParams<Query> {
     queryParams: Query;
 }
 
-export class RouterService<Query extends {}> {
+export class RouterService<Query extends {[key: string]: string}> {
     private readonly _popstate = new Subject<urlParams<Query>>();
 
     constructor() {
@@ -19,7 +19,9 @@ export class RouterService<Query extends {}> {
     		return instance as RouterService<Query>;
     	}
 
-    	instance = this as RouterService<unknown>;
+    	instance = this as RouterService<{}>;
+
+    	Observable.event(window, 'popstate').subscribe(() => this.onPopState());
     }
 
     public get config(): Record<pages, HTMLPageConstructor> {
@@ -33,8 +35,8 @@ export class RouterService<Query extends {}> {
     public get $path(): Observable<string> {
     	return this.$popstate
     		.map(urlParams => urlParams.pathname)
-    		.uniqueNext()
-    		.startWith(this.urlParams.pathname);
+    		.startWith(this.urlParams.pathname)
+    		.uniqueNext();
     }
 
     public get $queryParams(): Observable<Query> {
@@ -46,12 +48,13 @@ export class RouterService<Query extends {}> {
 
     public get urlParams(): urlParams<Query> {
     	let {hash, pathname, search} = window.location;
-    	const queryParams = search.match(/[^?&]*/g)
+    	const queryParams = (search.match(/[^?&]*/g) || [])
     		.filter(value => value)
     		.reduce((out, str) => {
-    			const param = str.split('=');
+    			const param: string[] = str.split('=');
 
     			if (param[1]) {
+    				// @ts-ignore
     				out[param[0]] = param[1];
     			}
 
@@ -94,14 +97,22 @@ export class RouterService<Query extends {}> {
     		path = `/${path}`;
     	}
 
-    	return this.config[path] || this.config[pages.default];
+    	return this.config[path as pages] || this.config[pages.default];
     }
 
     public getPage(): HTMLPageConstructor {
     	return this.getPageByPath(this.urlParams.pathname);
     }
 
-    private emitUrl(pathname: string = pages.main, queryParams: Query = {} as Query, hash: string = ''): void {
+    private onPopState(): void {
+    	this._popstate.next(this.urlParams);
+    }
+
+    private emitUrl(
+		pathname: string = pages.main,
+		queryParams: Query = {} as Query,
+		hash: string = '',
+	): void {
     	if (pathname[0] !== '/') {
     		pathname = `/${pathname}`;
     	}

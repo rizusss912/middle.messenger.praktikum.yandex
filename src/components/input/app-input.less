@@ -3,21 +3,71 @@ app-input {
     width: 100%;
     height: 100%;
 
+    --app-input-color-default: var(--text-secondary);
+    --app-input-color-focus: var(--primary-color);
+    --app-input-color-error: red;
+    --app-input-color-valid: rgb(147, 233, 147);
+    --app-input-color-disabled: rgb(175, 175, 175);
+    --app-input-text-color-enabled: var(--text-primary);
+    --app-input-text-color-disabled: var(--text-secondary);
+
     slot[name="title"] {
         display: block;
     }
 
     input {
-        width: 100%;
+        outline: none;
+        border: none;
         box-sizing: border-box;
+
+        width: 100%;
+
+        font-size: 18px;
+
+        background-color: white;
+        color: var(--app-input-text-color-enabled);
+
+        &[disabled] {
+            color: var(--app-input-text-color-disabled);
+        }
+    }
+
+    label {
+        display: block;
+
+        font-size: 14px;
+        min-height: 21px;
+
+        color: var(--app-input-color-default);
+
+        &[status="focus"] {
+            color: var(--app-input-color-focus);
+        }
+
+        &[status="error"] {
+            color: var(--app-input-color-error);
+        }
+
+        & > slot {
+            display: block;
+            transition: 0.3s;
+
+            padding-top: 4px;
+
+            &[instead-of-text] {
+                padding-top: 0;
+
+                transform: translateY(100%);
+
+                font-size: 18px;
+            }
+        }
     }
 
     .error {
         opacity: 1;
-        transition: 0.5s;
-        color: red;
-
-        margin-top: 2px;
+        transition: 0.4s;
+        color: var(--app-input-color-error);
 
         min-height: 15px;
         font-size: 13px;
@@ -25,5 +75,37 @@ app-input {
 
     .error[transparent] {
         opacity: 0;
+    }
+
+    [underline] {
+        margin-top: 3px;
+        margin-bottom: 2px;
+
+        display: block;
+        height: 1px;
+        width: 100%;
+
+        background-color: var(--app-input-color-default);
+        transition: 0.3s;
+
+        &[underline="error"] {
+            margin-bottom: 1px;
+            height: 2px;
+            background-color: var(--app-input-color-error);
+        }
+
+        &[underline="focus"] {
+            margin-bottom: 1px;
+            height: 2px;
+            background-color: var(--app-input-color-focus);
+        }
+
+        &[underline="valid"] {
+            background-color: var(--app-input-color-valid);
+        }
+
+        &[underline="disabled"] {
+            background-color: var(--app-input-color-disabled);
+        }
     }
 }

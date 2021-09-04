@@ -1,11 +1,7 @@
-import {RouterService} from '../../service/router/router.service';
-import {pages} from '../../service/router/pages.config';
-
 import {template} from './page-auth.tmpl';
 
 import {Observable} from '../../utils/observeble/observeble';
 import {FormGroup} from '../../utils/form/form-group';
-import {FormStatusType} from '../../utils/form/form-control';
 import {component, CustomHTMLElement} from '../../utils/component';
 
 import {formValidators} from '../../const/form-validators';
@@ -15,29 +11,20 @@ import '../../components/form/app-form';
 import '../../components/button/app-button';
 
 import './page-auth.less';
+import {Subscription} from '../../utils/observeble/subscription';
+import {AuthPageManager} from './services/auth-page-manager';
+import {authorizationData, registrationData} from '../../service/api/modules/auth-http-client-module';
+import {authPageFormTitle} from './enums/form-title.enum';
 
-enum authPageType {
-    registration = 'registration',
-}
-
-type authPageQueryParams = {
-    type?: authPageType,
-}
-
-const FORM_TITLE = {
-	registration: 'Регистрация',
-	authorization: 'Вход',
-};
-
-@component<PageAuth>({
+@component({
 	name: 'page-auth',
 	template,
 })
 export class PageAuth implements CustomHTMLElement {
     public readonly authForm = new FormGroup({
     	controls: {
-        	password: {validators: formValidators.password},
         	login: {validators: formValidators.login},
+    		password: {validators: formValidators.password},
     	},
     });
 
@@ -52,77 +39,79 @@ export class PageAuth implements CustomHTMLElement {
     	},
     });
 
-    private readonly routerService: RouterService<authPageQueryParams>;
+    private readonly authPageManager: AuthPageManager;
 
-    constructor() {
-    	this.routerService = new RouterService();
-    }
+	private authorizationSubscription: Subscription<authorizationData>;
+	private registrationSubscription: Subscription<registrationData>;
 
-    public onInit(): void {}
+	constructor() {
+		this.authPageManager = new AuthPageManager();
+	}
 
-    public get $title(): Observable<string> {
+	public onInit(): void {
+		this.authorizationSubscription = this.authForm.$submit
+			.subscribe(formData => this.onAuthorization(formData as authorizationData));
+		this.registrationSubscription = this.registrationForm.$submit
+			.subscribe(formData => this.onRegistration(formData as registrationData));
+	}
+
+	public onDestroy(): void {
+		if (this.authorizationSubscription) {
+			this.authorizationSubscription.unsubscribe();
+		}
+
+		if (this.registrationSubscription) {
+			this.registrationSubscription.unsubscribe();
+		}
+	}
+
+	public get $title(): Observable<string> {
     	return this.$isRegistration.map(
-    		isRegistration => isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization,
+    		isRegistration => isRegistration
+				? authPageFormTitle.registration
+				: authPageFormTitle.authorization,
     	);
-    }
+	}
 
-    public get $isRegistration(): Observable<boolean> {
-    	return this.routerService.$queryParams.map(query =>
-    		query.type === authPageType.registration,
-    	);
-    }
+	public get $isRegistration(): Observable<boolean> {
+		return this.authPageManager.$isRegistration;
+	}
 
-    public get $isAuthorization(): Observable<boolean> {
+	public get $isAuthorization(): Observable<boolean> {
     	return this.$isRegistration.map(isAuthorization => !isAuthorization);
-    }
+	}
 
-    public get $isInvalidForm(): Observable<boolean> {
-    	return Observable.all([
-        	this.$isRegistration,
-        	this.authForm.$statusChanged.map(status => status.status === FormStatusType.valid),
-    		this.registrationForm.$statusChanged.map(
-    			status => status.status === FormStatusType.valid),
-    	])
-        	.map(([isRegistration, isAuthFormValid, isRegistrationFormValid]) =>
-        		isRegistration ? !isRegistrationFormValid : !isAuthFormValid,
-    		);
-    }
+	public get $isDisabledAuthorizationForm(): Observable<boolean> {
+		return this.authForm.$isValid.map(isValid => !isValid);
+	}
 
-    public navigateTo(): void {
-    	this.$isAuthorization
-        	.only(1)
-        	.subscribe(isAuthorization => {
-        		if (isAuthorization) {
-        			this.routerService.navigateTo(pages.auth, {type: authPageType.registration});
-        		} else {
-        			this.routerService.navigateTo(pages.auth);
-        		}
-    		});
-    }
+	public get $isDisabledRegistrationForm(): Observable<boolean> {
+		return this.registrationForm.$isValid.map(isValid => !isValid);
+	}
 
-    public onAuthorization(): void {
-    	this.$isAuthorization
-    		.only(1)
-        	.subscribe(isAuthorization => {
-        		if (isAuthorization) {
-        			// TODO: собираем с формочки данные авторизации и идём на сервер
-        			console.log(this.authForm.value);
-        		} else {
-        			// TODO: собираем с формочки данные регистрации и идём на сервер
-        			console.log(this.registrationForm.value);
-    			}
-    		});
-    }
+	public onDisabledClickFormAuthorization(): void {
+		this.authForm.touch();
+		this.authForm.shakingFirstInvalidField();
+	}
 
-    public onDisabledClick(): void {
-    	this.$isAuthorization
-        	.only(1)
-        	.subscribe(isAuthorization => {
-        		if (isAuthorization) {
-        			this.authForm.touch();
-        		} else {
-        			this.registrationForm.touch();
-        		}
-    		});
-    }
+	public onDisabledClickFormRegistration(): void {
+		this.registrationForm.touch();
+		this.registrationForm.shakingFirstInvalidField();
+	}
+
+	public navigateToAuthorization(): void {
+		this.authPageManager.navigateToAuthorization();
+	}
+
+	public navigateToRegistration(): void {
+		this.authPageManager.navigateToRegistration();
+	}
+
+	private onAuthorization(authData: authorizationData): void {
+		this.authPageManager.authorization(authData);
+	}
+
+	private onRegistration(registrationData: registrationData): void {
+		this.authPageManager.registration(registrationData);
+	}
 }

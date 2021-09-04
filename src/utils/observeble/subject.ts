@@ -8,16 +8,16 @@ type DeferPromise<T, Error> = {
 };
 
 function deferPromise<T, Error>(): DeferPromise<T, Error> {
-	let resolvingFunctions;
+	let resolvingFunctions: Omit<DeferPromise<T, Error>, 'promise'>;
 	const promise = new Promise<T>((resolve, reject) => {
 		resolvingFunctions = {resolve, reject};
 	});
-
-	return {promise, resolve: resolvingFunctions.resolve, reject: resolvingFunctions.reject};
+	// @ts-ignore
+	return {promise, ...resolvingFunctions};
 }
 
 export class Subject<T> {
-    private _value: T;
+    private _value: T | undefined;
     private hasValue: boolean;
     private deferPromise: DeferPromise<ChainPromiseValue<T>, Error>;
 
@@ -31,7 +31,7 @@ export class Subject<T> {
     	this.deferPromise = deferPromise<ChainPromiseValue<T>, Error>();
     }
 
-    public next(value?: T) {
+    public next(value: T) {
     	const nextdeferPromise = deferPromise<ChainPromiseValue<T>, Error>();
 
     	this._value = value;

@@ -6,7 +6,7 @@ import './app-button.less';
 import {Subject} from '../../utils/observeble/subject';
 import {Observable} from '../../utils/observeble/observeble';
 
-@component<AppButton>({
+@component({
 	name: 'app-button',
 	template,
 	observedAttributes: ['disabled'],
@@ -20,7 +20,7 @@ export class AppButton implements CustomHTMLElement {
     }
 
     public onRendered(element: HTMLElement): void {
-    	element.querySelector('button').addEventListener('click', event => {
+    	element.querySelector('button')!.addEventListener('click', event => {
     		if (this._disabled) {
     			event.stopPropagation();
 

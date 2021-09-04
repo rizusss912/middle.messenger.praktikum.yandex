@@ -11,6 +11,12 @@ export const template = `
             <app-input slot="field" formControl=[[authForm.controls.password]]>
                 <span slot="label">Пароль</span>
             </app-input>
+
+            <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance="primary">
+                <span slot="label">
+                    Авторизироваться
+                </span>
+            </app-button>
         </app-form>
 
         <app-form name="registration" hidden={{$isAuthorization}} formGroup=[[registrationForm]]>
@@ -32,24 +38,24 @@ export const template = `
             <app-input slot="field" formControl=[[registrationForm.controls.phone]]>
                 <span slot="label">Телефон</span> 
             </app-input>
+
+            <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance="primary">
+                <span slot="label">
+                    Регистрация
+                </span>
+            </app-button>
         </app-form>
 
-        <app-button @click={{onAuthorization()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} appearance="primary">
-            <span slot="label" hidden={{$isAuthorization}}>
-                Регистрация
-            </span>
-            <span slot="label" hidden={{$isRegistration}}>
-                Авторизация
-            </span>
-        </app-button>
-
-        <app-button @click={{navigateTo()}} appearance="secondary">
-            <span slot="label" hidden={{$isRegistration}}>
-                Нет акаунта?
-            </span>
-            <span slot="label" hidden={{$isAuthorization}}>
+        <app-button @click={{navigateToAuthorization()}} appearance="secondary" hidden={{$isRegistration}}>
+            <span slot="label">
                 Войти
             </span>
         </app-button>
+
+        <app-button @click={{navigateToRegistration()}} appearance="secondary" hidden={{$isAuthorization}}>
+            <span slot="label">
+                Нет акаунта?
+            </span>
+    </app-button>
     </main>
 `;

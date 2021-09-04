@@ -23,7 +23,7 @@ export class Validators {
 
 	public static required(regExp: RegExp, error?: ValidatorError): formValidator {
 		return function (value: formValue): null | ValidatorError {
-			return regExp.test(Validators.nonNullable(value))
+			return regExp.test(Validators.nonNullable(value) as string)
 				? null
 				: error || new ValidatorError(defaultMessages.required);
 		};

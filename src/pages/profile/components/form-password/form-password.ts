@@ -1,50 +1,89 @@
-import {RouterService} from '../../../../service/router/router.service';
-import {pages} from '../../../../service/router/pages.config';
-
 import {FormGroup} from '../../../../utils/form/form-group';
 import {Observable} from '../../../../utils/observeble/observeble';
-import {component, CustomHTMLElement} from '../../../../utils/component';
+import {component} from '../../../../utils/component';
 
 import {formValidators} from '../../../../const/form-validators';
 
 import {template} from './form-password.tmpl';
 
 import './form-password.less';
+import {ProfileContent} from '../../elements/profile-content';
+import {ValidatorError} from '../../../../utils/form/validator-error';
+import {ProfilePageManager} from '../../service/profile-page-manager';
+import {changePasswordData} from '../../../../service/api/modules/user-http-client-module';
 
-@component<FormPassword>({
+// @ts-ignore никак не могу написать типы для component (
+@component({
 	name: 'form-password',
 	template,
 })
-export class FormPassword implements CustomHTMLElement {
+export class FormPassword extends ProfileContent {
         public readonly form = new FormGroup({
         	controls: {
-        		last: {validators: formValidators.password},
-        		next: {validators: formValidators.password},
-        		repeat: {validators: formValidators.password},
+        		oldPassword: {validators: formValidators.password},
+        		newPassword: {validators: formValidators.password},
+        		repeatPassword: {validators: formValidators.password},
         	},
+        	fieldValidators: [
+        		{
+        			targets: ['repeatPassword'],
+        			validators: [
+        				({newPassword, repeatPassword}) => newPassword === repeatPassword
+        					? null
+        					: new ValidatorError('Пароли не совпадают'),
+        			],
+        		},
+        		{
+        			targets: ['repeatPassword'],
+        			validators: [
+        				({oldPassword, repeatPassword}) => oldPassword === repeatPassword
+        					? new ValidatorError('Новый пароль не отличается от старого')
+        					: null,
+        			],
+        		},
+        		{
+        			targets: ['newPassword'],
+        			validators: [
+        				({oldPassword, newPassword}) => oldPassword === newPassword
+        					? new ValidatorError('Новый пароль не отличается от старого')
+        					: null,
+        			],
+        		},
+        	],
         });
 
-        private readonly routerService: RouterService<{}>;
+        private readonly profilePageManager: ProfilePageManager;
 
         constructor() {
-        	this.routerService = new RouterService();
+        	super();
+
+        	this.profilePageManager = new ProfilePageManager();
+        }
+
+        static get observedAttributes(): string[] {
+        	return super.observedAttributes;
         }
 
         public get $isInvalidForm(): Observable<boolean> {
         	return this.form.$isValid.map(isValid => !isValid);
         }
 
-        public onInit(): void {}
-
         public onBack(): void {
-        	this.routerService.navigateTo(pages.profile);
+        	this.profilePageManager.goToUserData();
         }
 
         public onChangePassword(): void {
-        	console.log(this.form.value);
+        	this.profilePageManager.changePassword(this.getChangePasswordData());
         }
 
         public onDisabledClick(): void {
         	this.form.touch();
+        	this.form.shakingFirstInvalidField();
+        }
+
+        private getChangePasswordData(): changePasswordData {
+        	const {newPassword, oldPassword} = this.form.value;
+
+        	return {newPassword, oldPassword} as changePasswordData;
         }
 }

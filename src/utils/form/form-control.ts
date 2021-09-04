@@ -1,14 +1,18 @@
+import {AppAnimation} from '../animation/app-animation';
 import {Observable} from '../observeble/observeble';
 import {Subject} from '../observeble/subject';
 import {ValidatorError} from './validator-error';
 
-export type formValue = string | undefined;
+export type formValue = unknown;
 
 export type formValidator = (value: formValue) => null | ValidatorError;
+export type asyncFormValidator =
+	($value: Observable<formValue>) => Observable<null | ValidatorError>;
 
 export interface FormControlOptions {
     value?: string;
     validators?: Array<formValidator>;
+	asyncValidators?: Array<asyncFormValidator>;
 }
 
 export interface FormControlConfig extends FormControlOptions {
@@ -28,31 +32,43 @@ export interface FormStatus {
 export class FormControl {
     public readonly name: string;
 
-    private readonly $value: Subject<string>;
+    private readonly $value: Subject<formValue>;
     private readonly validators: Array<formValidator>;
+	private readonly asyncValidators: Array<asyncFormValidator>;
     private readonly touched: Subject<boolean> = new Subject<boolean>(false);
     private readonly hasFocus: Subject<boolean> = new Subject<boolean>(false);
+	private readonly disabled: Subject<boolean> = new Subject<boolean>(false);
+	private readonly animations: Subject<AppAnimation> = new Subject<AppAnimation>();
 
     private _value: formValue;
 
     constructor(config: FormControlConfig) {
-    	this.$value = new Subject<string>(config.value || '');
+    	this.$value = new Subject<formValue>(config.value || '');
     	this._value = config.value;
     	this.name = config.name;
     	this.validators = config.validators || [];
+    	this.asyncValidators = config.asyncValidators || [];
     }
 
     public get value(): formValue {
     	return this._value;
     }
 
-    public get $valueChanged(): Observable<string> {
+    public get $valueChanged(): Observable<formValue> {
     	return this.$value.asObserveble();
     }
 
     public get $statusChanged(): Observable<FormStatus> {
-    	return this.$valueChanged
-    		.map(value => this.mapValueToStatus(value))
+    	return Observable.all([
+    		this.$valueChanged,
+    		...this.asyncValidators.map(validate => validate(this.$valueChanged)),
+    	])
+    		.map(([value, ...asyncValidatorsResults]) =>
+    			this.mapValueToStatus(
+    				value,
+					asyncValidatorsResults as Array<null | ValidatorError>,
+    			),
+    		)
     		.uniqueNext(true, (last, next) => FormControl.hasDiffInStatuses(last, next));
     }
 
@@ -60,22 +76,44 @@ export class FormControl {
     	return this.touched.asObserveble();
     }
 
+    public get $changeFocus(): Observable<boolean> {
+    	return this.hasFocus.asObserveble()
+    		.uniqueNext();
+    }
+
     public get $isValid(): Observable<boolean> {
     	return this.$statusChanged.map(status => status.status === FormStatusType.valid)
     		.uniqueNext();
     }
 
-    public next(value: string): void {
+    public get $disabled(): Observable<boolean> {
+    	return this.disabled.asObserveble()
+    		.uniqueNext();
+    }
+
+    public get $animations(): Observable<AppAnimation> {
+    	return this.animations.asObserveble();
+    }
+
+    public next(value: formValue): void {
     	this._value = value;
-    	this.$value.next(value);
+    	this.$value.next(value || '');
     }
 
     public touch(): void {
     	this.touched.next(true);
     }
 
+    public disable(disabled: boolean): void {
+    	this.disabled.next(disabled);
+    }
+
     public changeFocus(hasFocus: boolean): void {
     	this.hasFocus.next(hasFocus);
+    }
+
+    public animate(animations: AppAnimation): void {
+    	this.animations.next(animations);
     }
 
     private static hasDiffInStatuses(last: FormStatus, next: FormStatus): boolean {
@@ -94,12 +132,12 @@ export class FormControl {
     		return false;
     	}
 
-    	if (last.length !== next.length) {
+    	if (last!.length !== next!.length) {
     		return true;
     	}
 
-    	for (let index = 0; index < last.length; index++) {
-    		if (!last[index].equals(next[index])) {
+    	for (let index = 0; index < last!.length; index++) {
+    		if (!last![index].equals(next![index])) {
     			return true;
     		}
     	}
@@ -107,8 +145,11 @@ export class FormControl {
     	return false;
     }
 
-    private mapValueToStatus(value: formValue): FormStatus {
-    	const errors = [];
+    private mapValueToStatus(
+    	value: formValue,
+    	asyncValidatorsResults: Array<ValidatorError | null>,
+    ): FormStatus {
+    	let errors = [];
 
     	for (const validator of this.validators) {
     		const error = validator(value);
@@ -117,6 +158,10 @@ export class FormControl {
     			errors.push(error);
     		}
     	}
+
+    	errors = errors.concat(
+			asyncValidatorsResults.filter(error => Boolean(error)) as ValidatorError[],
+    	);
 
     	if (errors.length === 0) {
     		return {status: FormStatusType.valid};

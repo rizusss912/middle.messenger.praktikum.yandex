@@ -1,3 +1,4 @@
+import {Guard} from './interfaces/guard';
 import {Observable} from './observeble/observeble';
 import {Templator, RenderOptions} from './templator/templator';
 
@@ -5,6 +6,7 @@ export interface ComponentConfig {
     name: string;
     template: string;
     observedAttributes?: string[];
+	guards?: Array<new () => Guard>;
 }
 
 export interface CustomHTMLElement {
@@ -21,45 +23,58 @@ enum defaultObservedAttributes {
     style = 'style',
 }
 
-export function component<T extends CustomHTMLElement>(config: ComponentConfig):
-(Сlazz: new () => T) => new () => T {
-	return function (Clazz: new () => T): new () => T {
-		class CustomElement extends HTMLElement {
-            private templator: Templator<T> | undefined;
-            private readonly clazz: T;
+// @ts-ignore тут вообще никак не получается без any (
+export type Component = CustomHTMLElement & any;
+export type Clazz = Partial<{observedAttributes: string}> & (new () => Component);
 
-            constructor() {
+export function component(config: ComponentConfig):
+(Сlazz: Clazz) => Clazz {
+	return function (Clazz: Clazz): Clazz {
+		class CustomElement extends HTMLElement {
+            private templator: Templator<Component> | undefined;
+            private clazz: Component;
+			private template: string;
+
+			constructor() {
             	super();
 
+				this.template = config.template;
             	this.clazz = new Clazz();
-            }
+			}
 
-            connectedCallback(): void {
+			public connectedCallback(): void {
+				if (config.guards) {
+					this.checkGuards(config.guards);
+				}
+
             	if (this.clazz.onInit) {
             		this.clazz.onInit();
             	}
 
             	this.render();
+
             	if (this.clazz.onRendered) {
             		this.clazz.onRendered(this);
             	}
-            }
+			}
 
-            disconnectedCallback(): void {
+			public disconnectedCallback(): void {
             	if (this.clazz.onDestroy) {
             		this.clazz.onDestroy();
             	}
-            }
+			}
 
-            static get observedAttributes(): string[] {
+			public static get observedAttributes(): string[] {
             	// @ts-ignore
-            	return (Object.values(
-            		defaultObservedAttributes) as string[]).concat(
-            		config.observedAttributes ? config.observedAttributes : [],
-            	);
-            }
+            	return (Object.values(defaultObservedAttributes) as string[])
+            		.concat(
+            			config.observedAttributes ? config.observedAttributes : [],
+            		).concat(
+            			Clazz.observedAttributes ? Clazz.observedAttributes : [],
+            		);
+			}
 
-            attributeChangedCallback(
+			public attributeChangedCallback(
             	name: string, oldValue: string | null, newValue: string | null): void {
             	let needRender = false;
 
@@ -76,9 +91,15 @@ export function component<T extends CustomHTMLElement>(config: ComponentConfig):
             	if (needRender) {
             		this.render();
             	}
-            }
+			}
 
-            render(): void {
+			// @ts-ignore используется внешними компонентами
+			public inject(fieldName: string, value: unknown): void {
+				// @ts-ignore
+				this.clazz[fieldName] = value;
+			}
+
+			private render(): void {
             	const options: RenderOptions = {};
             	const {content} = this.clazz;
 
@@ -91,22 +112,17 @@ export function component<T extends CustomHTMLElement>(config: ComponentConfig):
             	}
 
             	this.templator!.render(this.clazz);
-            }
+			}
 
-            init(): void {
-            	this.templator = new Templator(this.clazz, config.template);
+			private init(): void {
+            	this.templator = new Templator(this.clazz, this.template);
 
             	for (const node of this.templator.nodes) {
             		this.appendChild(node);
             	}
-            }
+			}
 
-            inject(fieldName: string, value: unknown): void {
-            	// @ts-ignore
-            	this.clazz[fieldName] = value;
-            }
-
-            onDefaultAttributeChanged(
+			private onDefaultAttributeChanged(
             	name: string, _oldValue: string | null, newValue: string | null): boolean {
             	switch (name) {
             		case defaultObservedAttributes.hidden:
@@ -124,11 +140,37 @@ export function component<T extends CustomHTMLElement>(config: ComponentConfig):
             	}
 
             	return false;
-            }
+			}
+
+			private async checkGuards(guards: Array<new () => Guard>): Promise<void> {
+				for (const GuardConstructor of guards) {
+					const guard = new GuardConstructor();
+					const canOpen = guard.canOpen();
+
+					if (canOpen instanceof Promise) {
+						if (!await canOpen) {
+							guard.onOpenError();
+							this.fillsWithEmptiness();
+
+							return;
+						}
+					} else if (!canOpen) {
+						guard.onOpenError();
+						this.fillsWithEmptiness();
+
+						return;
+					}
+				}
+			}
+
+			private fillsWithEmptiness(): void {
+				this.template = '';
+				this.clazz = {};
+			}
 		}
 
 		customElements.define(config.name, CustomElement);
 
-		return <new () => T><unknown>CustomElement;
+		return <new () => Component>CustomElement;
 	};
 }

@@ -26,7 +26,10 @@ export class Observable<T> {
     	return Observable.combine(observebles, false);
     }
 
-    public static event(element: HTMLElement, eventName: string): Observable<Event> {
+    public static event(
+    	element: HTMLElement | Window & typeof globalThis,
+    	eventName: string,
+    ): Observable<Event> {
     	const emitter: Subject<Event> = new Subject<Event>();
 
     	element.addEventListener(eventName, (e: Event) => emitter.next(e));
@@ -34,7 +37,7 @@ export class Observable<T> {
     	return emitter.asObserveble();
     }
 
-    public subscribe(handler: (value?: T) => void): Subscription<T> {
+    public subscribe(handler: (value: T) => void): Subscription<T> {
     	const subscription = new Subscription(this.getUnsubscribeFunction(this.subscriptionMap));
 
     	this.subscriptionMap.set(subscription, handler);
@@ -46,7 +49,7 @@ export class Observable<T> {
     	return subscription;
     }
 
-    public map<R>(handler: (value?: T) => R): Observable<R> {
+    public map<R>(handler: (value: T) => R): Observable<R> {
     	function mapPromise(promise: ChainPromise<T>): ChainPromise<R> {
     		return promise.then(chain => ({
     			value: handler(chain.value),
@@ -61,7 +64,7 @@ export class Observable<T> {
     	return new Observable<R>(mapPromise(this.promise));
     }
 
-    public filter(handler: (value?: T) => boolean): Observable<T> {
+    public filter(handler: (value: T) => boolean): Observable<T> {
     	function filterPromise(promise: ChainPromise<T>): ChainPromise<T> {
     		return promise.then(chain => {
     			if (handler(chain.value)) {
@@ -82,7 +85,7 @@ export class Observable<T> {
     	return new Observable<T>(filterPromise(this.promise));
     }
 
-    public on(handler: (value?: T) => void): Observable<T> {
+    public on(handler: (value: T) => void): Observable<T> {
     	function onPromise(promise: ChainPromise<T>): ChainPromise<T> {
     		return promise.then(chain => {
     			handler(chain.value);
@@ -136,6 +139,10 @@ export class Observable<T> {
 
     	return new Observable<T>(count ? this.promise : emptyPromise)
     		.filter(() => count-- > 0);
+    }
+
+    public select<R>(selector: (value: T) => R): Observable<R> {
+    	return this.map(selector).uniqueNext();
     }
 
     private static combine<T>(
