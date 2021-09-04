@@ -47,7 +47,7 @@ app-input label > slot {
   padding-top: 4px;
 }
 app-input label > slot[instead-of-text] {
-  padding-top: 0px;
+  padding-top: 0;
   transform: translateY(100%);
   font-size: 18px;
 }
@@ -289,6 +289,9 @@ page-default main p {
 
 app-root {
   display: block;
+}
+app-root .inert {
+  pointer-events: none;
 }
 
 

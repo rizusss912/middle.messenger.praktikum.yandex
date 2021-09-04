@@ -117,40 +117,789 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"utils/observeble/subject.ts":[function(require,module,exports) {
+})({"../node_modules/regenerator-runtime/runtime.js":[function(require,module,exports) {
+var define;
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+var runtime = (function (exports) {
+  "use strict";
+
+  var Op = Object.prototype;
+  var hasOwn = Op.hasOwnProperty;
+  var undefined; // More compressible than void 0.
+  var $Symbol = typeof Symbol === "function" ? Symbol : {};
+  var iteratorSymbol = $Symbol.iterator || "@@iterator";
+  var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+  var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+
+  function define(obj, key, value) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+    return obj[key];
+  }
+  try {
+    // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+    define({}, "");
+  } catch (err) {
+    define = function(obj, key, value) {
+      return obj[key] = value;
+    };
+  }
+
+  function wrap(innerFn, outerFn, self, tryLocsList) {
+    // If outerFn provided and outerFn.prototype is a Generator, then outerFn.prototype instanceof Generator.
+    var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator;
+    var generator = Object.create(protoGenerator.prototype);
+    var context = new Context(tryLocsList || []);
+
+    // The ._invoke method unifies the implementations of the .next,
+    // .throw, and .return methods.
+    generator._invoke = makeInvokeMethod(innerFn, self, context);
+
+    return generator;
+  }
+  exports.wrap = wrap;
+
+  // Try/catch helper to minimize deoptimizations. Returns a completion
+  // record like context.tryEntries[i].completion. This interface could
+  // have been (and was previously) designed to take a closure to be
+  // invoked without arguments, but in all the cases we care about we
+  // already have an existing method we want to call, so there's no need
+  // to create a new function object. We can even get away with assuming
+  // the method takes exactly one argument, since that happens to be true
+  // in every case, so we don't have to touch the arguments object. The
+  // only additional allocation required is the completion record, which
+  // has a stable shape and so hopefully should be cheap to allocate.
+  function tryCatch(fn, obj, arg) {
+    try {
+      return { type: "normal", arg: fn.call(obj, arg) };
+    } catch (err) {
+      return { type: "throw", arg: err };
+    }
+  }
+
+  var GenStateSuspendedStart = "suspendedStart";
+  var GenStateSuspendedYield = "suspendedYield";
+  var GenStateExecuting = "executing";
+  var GenStateCompleted = "completed";
+
+  // Returning this object from the innerFn has the same effect as
+  // breaking out of the dispatch switch statement.
+  var ContinueSentinel = {};
+
+  // Dummy constructor functions that we use as the .constructor and
+  // .constructor.prototype properties for functions that return Generator
+  // objects. For full spec compliance, you may wish to configure your
+  // minifier not to mangle the names of these two functions.
+  function Generator() {}
+  function GeneratorFunction() {}
+  function GeneratorFunctionPrototype() {}
+
+  // This is a polyfill for %IteratorPrototype% for environments that
+  // don't natively support it.
+  var IteratorPrototype = {};
+  define(IteratorPrototype, iteratorSymbol, function () {
+    return this;
+  });
+
+  var getProto = Object.getPrototypeOf;
+  var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+  if (NativeIteratorPrototype &&
+      NativeIteratorPrototype !== Op &&
+      hasOwn.call(NativeIteratorPrototype, iteratorSymbol)) {
+    // This environment has a native %IteratorPrototype%; use it instead
+    // of the polyfill.
+    IteratorPrototype = NativeIteratorPrototype;
+  }
+
+  var Gp = GeneratorFunctionPrototype.prototype =
+    Generator.prototype = Object.create(IteratorPrototype);
+  GeneratorFunction.prototype = GeneratorFunctionPrototype;
+  define(Gp, "constructor", GeneratorFunctionPrototype);
+  define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
+  GeneratorFunction.displayName = define(
+    GeneratorFunctionPrototype,
+    toStringTagSymbol,
+    "GeneratorFunction"
+  );
+
+  // Helper for defining the .next, .throw, and .return methods of the
+  // Iterator interface in terms of a single ._invoke method.
+  function defineIteratorMethods(prototype) {
+    ["next", "throw", "return"].forEach(function(method) {
+      define(prototype, method, function(arg) {
+        return this._invoke(method, arg);
+      });
+    });
+  }
+
+  exports.isGeneratorFunction = function(genFun) {
+    var ctor = typeof genFun === "function" && genFun.constructor;
+    return ctor
+      ? ctor === GeneratorFunction ||
+        // For the native GeneratorFunction constructor, the best we can
+        // do is to check its .name property.
+        (ctor.displayName || ctor.name) === "GeneratorFunction"
+      : false;
+  };
+
+  exports.mark = function(genFun) {
+    if (Object.setPrototypeOf) {
+      Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
+    } else {
+      genFun.__proto__ = GeneratorFunctionPrototype;
+      define(genFun, toStringTagSymbol, "GeneratorFunction");
+    }
+    genFun.prototype = Object.create(Gp);
+    return genFun;
+  };
+
+  // Within the body of any async function, `await x` is transformed to
+  // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+  // `hasOwn.call(value, "__await")` to determine if the yielded value is
+  // meant to be awaited.
+  exports.awrap = function(arg) {
+    return { __await: arg };
+  };
+
+  function AsyncIterator(generator, PromiseImpl) {
+    function invoke(method, arg, resolve, reject) {
+      var record = tryCatch(generator[method], generator, arg);
+      if (record.type === "throw") {
+        reject(record.arg);
+      } else {
+        var result = record.arg;
+        var value = result.value;
+        if (value &&
+            typeof value === "object" &&
+            hasOwn.call(value, "__await")) {
+          return PromiseImpl.resolve(value.__await).then(function(value) {
+            invoke("next", value, resolve, reject);
+          }, function(err) {
+            invoke("throw", err, resolve, reject);
+          });
+        }
+
+        return PromiseImpl.resolve(value).then(function(unwrapped) {
+          // When a yielded Promise is resolved, its final value becomes
+          // the .value of the Promise<{value,done}> result for the
+          // current iteration.
+          result.value = unwrapped;
+          resolve(result);
+        }, function(error) {
+          // If a rejected Promise was yielded, throw the rejection back
+          // into the async generator function so it can be handled there.
+          return invoke("throw", error, resolve, reject);
+        });
+      }
+    }
+
+    var previousPromise;
+
+    function enqueue(method, arg) {
+      function callInvokeWithMethodAndArg() {
+        return new PromiseImpl(function(resolve, reject) {
+          invoke(method, arg, resolve, reject);
+        });
+      }
+
+      return previousPromise =
+        // If enqueue has been called before, then we want to wait until
+        // all previous Promises have been resolved before calling invoke,
+        // so that results are always delivered in the correct order. If
+        // enqueue has not been called before, then it is important to
+        // call invoke immediately, without waiting on a callback to fire,
+        // so that the async generator function has the opportunity to do
+        // any necessary setup in a predictable way. This predictability
+        // is why the Promise constructor synchronously invokes its
+        // executor callback, and why async functions synchronously
+        // execute code before the first await. Since we implement simple
+        // async functions in terms of async generators, it is especially
+        // important to get this right, even though it requires care.
+        previousPromise ? previousPromise.then(
+          callInvokeWithMethodAndArg,
+          // Avoid propagating failures to Promises returned by later
+          // invocations of the iterator.
+          callInvokeWithMethodAndArg
+        ) : callInvokeWithMethodAndArg();
+    }
+
+    // Define the unified helper method that is used to implement .next,
+    // .throw, and .return (see defineIteratorMethods).
+    this._invoke = enqueue;
+  }
+
+  defineIteratorMethods(AsyncIterator.prototype);
+  define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
+    return this;
+  });
+  exports.AsyncIterator = AsyncIterator;
+
+  // Note that simple async functions are implemented on top of
+  // AsyncIterator objects; they just return a Promise for the value of
+  // the final result produced by the iterator.
+  exports.async = function(innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+    if (PromiseImpl === void 0) PromiseImpl = Promise;
+
+    var iter = new AsyncIterator(
+      wrap(innerFn, outerFn, self, tryLocsList),
+      PromiseImpl
+    );
+
+    return exports.isGeneratorFunction(outerFn)
+      ? iter // If outerFn is a generator, return the full iterator.
+      : iter.next().then(function(result) {
+          return result.done ? result.value : iter.next();
+        });
+  };
+
+  function makeInvokeMethod(innerFn, self, context) {
+    var state = GenStateSuspendedStart;
+
+    return function invoke(method, arg) {
+      if (state === GenStateExecuting) {
+        throw new Error("Generator is already running");
+      }
+
+      if (state === GenStateCompleted) {
+        if (method === "throw") {
+          throw arg;
+        }
+
+        // Be forgiving, per 25.3.3.3.3 of the spec:
+        // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-generatorresume
+        return doneResult();
+      }
+
+      context.method = method;
+      context.arg = arg;
+
+      while (true) {
+        var delegate = context.delegate;
+        if (delegate) {
+          var delegateResult = maybeInvokeDelegate(delegate, context);
+          if (delegateResult) {
+            if (delegateResult === ContinueSentinel) continue;
+            return delegateResult;
+          }
+        }
+
+        if (context.method === "next") {
+          // Setting context._sent for legacy support of Babel's
+          // function.sent implementation.
+          context.sent = context._sent = context.arg;
+
+        } else if (context.method === "throw") {
+          if (state === GenStateSuspendedStart) {
+            state = GenStateCompleted;
+            throw context.arg;
+          }
+
+          context.dispatchException(context.arg);
+
+        } else if (context.method === "return") {
+          context.abrupt("return", context.arg);
+        }
+
+        state = GenStateExecuting;
+
+        var record = tryCatch(innerFn, self, context);
+        if (record.type === "normal") {
+          // If an exception is thrown from innerFn, we leave state ===
+          // GenStateExecuting and loop back for another invocation.
+          state = context.done
+            ? GenStateCompleted
+            : GenStateSuspendedYield;
+
+          if (record.arg === ContinueSentinel) {
+            continue;
+          }
+
+          return {
+            value: record.arg,
+            done: context.done
+          };
+
+        } else if (record.type === "throw") {
+          state = GenStateCompleted;
+          // Dispatch the exception by looping back around to the
+          // context.dispatchException(context.arg) call above.
+          context.method = "throw";
+          context.arg = record.arg;
+        }
+      }
+    };
+  }
+
+  // Call delegate.iterator[context.method](context.arg) and handle the
+  // result, either by returning a { value, done } result from the
+  // delegate iterator, or by modifying context.method and context.arg,
+  // setting context.delegate to null, and returning the ContinueSentinel.
+  function maybeInvokeDelegate(delegate, context) {
+    var method = delegate.iterator[context.method];
+    if (method === undefined) {
+      // A .throw or .return when the delegate iterator has no .throw
+      // method always terminates the yield* loop.
+      context.delegate = null;
+
+      if (context.method === "throw") {
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined;
+          maybeInvokeDelegate(delegate, context);
+
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
+          }
+        }
+
+        context.method = "throw";
+        context.arg = new TypeError(
+          "The iterator does not provide a 'throw' method");
+      }
+
+      return ContinueSentinel;
+    }
+
+    var record = tryCatch(method, delegate.iterator, context.arg);
+
+    if (record.type === "throw") {
+      context.method = "throw";
+      context.arg = record.arg;
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    var info = record.arg;
+
+    if (! info) {
+      context.method = "throw";
+      context.arg = new TypeError("iterator result is not an object");
+      context.delegate = null;
+      return ContinueSentinel;
+    }
+
+    if (info.done) {
+      // Assign the result of the finished delegate to the temporary
+      // variable specified by delegate.resultName (see delegateYield).
+      context[delegate.resultName] = info.value;
+
+      // Resume execution at the desired location (see delegateYield).
+      context.next = delegate.nextLoc;
+
+      // If context.method was "throw" but the delegate handled the
+      // exception, let the outer generator proceed normally. If
+      // context.method was "next", forget context.arg since it has been
+      // "consumed" by the delegate iterator. If context.method was
+      // "return", allow the original .return call to continue in the
+      // outer generator.
+      if (context.method !== "return") {
+        context.method = "next";
+        context.arg = undefined;
+      }
+
+    } else {
+      // Re-yield the result returned by the delegate method.
+      return info;
+    }
+
+    // The delegate iterator is finished, so forget it and continue with
+    // the outer generator.
+    context.delegate = null;
+    return ContinueSentinel;
+  }
+
+  // Define Generator.prototype.{next,throw,return} in terms of the
+  // unified ._invoke helper method.
+  defineIteratorMethods(Gp);
+
+  define(Gp, toStringTagSymbol, "Generator");
+
+  // A Generator should always return itself as the iterator object when the
+  // @@iterator function is called on it. Some browsers' implementations of the
+  // iterator prototype chain incorrectly implement this, causing the Generator
+  // object to not be returned from this call. This ensures that doesn't happen.
+  // See https://github.com/facebook/regenerator/issues/274 for more details.
+  define(Gp, iteratorSymbol, function() {
+    return this;
+  });
+
+  define(Gp, "toString", function() {
+    return "[object Generator]";
+  });
+
+  function pushTryEntry(locs) {
+    var entry = { tryLoc: locs[0] };
+
+    if (1 in locs) {
+      entry.catchLoc = locs[1];
+    }
+
+    if (2 in locs) {
+      entry.finallyLoc = locs[2];
+      entry.afterLoc = locs[3];
+    }
+
+    this.tryEntries.push(entry);
+  }
+
+  function resetTryEntry(entry) {
+    var record = entry.completion || {};
+    record.type = "normal";
+    delete record.arg;
+    entry.completion = record;
+  }
+
+  function Context(tryLocsList) {
+    // The root entry object (effectively a try statement without a catch
+    // or a finally block) gives us a place to store values thrown from
+    // locations where there is no enclosing try statement.
+    this.tryEntries = [{ tryLoc: "root" }];
+    tryLocsList.forEach(pushTryEntry, this);
+    this.reset(true);
+  }
+
+  exports.keys = function(object) {
+    var keys = [];
+    for (var key in object) {
+      keys.push(key);
+    }
+    keys.reverse();
+
+    // Rather than returning an object with a next method, we keep
+    // things simple and return the next function itself.
+    return function next() {
+      while (keys.length) {
+        var key = keys.pop();
+        if (key in object) {
+          next.value = key;
+          next.done = false;
+          return next;
+        }
+      }
+
+      // To avoid creating an additional object, we just hang the .value
+      // and .done properties off the next function object itself. This
+      // also ensures that the minifier will not anonymize the function.
+      next.done = true;
+      return next;
+    };
+  };
+
+  function values(iterable) {
+    if (iterable) {
+      var iteratorMethod = iterable[iteratorSymbol];
+      if (iteratorMethod) {
+        return iteratorMethod.call(iterable);
+      }
+
+      if (typeof iterable.next === "function") {
+        return iterable;
+      }
+
+      if (!isNaN(iterable.length)) {
+        var i = -1, next = function next() {
+          while (++i < iterable.length) {
+            if (hasOwn.call(iterable, i)) {
+              next.value = iterable[i];
+              next.done = false;
+              return next;
+            }
+          }
+
+          next.value = undefined;
+          next.done = true;
+
+          return next;
+        };
+
+        return next.next = next;
+      }
+    }
+
+    // Return an iterator with no values.
+    return { next: doneResult };
+  }
+  exports.values = values;
+
+  function doneResult() {
+    return { value: undefined, done: true };
+  }
+
+  Context.prototype = {
+    constructor: Context,
+
+    reset: function(skipTempReset) {
+      this.prev = 0;
+      this.next = 0;
+      // Resetting context._sent for legacy support of Babel's
+      // function.sent implementation.
+      this.sent = this._sent = undefined;
+      this.done = false;
+      this.delegate = null;
+
+      this.method = "next";
+      this.arg = undefined;
+
+      this.tryEntries.forEach(resetTryEntry);
+
+      if (!skipTempReset) {
+        for (var name in this) {
+          // Not sure about the optimal order of these conditions:
+          if (name.charAt(0) === "t" &&
+              hasOwn.call(this, name) &&
+              !isNaN(+name.slice(1))) {
+            this[name] = undefined;
+          }
+        }
+      }
+    },
+
+    stop: function() {
+      this.done = true;
+
+      var rootEntry = this.tryEntries[0];
+      var rootRecord = rootEntry.completion;
+      if (rootRecord.type === "throw") {
+        throw rootRecord.arg;
+      }
+
+      return this.rval;
+    },
+
+    dispatchException: function(exception) {
+      if (this.done) {
+        throw exception;
+      }
+
+      var context = this;
+      function handle(loc, caught) {
+        record.type = "throw";
+        record.arg = exception;
+        context.next = loc;
+
+        if (caught) {
+          // If the dispatched exception was caught by a catch block,
+          // then let that catch block handle the exception normally.
+          context.method = "next";
+          context.arg = undefined;
+        }
+
+        return !! caught;
+      }
+
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        var record = entry.completion;
+
+        if (entry.tryLoc === "root") {
+          // Exception thrown outside of any try block that could handle
+          // it, so set the completion value of the entire function to
+          // throw the exception.
+          return handle("end");
+        }
+
+        if (entry.tryLoc <= this.prev) {
+          var hasCatch = hasOwn.call(entry, "catchLoc");
+          var hasFinally = hasOwn.call(entry, "finallyLoc");
+
+          if (hasCatch && hasFinally) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            } else if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else if (hasCatch) {
+            if (this.prev < entry.catchLoc) {
+              return handle(entry.catchLoc, true);
+            }
+
+          } else if (hasFinally) {
+            if (this.prev < entry.finallyLoc) {
+              return handle(entry.finallyLoc);
+            }
+
+          } else {
+            throw new Error("try statement without catch or finally");
+          }
+        }
+      }
+    },
+
+    abrupt: function(type, arg) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc <= this.prev &&
+            hasOwn.call(entry, "finallyLoc") &&
+            this.prev < entry.finallyLoc) {
+          var finallyEntry = entry;
+          break;
+        }
+      }
+
+      if (finallyEntry &&
+          (type === "break" ||
+           type === "continue") &&
+          finallyEntry.tryLoc <= arg &&
+          arg <= finallyEntry.finallyLoc) {
+        // Ignore the finally entry if control is not jumping to a
+        // location outside the try/catch block.
+        finallyEntry = null;
+      }
+
+      var record = finallyEntry ? finallyEntry.completion : {};
+      record.type = type;
+      record.arg = arg;
+
+      if (finallyEntry) {
+        this.method = "next";
+        this.next = finallyEntry.finallyLoc;
+        return ContinueSentinel;
+      }
+
+      return this.complete(record);
+    },
+
+    complete: function(record, afterLoc) {
+      if (record.type === "throw") {
+        throw record.arg;
+      }
+
+      if (record.type === "break" ||
+          record.type === "continue") {
+        this.next = record.arg;
+      } else if (record.type === "return") {
+        this.rval = this.arg = record.arg;
+        this.method = "return";
+        this.next = "end";
+      } else if (record.type === "normal" && afterLoc) {
+        this.next = afterLoc;
+      }
+
+      return ContinueSentinel;
+    },
+
+    finish: function(finallyLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.finallyLoc === finallyLoc) {
+          this.complete(entry.completion, entry.afterLoc);
+          resetTryEntry(entry);
+          return ContinueSentinel;
+        }
+      }
+    },
+
+    "catch": function(tryLoc) {
+      for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+        var entry = this.tryEntries[i];
+        if (entry.tryLoc === tryLoc) {
+          var record = entry.completion;
+          if (record.type === "throw") {
+            var thrown = record.arg;
+            resetTryEntry(entry);
+          }
+          return thrown;
+        }
+      }
+
+      // The context.catch method must only be called with a location
+      // argument that corresponds to a known catch block.
+      throw new Error("illegal catch attempt");
+    },
+
+    delegateYield: function(iterable, resultName, nextLoc) {
+      this.delegate = {
+        iterator: values(iterable),
+        resultName: resultName,
+        nextLoc: nextLoc
+      };
+
+      if (this.method === "next") {
+        // Deliberately forget the last sent value so that we don't
+        // accidentally pass it on to the delegate.
+        this.arg = undefined;
+      }
+
+      return ContinueSentinel;
+    }
+  };
+
+  // Regardless of whether this script is executing as a CommonJS module
+  // or not, return the runtime object so that we can declare the variable
+  // regeneratorRuntime in the outer scope, which allows this module to be
+  // injected easily by `bin/regenerator --include-runtime script.js`.
+  return exports;
+
+}(
+  // If this script is executing as a CommonJS module, use module.exports
+  // as the regeneratorRuntime namespace. Otherwise create a new empty
+  // object. Either way, the resulting object will be used to initialize
+  // the regeneratorRuntime variable at the top of this file.
+  typeof module === "object" ? module.exports : {}
+));
+
+try {
+  regeneratorRuntime = runtime;
+} catch (accidentalStrictMode) {
+  // This module should not be running in strict mode, so the above
+  // assignment should always work unless something is misconfigured. Just
+  // in case runtime.js accidentally runs in strict mode, in modern engines
+  // we can explicitly access globalThis. In older engines we can escape
+  // strict mode using a global Function call. This could conceivably fail
+  // if a Content Security Policy forbids using Function, but in that case
+  // the proper solution is to fix the accidental strict mode problem. If
+  // you've misconfigured your bundler to force strict mode and applied a
+  // CSP to forbid Function, and you're not willing to fix either of those
+  // problems, please detail your unique predicament in a GitHub issue.
+  if (typeof globalThis === "object") {
+    globalThis.regeneratorRuntime = runtime;
+  } else {
+    Function("r", "regeneratorRuntime = r")(runtime);
+  }
+}
+
+},{}],"utils/observeble/subject.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Subject = void 0;
 
-var observeble_1 = require("./observeble");
+const observeble_1 = require("./observeble");
 
 function deferPromise() {
-  var resolvingFunctions;
-  var promise = new Promise(function (resolve, reject) {
+  let resolvingFunctions;
+  const promise = new Promise((resolve, reject) => {
     resolvingFunctions = {
-      resolve: resolve,
-      reject: reject
+      resolve,
+      reject
     };
   }); // @ts-ignore
 
   return Object.assign({
-    promise: promise
+    promise
   }, resolvingFunctions);
 }
 
-var Subject = /*#__PURE__*/function () {
-  function Subject(value) {
-    _classCallCheck(this, Subject);
-
+class Subject {
+  constructor(value) {
     this.hasValue = arguments.length > 0;
 
     if (this.hasValue) {
@@ -160,95 +909,62 @@ var Subject = /*#__PURE__*/function () {
     this.deferPromise = deferPromise();
   }
 
-  _createClass(Subject, [{
-    key: "next",
-    value: function next(value) {
-      var nextdeferPromise = deferPromise();
-      this._value = value;
-      this.hasValue = true;
-      this.deferPromise.resolve({
-        value: this._value,
-        next: nextdeferPromise.promise
-      });
-      this.deferPromise = nextdeferPromise;
-    }
-  }, {
-    key: "asObserveble",
-    value: function asObserveble() {
-      if (this.hasValue) {
-        return new observeble_1.Observable(this.deferPromise.promise, this._value);
-      }
+  next(value) {
+    const nextdeferPromise = deferPromise();
+    this._value = value;
+    this.hasValue = true;
+    this.deferPromise.resolve({
+      value: this._value,
+      next: nextdeferPromise.promise
+    });
+    this.deferPromise = nextdeferPromise;
+  }
 
-      return new observeble_1.Observable(this.deferPromise.promise);
+  asObserveble() {
+    if (this.hasValue) {
+      return new observeble_1.Observable(this.deferPromise.promise, this._value);
     }
-  }]);
 
-  return Subject;
-}();
+    return new observeble_1.Observable(this.deferPromise.promise);
+  }
+
+}
 
 exports.Subject = Subject;
 },{"./observeble":"utils/observeble/observeble.ts"}],"utils/observeble/subscription.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Subscription = void 0;
 
-var Subscription = /*#__PURE__*/function () {
-  function Subscription(onUnsubscribe) {
-    _classCallCheck(this, Subscription);
-
+class Subscription {
+  constructor(onUnsubscribe) {
     this.onUnsubscribe = onUnsubscribe;
   }
 
-  _createClass(Subscription, [{
-    key: "unsubscribe",
-    value: function unsubscribe() {
-      this.onUnsubscribe(this);
-    }
-  }]);
+  unsubscribe() {
+    this.onUnsubscribe(this);
+  }
 
-  return Subscription;
-}();
+}
 
 exports.Subscription = Subscription;
 },{}],"utils/observeble/observeble.ts":[function(require,module,exports) {
 "use strict";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Observable = void 0;
 
-var subject_1 = require("./subject");
+const subject_1 = require("./subject");
 
-var subscription_1 = require("./subscription");
+const subscription_1 = require("./subscription");
 
-var Observable = /*#__PURE__*/function () {
-  function Observable(chainPromise, value) {
-    var _this = this;
-
-    _classCallCheck(this, Observable);
-
+class Observable {
+  constructor(chainPromise, value) {
     this.subscriptionMap = new Map();
     this.hasValue = false;
 
@@ -258,375 +974,294 @@ var Observable = /*#__PURE__*/function () {
     }
 
     this.promise = chainPromise;
-    chainPromise.then(function (value) {
-      return _this.onNext(value);
+    chainPromise.then(value => this.onNext(value));
+  }
+
+  static all(observebles) {
+    return Observable.combine(observebles, true);
+  }
+
+  static concat(observebles) {
+    return Observable.combine(observebles, false);
+  }
+
+  static event(element, eventName) {
+    const emitter = new subject_1.Subject();
+    element.addEventListener(eventName, e => emitter.next(e));
+    return emitter.asObserveble();
+  }
+
+  subscribe(handler) {
+    const subscription = new subscription_1.Subscription(this.getUnsubscribeFunction(this.subscriptionMap));
+    this.subscriptionMap.set(subscription, handler); // Т.к. следующее значение может быть и undefined, используем hasValue
+
+    if (this.hasValue) {
+      handler(this._value);
+    }
+
+    return subscription;
+  }
+
+  map(handler) {
+    function mapPromise(promise) {
+      return promise.then(chain => ({
+        value: handler(chain.value),
+        next: mapPromise(chain.next)
+      }));
+    }
+
+    if (this.hasValue) {
+      return new Observable(mapPromise(this.promise), handler(this._value));
+    }
+
+    return new Observable(mapPromise(this.promise));
+  }
+
+  filter(handler) {
+    function filterPromise(promise) {
+      return promise.then(chain => {
+        if (handler(chain.value)) {
+          return {
+            value: chain.value,
+            next: filterPromise(chain.next)
+          };
+        }
+
+        return filterPromise(chain.next);
+      });
+    }
+
+    if (this.hasValue && handler(this._value)) {
+      return new Observable(filterPromise(this.promise), this._value);
+    }
+
+    return new Observable(filterPromise(this.promise));
+  }
+
+  on(handler) {
+    function onPromise(promise) {
+      return promise.then(chain => {
+        handler(chain.value);
+        return {
+          value: chain.value,
+          next: onPromise(chain.next)
+        };
+      });
+    }
+
+    if (this._value) {
+      handler(this._value);
+    }
+
+    if (this.hasValue) {
+      return new Observable(onPromise(this.promise), this._value);
+    }
+
+    return new Observable(onPromise(this.promise));
+  }
+
+  startWith(value) {
+    return new Observable(this.promise, value);
+  }
+
+  uniqueNext(approveFirst = true, checkUnicue = (last, next) => last !== next || !this.hasValue && approveFirst) {
+    let last = this._value;
+    let firstAppruved = false;
+    return this.filter(value => !firstAppruved || checkUnicue(last, value)).on(() => {
+      firstAppruved = true;
+    }).on(value => {
+      last = value;
     });
   }
 
-  _createClass(Observable, [{
-    key: "subscribe",
-    value: function subscribe(handler) {
-      var subscription = new subscription_1.Subscription(this.getUnsubscribeFunction(this.subscriptionMap));
-      this.subscriptionMap.set(subscription, handler); // Т.к. следующее значение может быть и undefined, используем hasValue
+  only(count) {
+    const emptyPromise = new Promise(() => {});
 
-      if (this.hasValue) {
-        handler(this._value);
-      }
-
-      return subscription;
+    if (this.hasValue) {
+      return new Observable(count ? this.promise : emptyPromise, this._value).filter(() => count-- > 0);
     }
-  }, {
-    key: "map",
-    value: function map(handler) {
-      function mapPromise(promise) {
-        return promise.then(function (chain) {
-          return {
-            value: handler(chain.value),
-            next: mapPromise(chain.next)
-          };
-        });
-      }
 
-      if (this.hasValue) {
-        return new Observable(mapPromise(this.promise), handler(this._value));
-      }
+    return new Observable(count ? this.promise : emptyPromise).filter(() => count-- > 0);
+  }
 
-      return new Observable(mapPromise(this.promise));
-    }
-  }, {
-    key: "filter",
-    value: function filter(handler) {
-      function filterPromise(promise) {
-        return promise.then(function (chain) {
-          if (handler(chain.value)) {
-            return {
-              value: chain.value,
-              next: filterPromise(chain.next)
-            };
-          }
+  select(selector) {
+    return this.map(selector).uniqueNext();
+  }
 
-          return filterPromise(chain.next);
-        });
-      }
+  static combine(observebles, waitAll) {
+    const subject = new subject_1.Subject();
+    const values = Array(observebles.length).fill(undefined);
+    const hasValues = Array(observebles.length).fill(false);
+    let hasAllValues = false;
 
-      if (this.hasValue && handler(this._value)) {
-        return new Observable(filterPromise(this.promise), this._value);
-      }
+    const subscribeobserveble = (observeble, index) => {
+      observeble.subscribe(value => {
+        values[index] = value;
 
-      return new Observable(filterPromise(this.promise));
-    }
-  }, {
-    key: "on",
-    value: function on(handler) {
-      function onPromise(promise) {
-        return promise.then(function (chain) {
-          handler(chain.value);
-          return {
-            value: chain.value,
-            next: onPromise(chain.next)
-          };
-        });
-      }
+        if (hasAllValues || !waitAll) {
+          subject.next(values.slice());
+        } else {
+          hasValues[index] = true;
+          hasAllValues = hasValues.every(has => has);
 
-      if (this._value) {
-        handler(this._value);
-      }
-
-      if (this.hasValue) {
-        return new Observable(onPromise(this.promise), this._value);
-      }
-
-      return new Observable(onPromise(this.promise));
-    }
-  }, {
-    key: "startWith",
-    value: function startWith(value) {
-      return new Observable(this.promise, value);
-    }
-  }, {
-    key: "uniqueNext",
-    value: function uniqueNext() {
-      var _this2 = this;
-
-      var approveFirst = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
-      var checkUnicue = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function (last, next) {
-        return last !== next || !_this2.hasValue && approveFirst;
-      };
-      var last = this._value;
-      var firstAppruved = false;
-      return this.filter(function (value) {
-        return !firstAppruved || checkUnicue(last, value);
-      }).on(function () {
-        firstAppruved = true;
-      }).on(function (value) {
-        last = value;
-      });
-    }
-  }, {
-    key: "only",
-    value: function only(count) {
-      var emptyPromise = new Promise(function () {});
-
-      if (this.hasValue) {
-        return new Observable(count ? this.promise : emptyPromise, this._value).filter(function () {
-          return count-- > 0;
-        });
-      }
-
-      return new Observable(count ? this.promise : emptyPromise).filter(function () {
-        return count-- > 0;
-      });
-    }
-  }, {
-    key: "select",
-    value: function select(selector) {
-      return this.map(selector).uniqueNext();
-    }
-  }, {
-    key: "onNext",
-    value: function onNext(value) {
-      var _this3 = this;
-
-      if (!value) {
-        this.onFinish();
-        return;
-      }
-
-      this._value = value.value;
-      this.hasValue = true;
-      this.emitValue(value.value);
-      this.promise = value.next;
-      value.next.then(function (value) {
-        return _this3.onNext(value);
-      });
-    }
-  }, {
-    key: "emitValue",
-    value: function emitValue(value) {
-      var _iterator = _createForOfIteratorHelper(this.subscriptionMap.values()),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var handler = _step.value;
-          handler(value);
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-    }
-  }, {
-    key: "onFinish",
-    value: function onFinish() {
-      this.subscriptionMap.clear();
-    }
-  }, {
-    key: "getUnsubscribeFunction",
-    value: function getUnsubscribeFunction(map) {
-      return function (subscription) {
-        if (map.has(subscription)) {
-          map.delete(subscription);
-        }
-      };
-    }
-  }], [{
-    key: "all",
-    value: function all(observebles) {
-      return Observable.combine(observebles, true);
-    }
-  }, {
-    key: "concat",
-    value: function concat(observebles) {
-      return Observable.combine(observebles, false);
-    }
-  }, {
-    key: "event",
-    value: function event(element, eventName) {
-      var emitter = new subject_1.Subject();
-      element.addEventListener(eventName, function (e) {
-        return emitter.next(e);
-      });
-      return emitter.asObserveble();
-    }
-  }, {
-    key: "combine",
-    value: function combine(observebles, waitAll) {
-      var subject = new subject_1.Subject();
-      var values = Array(observebles.length).fill(undefined);
-      var hasValues = Array(observebles.length).fill(false);
-      var hasAllValues = false;
-
-      var subscribeobserveble = function subscribeobserveble(observeble, index) {
-        observeble.subscribe(function (value) {
-          values[index] = value;
-
-          if (hasAllValues || !waitAll) {
+          if (hasAllValues) {
             subject.next(values.slice());
-          } else {
-            hasValues[index] = true;
-            hasAllValues = hasValues.every(function (has) {
-              return has;
-            });
-
-            if (hasAllValues) {
-              subject.next(values.slice());
-            }
           }
-        });
-      };
+        }
+      });
+    };
 
-      for (var index = 0; index < observebles.length; index++) {
-        subscribeobserveble(observebles[index], index);
-      }
-
-      return subject.asObserveble();
+    for (let index = 0; index < observebles.length; index++) {
+      subscribeobserveble(observebles[index], index);
     }
-  }]);
 
-  return Observable;
-}();
+    return subject.asObserveble();
+  }
+
+  onNext(value) {
+    if (!value) {
+      this.onFinish();
+      return;
+    }
+
+    this._value = value.value;
+    this.hasValue = true;
+    this.emitValue(value.value);
+    this.promise = value.next;
+    value.next.then(value => this.onNext(value));
+  }
+
+  emitValue(value) {
+    for (const handler of this.subscriptionMap.values()) {
+      handler(value);
+    }
+  }
+
+  onFinish() {
+    this.subscriptionMap.clear();
+  }
+
+  getUnsubscribeFunction(map) {
+    return function (subscription) {
+      if (map.has(subscription)) {
+        map.delete(subscription);
+      }
+    };
+  }
+
+}
 
 exports.Observable = Observable;
 },{"./subject":"utils/observeble/subject.ts","./subscription":"utils/observeble/subscription.ts"}],"utils/templator/renderer.ts":[function(require,module,exports) {
 "use strict";
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Renderer = void 0;
 
-var observeble_1 = require("../observeble/observeble");
+const observeble_1 = require("../observeble/observeble");
 
-var subject_1 = require("../observeble/subject");
+const subject_1 = require("../observeble/subject");
 
-var Renderer = /*#__PURE__*/function () {
-  function Renderer(context) {
-    _classCallCheck(this, Renderer);
-
+class Renderer {
+  constructor(context) {
     this.$staticValues = new subject_1.Subject();
     this.context = context;
   }
 
-  _createClass(Renderer, [{
-    key: "getFieldValue",
-    value: function getFieldValue(fieldName) {
-      var out = this.context;
+  getFieldValue(fieldName) {
+    let out = this.context;
 
-      var _iterator = _createForOfIteratorHelper(fieldName.split('.')),
-          _step;
+    for (const field of fieldName.split('.')) {
+      if (field in out) {
+        // @ts-ignore
+        out = out[field];
+      } else {
+        // Только так мы можем понять что поле отсутствует
+        // Любой корректный выход из этой функции считается найденным значением
+        throw new Error(`field ${fieldName} not found`);
+      }
+    }
 
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var field = _step.value;
+    return out;
+  }
 
-          if (field in out) {
-            out = out[field];
-          } else {
-            // Только так мы можем понять что поле отсутствует
-            // Любой корректный выход из этой функции считается найденным значением
-            throw new Error("field ".concat(fieldName, " not found"));
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+  needSelectValueInObservable(fieldName) {
+    const fieldPath = fieldName.split('.');
+    return fieldPath.length > 1 && fieldPath[0].length > 0 && this.firstFieldIsObservable(fieldName);
+  }
+
+  firstFieldIsObservable(fieldName) {
+    return this.getFirstFieldByFieldName(fieldName) instanceof observeble_1.Observable;
+  }
+
+  getSelectedObservable(fieldName) {
+    if (!this.firstFieldIsObservable(fieldName)) {
+      throw new Error(`first field is not observable: ${fieldName}`);
+    }
+
+    return this.getFirstFieldByFieldName(fieldName).select(this.createSelectorByFieldName(fieldName));
+  }
+
+  initObserveblesSubscription(observebles, onValuesChanged) {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+
+    this.subscription = this.getObservable(observebles).subscribe(onValuesChanged);
+    return this.subscription;
+  } // TODO: Изменить реализацию метода, когда появится метод merge у Observeble
+
+
+  getObservable(observebles) {
+    // Тут проблема с типами из-за костыльной реализации метода
+    // метод merge должен решить эту проблему
+    return observeble_1.Observable.all([this.$staticValues.asObserveble(), ...observebles]).map(data => data.length > 1 ? data[0].concat(data.slice(1, data.length)) : data[0]);
+  }
+
+  mapTemplateToField(template) {
+    return template.replace(/[\s{}()[\]]+/gim, '');
+  }
+
+  getFirstFieldByFieldName(fieldName) {
+    // @ts-ignore
+    return this.context[fieldName.split('.')[0]];
+  }
+
+  createSelectorByFieldName(fieldName) {
+    const fieldPath = fieldName.split('.');
+    fieldPath.shift();
+    return function (value) {
+      let out = value;
+
+      for (const fieldName of fieldPath) {
+        if (typeof out !== 'object') {
+          throw new Error(`Templator: invalid selector (${fieldName}) or observeble value`);
+        } // @ts-ignore
+
+
+        out = out[fieldName];
       }
 
       return out;
-    }
-  }, {
-    key: "initObserveblesSubscription",
-    value: function initObserveblesSubscription(observebles, onValuesChanged) {
-      if (this.subscription) {
-        this.subscription.unsubscribe();
-      }
+    };
+  }
 
-      this.subscription = this.getObservable(observebles).subscribe(onValuesChanged);
-      return this.subscription;
-    } // TODO: Изменить реализацию метода, когда появится метод merge у Observeble
-
-  }, {
-    key: "getObservable",
-    value: function getObservable(observebles) {
-      // Тут проблема с типами из-за костыльной реализации метода
-      // метод merge должен решить эту проблему
-      return observeble_1.Observable.all([this.$staticValues.asObserveble()].concat(_toConsumableArray(observebles))).map(function (data) {
-        return data.length > 1 ? data[0].concat(data.slice(1, data.length)) : data[0];
-      });
-    }
-  }, {
-    key: "mapTemplateToField",
-    value: function mapTemplateToField(template) {
-      return template.replace(/[\s{}()[\]]+/gim, '');
-    }
-  }]);
-
-  return Renderer;
-}();
+}
 
 exports.Renderer = Renderer;
 },{"../observeble/observeble":"utils/observeble/observeble.ts","../observeble/subject":"utils/observeble/subject.ts"}],"utils/templator/html-element-renderer.ts":[function(require,module,exports) {
 "use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.HTMLElementRenderer = void 0;
 
-var observeble_1 = require("../observeble/observeble");
+const observeble_1 = require("../observeble/observeble");
 
-var renderer_1 = require("./renderer");
+const renderer_1 = require("./renderer");
 /**
  * Разбивает тег на массив атрибутов. Пример:
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
@@ -635,537 +1270,326 @@ var renderer_1 = require("./renderer");
 // TODO: не может читать значение атрибута с пробелом
 
 
-var TEG_ATTRIBUTES = /([(<|</)\w\-@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
+const TEG_ATTRIBUTES = /([(<|</)\w\-@]+(?:=)?(?:"|'|\{\{|\}\}|\]\]|\[\[)?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\}|\]\]|\[\[])?)/gim;
 
-var HTMLElementRenderer = /*#__PURE__*/function (_renderer_1$Renderer) {
-  _inherits(HTMLElementRenderer, _renderer_1$Renderer);
+class HTMLElementRenderer extends renderer_1.Renderer {
+  constructor(tagStr, context) {
+    super(context);
+    this.customAttributes = new Map();
+    this.eventListenersMap = new Map();
+    const tagArr = tagStr.match(TEG_ATTRIBUTES) || [];
+    const tagName = tagArr[0].replace(/</g, '');
+    const tagAttributeStrs = tagArr.splice(1);
+    this.element = document.createElement(tagName);
 
-  var _super = _createSuper(HTMLElementRenderer);
+    for (const attributeStr of tagAttributeStrs) {
+      const attribute = this.mapStrToAttribute(attributeStr);
 
-  function HTMLElementRenderer(tagStr, context) {
-    var _this;
-
-    _classCallCheck(this, HTMLElementRenderer);
-
-    _this = _super.call(this, context);
-    _this.customAttributes = new Map();
-    _this.eventListenersMap = new Map();
-    var tagArr = tagStr.match(TEG_ATTRIBUTES);
-    var tagName = tagArr[0].replace(/</g, '');
-    var tagAttributeStrs = tagArr.splice(1);
-    _this.element = document.createElement(tagName);
-
-    var _iterator = _createForOfIteratorHelper(tagAttributeStrs),
-        _step;
-
-    try {
-      for (_iterator.s(); !(_step = _iterator.n()).done;) {
-        var attributeStr = _step.value;
-
-        var attribute = _this.mapStrToAttribute(attributeStr);
-
-        if (_this.isCustomAttribute(attribute)) {
-          _this.customAttributes.set(attribute.name, attribute.value); // @ts-ignore
-
-        } else if (_this.isInjectableAttribute(attribute) && _this.element.inject) {
-          _this.injectAttribute(attribute);
-        } else {
-          _this.element.setAttribute(attribute.name, _this.mapAttributeValueToValue(attribute.value));
-        }
+      if (this.isCustomAttribute(attribute)) {
+        this.customAttributes.set(attribute.name, attribute.value); // @ts-ignore
+      } else if (this.isInjectableAttribute(attribute) && this.element.inject) {
+        this.injectAttribute(attribute);
+      } else {
+        this.element.setAttribute(attribute.name, this.mapAttributeValueToValue(attribute.value));
       }
-    } catch (err) {
-      _iterator.e(err);
-    } finally {
-      _iterator.f();
     }
-
-    return _this;
   }
 
-  _createClass(HTMLElementRenderer, [{
-    key: "render",
-    value: function render() {
-      var _this2 = this;
+  render() {
+    const observebles = [];
+    const staticValues = [];
 
-      var observebles = [];
-      var staticValues = [];
-
-      var _iterator2 = _createForOfIteratorHelper(this.customAttributes.entries()),
-          _step2;
-
+    for (const customAttributeEntries of this.customAttributes.entries()) {
       try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var customAttributeEntries = _step2.value;
-
-          try {
-            var value = this.getFieldValue(this.mapTemplateToField(customAttributeEntries[1]));
-            var customAttribute = {
-              name: customAttributeEntries[0],
-              valueTemplate: customAttributeEntries[1]
-            };
-
-            if (value instanceof observeble_1.Observable) {
-              this.addObservable(observebles, value, customAttribute.name, customAttribute.valueTemplate);
-            } else {
-              staticValues.push(Object.assign(Object.assign({}, customAttribute), {
-                value: value
-              }));
-            }
-          } catch (e) {
-            console.error("Error when rendering attribute in ".concat(this.element.tagName, " HTMLElement: ").concat(e));
-          }
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-
-      if (!this.subscription) {
-        this.initObserveblesSubscription(observebles, function (values) {
-          return _this2.onValuesChanged(values);
-        });
-      }
-
-      this.$staticValues.next(staticValues);
-    }
-  }, {
-    key: "onValuesChanged",
-    value: function onValuesChanged(values) {
-      var _iterator3 = _createForOfIteratorHelper(values),
-          _step3;
-
-      try {
-        for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-          var value = _step3.value;
-          this.onValueChanged(value);
-        }
-      } catch (err) {
-        _iterator3.e(err);
-      } finally {
-        _iterator3.f();
-      }
-    }
-  }, {
-    key: "onValueChanged",
-    value: function onValueChanged(attribute) {
-      var _this3 = this;
-
-      if (attribute.name[0] === '@') {
-        if (typeof attribute.value !== 'function') {
-          throw new Error("HTMLElementRenderer: ".concat(attribute.name, " is not a function"));
-        }
-
-        if (this.eventListenersMap.has(attribute.name) && this.eventListenersMap.get(attribute.name).includes(attribute.value)) {
-          return;
-        }
-
-        if (this.eventListenersMap.has(attribute.name)) {
-          this.eventListenersMap.get(attribute.name).push(attribute.value);
-        } else {
-          this.eventListenersMap.set(attribute.name, [attribute.value]);
-        }
-
-        var name = attribute.name.slice(1);
-        this.element.addEventListener(name, function (e) {
-          return attribute.value.call(_this3.context, e);
-        });
-        return;
-      }
-
-      switch (_typeof(attribute.value)) {
-        case 'function':
-          this.element.setAttribute(attribute.name, String(attribute.value()));
-          break;
-
-        case 'string':
-          this.element.setAttribute(attribute.name, attribute.value);
-          break;
-
-        case 'boolean':
-          if (attribute.value) {
-            if (!this.element.hasAttribute(attribute.name)) {
-              this.element.setAttribute(attribute.name, '');
-            }
-          } else {
-            this.element.removeAttribute(attribute.name);
-          }
-
-          break;
-
-        default:
-          this.element.setAttribute(attribute.name, String(attribute.value));
-          break;
-      }
-    }
-  }, {
-    key: "injectAttribute",
-    value: function injectAttribute(attribute) {
-      try {
-        var value = this.getFieldValue(this.mapTemplateToField(attribute.value)); // @ts-ignore
-
-        this.element.inject(attribute.name, value);
-      } catch (e) {
-        console.error("Error when inject in ".concat(this.element.tagName, " HTMLElement: ").concat(e));
-      }
-    }
-  }, {
-    key: "addObservable",
-    value: function addObservable(observebles, observeble, name, valueTemplate) {
-      observebles.push(observeble.map(function (value) {
-        return {
-          name: name,
-          value: value,
-          valueTemplate: valueTemplate
+        const value = this.getFieldValue(this.mapTemplateToField(customAttributeEntries[1]));
+        const customAttribute = {
+          name: customAttributeEntries[0],
+          valueTemplate: customAttributeEntries[1]
         };
-      }));
+
+        if (value instanceof observeble_1.Observable) {
+          this.addObservable(observebles, value, customAttribute.name, customAttribute.valueTemplate);
+        } else {
+          staticValues.push(Object.assign(Object.assign({}, customAttribute), {
+            value
+          }));
+        }
+      } catch (e) {
+        console.error(`Error when rendering attribute in ${this.element.tagName} HTMLElement: ${e}`);
+      }
     }
-  }, {
-    key: "mapStrToAttribute",
-    value: function mapStrToAttribute(str) {
-      var strArr = str.split('=');
-      return strArr.length > 1 ? {
-        name: strArr[0],
-        value: strArr[1]
-      } : {
-        name: strArr[0]
-      };
+
+    if (!this.subscription) {
+      this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
     }
-  }, {
-    key: "mapAttributeValueToValue",
-    value: function mapAttributeValueToValue(template) {
-      if (!template) {
+
+    this.$staticValues.next(staticValues);
+  }
+
+  onValuesChanged(values) {
+    for (const value of values) {
+      this.onValueChanged(value);
+    }
+  }
+
+  onValueChanged(attribute) {
+    if (attribute.name[0] === '@') {
+      if (typeof attribute.value !== 'function') {
+        throw new Error(`HTMLElementRenderer: ${attribute.name} is not a function`);
+      }
+
+      if (this.eventListenersMap.has(attribute.name) && this.eventListenersMap.get(attribute.name).includes(attribute.value)) {
         return;
       }
 
-      return String(template).replace(/['"]+/g, '');
-    }
-  }, {
-    key: "isCustomAttribute",
-    value: function isCustomAttribute(attribute) {
-      if (!attribute.value) {
-        return false;
+      if (this.eventListenersMap.has(attribute.name)) {
+        this.eventListenersMap.get(attribute.name).push(attribute.value);
+      } else {
+        this.eventListenersMap.set(attribute.name, [attribute.value]);
       }
 
-      return /[{]{2}(.+)[}]{2}/.test(String(attribute.value));
+      const name = attribute.name.slice(1);
+      this.element.addEventListener(name, e => attribute.value.call(this.context, e));
+      return;
     }
-  }, {
-    key: "isInjectableAttribute",
-    value: function isInjectableAttribute(attribute) {
-      if (!attribute.value) {
-        return false;
-      }
 
-      return /[[]{2}(.+)[\]]{2}/.test(String(attribute.value));
+    switch (typeof attribute.value) {
+      case 'function':
+        this.element.setAttribute(attribute.name, String(attribute.value()));
+        break;
+
+      case 'string':
+        this.element.setAttribute(attribute.name, attribute.value);
+        break;
+
+      case 'boolean':
+        if (attribute.value) {
+          if (!this.element.hasAttribute(attribute.name)) {
+            this.element.setAttribute(attribute.name, '');
+          }
+        } else {
+          this.element.removeAttribute(attribute.name);
+        }
+
+        break;
+
+      default:
+        this.element.setAttribute(attribute.name, String(attribute.value));
+        break;
     }
-  }]);
+  }
 
-  return HTMLElementRenderer;
-}(renderer_1.Renderer);
+  injectAttribute(attribute) {
+    try {
+      const value = this.getFieldValue(this.mapTemplateToField(attribute.value)); // @ts-ignore
+
+      this.element.inject(attribute.name, value);
+    } catch (e) {
+      console.error(`Error when inject in ${this.element.tagName} HTMLElement: ${e}`);
+    }
+  }
+
+  addObservable(observebles, observeble, name, valueTemplate) {
+    observebles.push(observeble.map(value => ({
+      name,
+      value,
+      valueTemplate
+    })));
+  }
+
+  mapStrToAttribute(str) {
+    const strArr = str.split('=');
+    return strArr.length > 1 ? {
+      name: strArr[0],
+      value: strArr[1]
+    } : {
+      name: strArr[0]
+    };
+  }
+
+  mapAttributeValueToValue(template) {
+    if (!template) {
+      return;
+    }
+
+    return String(template).replace(/['"]+/g, '');
+  }
+
+  isCustomAttribute(attribute) {
+    if (!attribute.value) {
+      return false;
+    }
+
+    return /[{]{2}(.+)[}]{2}/.test(String(attribute.value));
+  }
+
+  isInjectableAttribute(attribute) {
+    if (!attribute.value) {
+      return false;
+    }
+
+    return /[[]{2}(.+)[\]]{2}/.test(String(attribute.value));
+  }
+
+}
 
 exports.HTMLElementRenderer = HTMLElementRenderer;
 },{"../observeble/observeble":"utils/observeble/observeble.ts","./renderer":"utils/templator/renderer.ts"}],"utils/templator/html-elements-render-manager.ts":[function(require,module,exports) {
 "use strict";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.HTMLElementsRenderManager = void 0;
 
-var html_element_renderer_1 = require("./html-element-renderer");
+const html_element_renderer_1 = require("./html-element-renderer");
 
-var HTMLElementsRenderManager = /*#__PURE__*/function () {
-  function HTMLElementsRenderManager(context) {
-    _classCallCheck(this, HTMLElementsRenderManager);
-
+class HTMLElementsRenderManager {
+  constructor(context) {
     this.renderers = [];
     this.context = context;
   }
 
-  _createClass(HTMLElementsRenderManager, [{
-    key: "initNode",
-    value: function initNode(tagStr) {
-      var elementRenderer = new html_element_renderer_1.HTMLElementRenderer(tagStr, this.context);
-      this.renderers.push(elementRenderer);
-      return elementRenderer.element;
-    }
-  }, {
-    key: "renderAll",
-    value: function renderAll() {
-      var _iterator = _createForOfIteratorHelper(this.renderers),
-          _step;
+  initNode(tagStr) {
+    const elementRenderer = new html_element_renderer_1.HTMLElementRenderer(tagStr, this.context);
+    this.renderers.push(elementRenderer);
+    return elementRenderer.element;
+  }
 
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var elementRenderer = _step.value;
-          elementRenderer.render();
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
+  renderAll() {
+    for (const elementRenderer of this.renderers) {
+      elementRenderer.render();
     }
-  }]);
+  }
 
-  return HTMLElementsRenderManager;
-}();
+}
 
 exports.HTMLElementsRenderManager = HTMLElementsRenderManager;
 },{"./html-element-renderer":"utils/templator/html-element-renderer.ts"}],"utils/templator/text-node-renderer.ts":[function(require,module,exports) {
 "use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.TextNodeRenderer = void 0;
 
-var observeble_1 = require("../observeble/observeble");
+const observeble_1 = require("../observeble/observeble");
 
-var renderer_1 = require("./renderer");
+const renderer_1 = require("./renderer");
 /**
 * Шаблон для поиска вставляемого элемента
 * 'server has bin started on port {{PORT}}' => ['{{PORT}}']
 */
 
 
-var VARIEBLES = /[{]{2}[\s]*[^\s]+[\s]*[}]{2}/g;
+const VARIEBLES = /[{]{2}[\s]*[^\s]+[\s]*[}]{2}/g;
 
-var TextNodeRenderer = /*#__PURE__*/function (_renderer_1$Renderer) {
-  _inherits(TextNodeRenderer, _renderer_1$Renderer);
-
-  var _super = _createSuper(TextNodeRenderer);
-
-  function TextNodeRenderer(content, context) {
-    var _this;
-
-    _classCallCheck(this, TextNodeRenderer);
-
-    _this = _super.call(this, context);
-    _this.content = content;
-    _this.node = document.createTextNode(content);
-    _this.variablesNames = _this.getFieldsNamesFromContent(_this.content);
-    return _this;
+class TextNodeRenderer extends renderer_1.Renderer {
+  constructor(content, context) {
+    super(context);
+    this.content = content;
+    this.node = document.createTextNode(content);
+    this.variablesNames = this.getFieldsNamesFromContent(this.content);
   }
 
-  _createClass(TextNodeRenderer, [{
-    key: "render",
-    value: function render() {
-      var _this2 = this;
+  render() {
+    const observebles = [];
+    const staticValues = [];
 
-      var observebles = [];
-      var staticValues = [];
-
-      var _iterator = _createForOfIteratorHelper(this.variablesNames.entries()),
-          _step;
-
+    for (const [fieldTemplate, fieldName] of this.variablesNames.entries()) {
       try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var _step$value = _slicedToArray(_step.value, 2),
-              fieldTemplate = _step$value[0],
-              fieldName = _step$value[1];
+        if (this.needSelectValueInObservable(fieldName)) {
+          this.addObservable(observebles, fieldTemplate, this.getSelectedObservable(fieldName));
+        } else {
+          let fieldValue = this.getFieldValue(fieldName);
 
-          try {
-            var fieldValue = this.getFieldValue(fieldName);
+          if (typeof fieldValue === 'function') {
+            fieldValue = fieldValue.call(this.context);
+          }
 
-            if (typeof fieldValue === 'function') {
-              fieldValue = fieldValue.call(this.context);
-            }
-
-            if (fieldValue instanceof observeble_1.Observable) {
-              this.addObservable(observebles, fieldTemplate, fieldValue);
-            } else {
-              staticValues.push({
-                tempate: fieldTemplate,
-                value: fieldValue
-              });
-            }
-          } catch (e) {
-            console.error("Error when rendering text: ".concat(e));
+          if (fieldValue instanceof observeble_1.Observable) {
+            this.addObservable(observebles, fieldTemplate, fieldValue);
+          } else {
+            staticValues.push({
+              tempate: fieldTemplate,
+              value: fieldValue
+            });
           }
         }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+      } catch (e) {
+        console.error(`Error when rendering text: ${e}`);
       }
+    }
 
-      if (!this.subscription) {
-        this.initObserveblesSubscription(observebles, function (values) {
-          return _this2.onValuesChanged(values);
-        });
+    if (!this.subscription) {
+      this.initObserveblesSubscription(observebles, values => this.onValuesChanged(values));
+    }
+
+    this.$staticValues.next(staticValues);
+  }
+
+  getFieldsNamesFromContent(text) {
+    return new Map([...new Set(text.match(VARIEBLES) || [])].map(fieldTemplate => [fieldTemplate, this.mapTemplateToField(fieldTemplate)]));
+  }
+
+  addObservable(observebles, fieldTemplate, fieldValue) {
+    observebles.push(fieldValue.map(value => ({
+      tempate: fieldTemplate,
+      value
+    })));
+  }
+
+  onValuesChanged(values) {
+    let {
+      content
+    } = this;
+
+    for (const value of values) {
+      switch (typeof value.value) {
+        case 'function':
+          content = content.replaceAll(value.tempate, value.value.call(this.context));
+          break;
+
+        default:
+          content = content.replaceAll(value.tempate, String(value.value));
       }
-
-      this.$staticValues.next(staticValues);
     }
-  }, {
-    key: "getFieldsNamesFromContent",
-    value: function getFieldsNamesFromContent(text) {
-      var _this3 = this;
 
-      return new Map(_toConsumableArray(new Set(text.match(VARIEBLES) || [])).map(function (fieldTemplate) {
-        return [fieldTemplate, _this3.mapTemplateToField(fieldTemplate)];
-      }));
-    }
-  }, {
-    key: "addObservable",
-    value: function addObservable(observebles, fieldTemplate, fieldValue) {
-      observebles.push(fieldValue.map(function (value) {
-        return {
-          tempate: fieldTemplate,
-          value: value
-        };
-      }));
-    }
-  }, {
-    key: "onValuesChanged",
-    value: function onValuesChanged(values) {
-      var content = this.content;
+    this.node.textContent = content.trim();
+  }
 
-      var _iterator2 = _createForOfIteratorHelper(values),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var value = _step2.value;
-
-          switch (_typeof(value.value)) {
-            case 'function':
-              content = content.replaceAll(value.tempate, value.value.call(this.context));
-              break;
-
-            default:
-              content = content.replaceAll(value.tempate, String(value.value));
-          }
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-
-      this.node.textContent = content.trim();
-    }
-  }]);
-
-  return TextNodeRenderer;
-}(renderer_1.Renderer);
+}
 
 exports.TextNodeRenderer = TextNodeRenderer;
 },{"../observeble/observeble":"utils/observeble/observeble.ts","./renderer":"utils/templator/renderer.ts"}],"utils/templator/text-nodes-render-manager.ts":[function(require,module,exports) {
 "use strict";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.TextNodesRenderManager = void 0;
 
-var text_node_renderer_1 = require("./text-node-renderer");
+const text_node_renderer_1 = require("./text-node-renderer");
 
-var TextNodesRenderManager = /*#__PURE__*/function () {
-  function TextNodesRenderManager(context) {
-    _classCallCheck(this, TextNodesRenderManager);
-
+class TextNodesRenderManager {
+  constructor(context) {
     this.renderers = [];
     this.context = context;
   }
 
-  _createClass(TextNodesRenderManager, [{
-    key: "initTextNode",
-    value: function initTextNode(content) {
-      var renderer = new text_node_renderer_1.TextNodeRenderer(content, this.context);
-      this.renderers.push(renderer);
-      return renderer.node;
-    }
-  }, {
-    key: "renderAll",
-    value: function renderAll() {
-      var _iterator = _createForOfIteratorHelper(this.renderers),
-          _step;
+  initTextNode(content) {
+    const renderer = new text_node_renderer_1.TextNodeRenderer(content, this.context);
+    this.renderers.push(renderer);
+    return renderer.node;
+  }
 
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var renderer = _step.value;
-          renderer.render();
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
+  renderAll() {
+    for (const renderer of this.renderers) {
+      renderer.render();
     }
-  }]);
+  }
 
-  return TextNodesRenderManager;
-}();
+}
 
 exports.TextNodesRenderManager = TextNodesRenderManager;
 },{"./text-node-renderer":"utils/templator/text-node-renderer.ts"}],"utils/templator/templator.ts":[function(require,module,exports) {
@@ -1174,28 +1598,16 @@ exports.TextNodesRenderManager = TextNodesRenderManager;
 // TODO: Вынести часть реализации в helper
 // TODO: Когда появятся тесты, описание можно будет убрать
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Templator = void 0;
 
-var observeble_1 = require("../observeble/observeble");
+const observeble_1 = require("../observeble/observeble");
 
-var html_elements_render_manager_1 = require("./html-elements-render-manager");
+const html_elements_render_manager_1 = require("./html-elements-render-manager");
 
-var text_nodes_render_manager_1 = require("./text-nodes-render-manager");
+const text_nodes_render_manager_1 = require("./text-nodes-render-manager");
 /**
  * Разбивает html на массив по одному тегу в каждом элементе и при этом тег на первом месте. Пример:
  * <div>content<p>text</p>content2</div> =>
@@ -1203,37 +1615,33 @@ var text_nodes_render_manager_1 = require("./text-nodes-render-manager");
  */
 
 
-var HTML_TAG_AND_CONTENT = /<.*?>[^<>]*/gim;
+const HTML_TAG_AND_CONTENT = /<.*?>[^<>]*/gim;
 /**
  * Разбивает тег на массив атрибутов. Пример:
  * <div name={{name}} click={{handler()}} type="test" hidden> =>
  * ['<div', 'name={{name}}', 'click={{handler()}}', 'type="test"', 'hidden']
  */
 
-var TEG_ATTRIBUTES = /([(<|</)\w-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\})?)/gim;
+const TEG_ATTRIBUTES = /([(<|</)\w-]+(?:=)?(?:"|'|\{\{|\}\})?[\w\-|(|)|.|$]+(?:"|'|\{\{|\}\})?)/gim;
 /**
  * Выделяет тег. Пример:
  * '<div hidden name={{name}}> content text' => ['<div hidden name={{name}}>']
  */
 
-var TEG = /^<.*?>/;
+const TEG = /^<.*?>/;
 /**
  * Начинается не с </
  */
 
-var OPEN_TEG = /^<\//;
+const OPEN_TEG = /^<\//;
 /**
  * Выделяет из строки всё, кроме '<', '/' и пробелов
  */
 
-var TEG_NAME = /[^</\s]+/; // TODO: Разобраться с типизацией страниц и компонентов type Context = {[key: string]: any};
+const TEG_NAME = /[^</\s]+/; // TODO: Разобраться с типизацией страниц и компонентов type Context = {[key: string]: any};
 
-var Templator = /*#__PURE__*/function () {
-  function Templator(context) {
-    var template = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
-
-    _classCallCheck(this, Templator);
-
+class Templator {
+  constructor(context, template = '') {
     this.slotsMap = new Map();
 
     if (typeof template !== 'string') {
@@ -1247,291 +1655,213 @@ var Templator = /*#__PURE__*/function () {
     this.nodes = this.initTemplate(this.template);
   }
 
-  _createClass(Templator, [{
-    key: "initTemplate",
-    value: function initTemplate(str) {
-      var _this = this;
+  initTemplate(str) {
+    const outNodes = [];
 
-      var outNodes = [];
+    const addToChain = (node, content) => {
+      const getParent = () => {
+        // Из-за того что есть не закрывающиеся теги
+        const parentIndex = htmlElements[htmlElements.length - 1] === node ? htmlElements.length - 2 : htmlElements.length - 1;
 
-      var addToChain = function addToChain(node, content) {
-        var getParent = function getParent() {
-          // Из-за того что есть не закрывающиеся теги
-          var parentIndex = htmlElements[htmlElements.length - 1] === node ? htmlElements.length - 2 : htmlElements.length - 1;
-
-          if (!htmlElements[parentIndex]) {
-            throw new Error('Templator: the parent could not be found, most likely the element with the "slot" attribute lies in the root of the template');
-          }
-
-          return htmlElements[parentIndex];
-        };
-
-        if (node.hasAttribute('slot')) {
-          var parent = getParent();
-
-          if (_this.slotsMap.has(parent)) {
-            _this.slotsMap.get(parent).push(node);
-          } else {
-            _this.slotsMap.set(parent, [node]);
-          }
-
-          parent.appendChild(node);
-          return;
+        if (!htmlElements[parentIndex]) {
+          throw new Error('Templator: the parent could not be found, most likely the element with the "slot" attribute lies in the root of the template');
         }
 
-        if (htmlElements.length > 1) {
-          var _parent = getParent();
+        return htmlElements[parentIndex];
+      };
 
-          _parent.appendChild(node);
+      if (node.hasAttribute('slot')) {
+        const parent = getParent();
 
-          _parent.appendChild(_this.textNodesRenderManager.initTextNode(content));
+        if (this.slotsMap.has(parent)) {
+          this.slotsMap.get(parent).push(node);
         } else {
-          outNodes.push(node);
-          outNodes.push(_this.textNodesRenderManager.initTextNode(content));
+          this.slotsMap.set(parent, [node]);
         }
-      }; // Получаем массив, который содержит один тег и контент до следующего тега
 
-
-      var htmlConfig = str.match(HTML_TAG_AND_CONTENT).map(function (str) {
-        // Выбираем только тег
-        var tagStr = str.match(TEG)[0];
-        var content = str.split(tagStr)[1]; // Разбиваем тег на массив из имени тега и атрибутов
-
-        var tagArray = tagStr.match(TEG_ATTRIBUTES);
-        var tag = {
-          isOpen: !OPEN_TEG.test(tagStr),
-          name: tagArray[0].match(TEG_NAME)[0],
-          str: tagStr
-        };
-        return {
-          tag: tag,
-          content: content
-        };
-      });
-      var htmlElements = [];
-
-      var _iterator = _createForOfIteratorHelper(htmlConfig),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var item = _step.value;
-
-          if (item.tag.isOpen) {
-            var element = this.htmlElementRendererManager.initNode(item.tag.str);
-
-            if (this.isSolloTag(element)) {
-              if (this.isContentElement(element)) {
-                this.contentElement = element;
-              }
-
-              addToChain(element, item.content);
-            } else {
-              element.appendChild(this.textNodesRenderManager.initTextNode(item.content));
-              htmlElements.push(element);
-            }
-          } else {
-            if (!htmlElements[htmlElements.length - 1] || htmlElements[htmlElements.length - 1].tagName !== item.tag.name.toUpperCase()) {
-              throw Error("Templator: invalid html template: ".concat(str));
-            }
-
-            addToChain(htmlElements[htmlElements.length - 1], item.content);
-            htmlElements.pop();
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
+        parent.appendChild(node);
+        return;
       }
 
-      if (htmlElements.length) {
-        throw Error("Templator: invalid html template: ".concat(str));
-      }
-
-      return outNodes;
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-      if (options.content && this.contentElement && !this.contentSubscription) {
-        this.setContent(options.content);
-      }
-
-      this.textNodesRenderManager.renderAll();
-      this.htmlElementRendererManager.renderAll();
-      this.setSlots();
-    }
-  }, {
-    key: "setContent",
-    value: function setContent() {
-      var _this2 = this;
-
-      var content = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
-
-      if (content instanceof observeble_1.Observable) {
-        this.contentSubscription = content.subscribe(function (elements) {
-          while (_this2.contentElement.firstChild) {
-            _this2.contentElement.removeChild(_this2.contentElement.firstChild);
-          }
-
-          var _iterator2 = _createForOfIteratorHelper(elements),
-              _step2;
-
-          try {
-            for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-              var node = _step2.value;
-
-              _this2.contentElement.appendChild(node);
-            }
-          } catch (err) {
-            _iterator2.e(err);
-          } finally {
-            _iterator2.f();
-          }
-        });
+      if (htmlElements.length > 1) {
+        const parent = getParent();
+        parent.appendChild(node);
+        parent.appendChild(this.textNodesRenderManager.initTextNode(content));
       } else {
-        var _iterator3 = _createForOfIteratorHelper(content),
-            _step3;
+        outNodes.push(node);
+        outNodes.push(this.textNodesRenderManager.initTextNode(content));
+      }
+    }; // Получаем массив, который содержит один тег и контент до следующего тега
 
-        try {
-          for (_iterator3.s(); !(_step3 = _iterator3.n()).done;) {
-            var node = _step3.value;
-            this.contentElement.appendChild(node);
+
+    const htmlConfig = (str.match(HTML_TAG_AND_CONTENT) || []).map(str => {
+      // Выбираем только тег
+      const tagStr = str.match(TEG)[0];
+      const content = str.split(tagStr)[1]; // Разбиваем тег на массив из имени тега и атрибутов
+
+      const tagArray = tagStr.match(TEG_ATTRIBUTES) || [];
+      const tag = {
+        isOpen: !OPEN_TEG.test(tagStr),
+        name: tagArray[0].match(TEG_NAME)[0],
+        str: tagStr
+      };
+      return {
+        tag,
+        content
+      };
+    });
+    const htmlElements = [];
+
+    for (const item of htmlConfig) {
+      if (item.tag.isOpen) {
+        const element = this.htmlElementRendererManager.initNode(item.tag.str);
+
+        if (this.isSolloTag(element)) {
+          if (this.isContentElement(element)) {
+            this.contentElement = element;
           }
-        } catch (err) {
-          _iterator3.e(err);
-        } finally {
-          _iterator3.f();
+
+          addToChain(element, item.content);
+        } else {
+          element.appendChild(this.textNodesRenderManager.initTextNode(item.content));
+          htmlElements.push(element);
         }
+      } else {
+        if (!htmlElements[htmlElements.length - 1] || htmlElements[htmlElements.length - 1].tagName !== item.tag.name.toUpperCase()) {
+          throw Error(`Templator: invalid html template: ${str}`);
+        }
+
+        addToChain(htmlElements[htmlElements.length - 1], item.content);
+        htmlElements.pop();
       }
     }
-  }, {
-    key: "setSlots",
-    value: function setSlots() {
-      var _iterator4 = _createForOfIteratorHelper(this.getMapKeys(this.slotsMap)),
-          _step4;
 
-      try {
-        for (_iterator4.s(); !(_step4 = _iterator4.n()).done;) {
-          var parent = _step4.value;
+    if (htmlElements.length) {
+      throw Error(`Templator: invalid html template: ${str}`);
+    }
 
-          var _iterator5 = _createForOfIteratorHelper(this.slotsMap.get(parent)),
-              _step5;
+    return outNodes;
+  }
 
-          try {
-            for (_iterator5.s(); !(_step5 = _iterator5.n()).done;) {
-              var slot = _step5.value;
-              var slotNode = this.getSlotNode(parent, slot.getAttribute('slot'));
+  render(options = {}) {
+    if (options.content && this.contentElement && !this.contentSubscription) {
+      this.setContent(options.content);
+    }
 
-              if (slotNode) {
-                slotNode.appendChild(slot);
-              }
-            }
-          } catch (err) {
-            _iterator5.e(err);
-          } finally {
-            _iterator5.f();
-          }
+    this.textNodesRenderManager.renderAll();
+    this.htmlElementRendererManager.renderAll();
+    this.setSlots();
+  }
+
+  setContent(content = []) {
+    if (content instanceof observeble_1.Observable) {
+      this.contentSubscription = content.subscribe(elements => {
+        while (this.contentElement.firstChild) {
+          this.contentElement.removeChild(this.contentElement.firstChild);
         }
-      } catch (err) {
-        _iterator4.e(err);
-      } finally {
-        _iterator4.f();
-      }
-    } // TODO: вынести в утилиту
 
-  }, {
-    key: "getMapKeys",
-    value: function getMapKeys(map) {
-      var keys = [];
-      map.forEach(function (value, key) {
-        return keys.push(key);
+        for (const node of elements) {
+          this.contentElement.appendChild(node);
+        }
       });
-      return keys;
+    } else {
+      for (const node of content) {
+        this.contentElement.appendChild(node);
+      }
     }
-  }, {
-    key: "isSolloTag",
-    value: function isSolloTag(element) {
-      var solloTags = ['area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr', 'content'];
-      return solloTags.includes(element.tagName.toLowerCase());
-    }
-  }, {
-    key: "isContentElement",
-    value: function isContentElement(element) {
-      return element.tagName.toLowerCase() === 'content';
-    } // Node.querySelector("slot[name="name"]")
+  }
 
-  }, {
-    key: "getSlotNode",
-    value: function getSlotNode(node, name) {
-      for (var index = 0; index < node.children.length; index++) {
-        var child = node.children.item(index);
+  setSlots() {
+    for (const parent of this.getMapKeys(this.slotsMap)) {
+      for (const slot of this.slotsMap.get(parent)) {
+        const slotNode = this.getSlotNode(parent, slot.getAttribute('slot'));
 
-        if (child.tagName === 'SLOT' && child.getAttribute('name') === name) {
-          return child;
-        }
-
-        var req = this.getSlotNode(child, name);
-
-        if (req) {
-          return req;
+        if (slotNode) {
+          slotNode.appendChild(slot);
         }
       }
-
-      return null;
     }
-  }]);
+  } // TODO: вынести в утилиту
 
-  return Templator;
-}();
+
+  getMapKeys(map) {
+    const keys = [];
+    map.forEach((_value, key) => keys.push(key));
+    return keys;
+  }
+
+  isSolloTag(element) {
+    const solloTags = ['area', 'base', 'basefont', 'bgsound', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'isindex', 'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr', 'content'];
+    return solloTags.includes(element.tagName.toLowerCase());
+  }
+
+  isContentElement(element) {
+    return element.tagName.toLowerCase() === 'content';
+  } // Node.querySelector("slot[name="name"]")
+
+
+  getSlotNode(node, name) {
+    for (let index = 0; index < node.children.length; index++) {
+      const child = node.children.item(index);
+
+      if (child.tagName === 'SLOT' && child.getAttribute('name') === name) {
+        return child;
+      }
+
+      const req = this.getSlotNode(child, name);
+
+      if (req) {
+        return req;
+      }
+    }
+
+    return null;
+  }
+
+}
 
 exports.Templator = Templator;
 },{"../observeble/observeble":"utils/observeble/observeble.ts","./html-elements-render-manager":"utils/templator/html-elements-render-manager.ts","./text-nodes-render-manager":"utils/templator/text-nodes-render-manager.ts"}],"utils/component.ts":[function(require,module,exports) {
 "use strict";
 
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var __awaiter = this && this.__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
+    });
+  }
 
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
 
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
 
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
-
-function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _isNativeFunction(fn) { return Function.toString.call(fn).indexOf("[native code]") !== -1; }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.component = void 0;
 
-var templator_1 = require("./templator/templator");
+const templator_1 = require("./templator/templator");
 
 var defaultObservedAttributes;
 
@@ -1542,130 +1872,134 @@ var defaultObservedAttributes;
 
 function component(config) {
   return function (Clazz) {
-    var CustomElement = /*#__PURE__*/function (_HTMLElement) {
-      _inherits(CustomElement, _HTMLElement);
-
-      var _super = _createSuper(CustomElement);
-
-      function CustomElement() {
-        var _this;
-
-        _classCallCheck(this, CustomElement);
-
-        _this = _super.call(this);
-        _this.clazz = new Clazz();
-        return _this;
+    class CustomElement extends HTMLElement {
+      constructor() {
+        super();
+        this.template = config.template;
+        this.clazz = new Clazz();
       }
 
-      _createClass(CustomElement, [{
-        key: "connectedCallback",
-        value: function connectedCallback() {
-          if (this.clazz.onInit) {
-            this.clazz.onInit();
-          }
+      connectedCallback() {
+        if (config.guards) {
+          this.checkGuards(config.guards);
+        }
 
+        if (this.clazz.onInit) {
+          this.clazz.onInit();
+        }
+
+        this.render();
+
+        if (this.clazz.onRendered) {
+          this.clazz.onRendered(this);
+        }
+      }
+
+      disconnectedCallback() {
+        if (this.clazz.onDestroy) {
+          this.clazz.onDestroy();
+        }
+      }
+
+      static get observedAttributes() {
+        // @ts-ignore
+        return Object.values(defaultObservedAttributes).concat(config.observedAttributes ? config.observedAttributes : []).concat(Clazz.observedAttributes ? Clazz.observedAttributes : []);
+      }
+
+      attributeChangedCallback(name, oldValue, newValue) {
+        let needRender = false; // @ts-ignore name - строка не обязательно содержааяся в defaultObservedAttributes
+
+        if (Object.values(defaultObservedAttributes).includes(name)) {
+          needRender = this.onDefaultAttributeChanged(name, oldValue, newValue);
+        }
+
+        if (this.clazz.onAttributeChanged) {
+          needRender = this.clazz.onAttributeChanged(name, oldValue, newValue) || needRender;
+        }
+
+        if (needRender) {
           this.render();
-
-          if (this.clazz.onRendered) {
-            this.clazz.onRendered(this);
-          }
         }
-      }, {
-        key: "disconnectedCallback",
-        value: function disconnectedCallback() {
-          if (this.clazz.onDestroy) {
-            this.clazz.onDestroy();
-          }
+      } // @ts-ignore используется внешними компонентами
+
+
+      inject(fieldName, value) {
+        // @ts-ignore
+        this.clazz[fieldName] = value;
+      }
+
+      render() {
+        const options = {};
+        const {
+          content
+        } = this.clazz;
+
+        if (content) {
+          options.content = content;
         }
-      }, {
-        key: "attributeChangedCallback",
-        value: function attributeChangedCallback(name, oldValue, newValue) {
-          var needRender = false; // @ts-ignore name - строка не обязательно содержааяся в defaultObservedAttributes
 
-          if (Object.values(defaultObservedAttributes).includes(name)) {
-            needRender = this.onDefaultAttributeChanged(name, oldValue, newValue);
-          }
-
-          if (this.clazz.onAttributeChanged) {
-            needRender = this.clazz.onAttributeChanged(name, oldValue, newValue) || needRender;
-          }
-
-          if (needRender) {
-            this.render();
-          }
+        if (!this.templator) {
+          this.init();
         }
-      }, {
-        key: "render",
-        value: function render() {
-          var options = {};
-          var content = this.clazz.content;
 
-          if (content) {
-            options.content = content;
-          }
+        this.templator.render(this.clazz);
+      }
 
-          if (!this.templator) {
-            this.init();
-          }
+      init() {
+        this.templator = new templator_1.Templator(this.clazz, this.template);
 
-          this.templator.render(this.clazz);
+        for (const node of this.templator.nodes) {
+          this.appendChild(node);
         }
-      }, {
-        key: "init",
-        value: function init() {
-          this.templator = new templator_1.Templator(this.clazz, config.template);
+      }
 
-          var _iterator = _createForOfIteratorHelper(this.templator.nodes),
-              _step;
+      onDefaultAttributeChanged(name, _oldValue, newValue) {
+        switch (name) {
+          case defaultObservedAttributes.hidden:
+            this.style.display = this.hasAttribute(defaultObservedAttributes.hidden) ? 'none' : '';
+            break;
 
-          try {
-            for (_iterator.s(); !(_step = _iterator.n()).done;) {
-              var node = _step.value;
-              this.appendChild(node);
+          case defaultObservedAttributes.style:
+            if (!newValue) {
+              this.removeAttribute(defaultObservedAttributes.style);
             }
-          } catch (err) {
-            _iterator.e(err);
-          } finally {
-            _iterator.f();
-          }
-        }
-      }, {
-        key: "inject",
-        value: function inject(fieldName, value) {
-          // @ts-ignore
-          this.clazz[fieldName] = value;
-        }
-      }, {
-        key: "onDefaultAttributeChanged",
-        value: function onDefaultAttributeChanged(name, _oldValue, newValue) {
-          switch (name) {
-            case defaultObservedAttributes.hidden:
-              this.style.display = this.hasAttribute(defaultObservedAttributes.hidden) ? 'none' : '';
-              break;
 
-            case defaultObservedAttributes.style:
-              if (!newValue) {
-                this.removeAttribute(defaultObservedAttributes.style);
+            break;
+
+          default:
+            return false;
+        }
+
+        return false;
+      }
+
+      checkGuards(guards) {
+        return __awaiter(this, void 0, void 0, function* () {
+          for (const GuardConstructor of guards) {
+            const guard = new GuardConstructor();
+            const canOpen = guard.canOpen();
+
+            if (canOpen instanceof Promise) {
+              if (!(yield canOpen)) {
+                guard.onOpenError();
+                this.fillsWithEmptiness();
+                return;
               }
-
-              break;
-
-            default:
-              return false;
+            } else if (!canOpen) {
+              guard.onOpenError();
+              this.fillsWithEmptiness();
+              return;
+            }
           }
+        });
+      }
 
-          return false;
-        }
-      }], [{
-        key: "observedAttributes",
-        get: function get() {
-          // @ts-ignore
-          return Object.values(defaultObservedAttributes).concat(config.observedAttributes ? config.observedAttributes : []).concat(Clazz.observedAttributes ? Clazz.observedAttributes : []);
-        }
-      }]);
+      fillsWithEmptiness() {
+        this.template = '';
+        this.clazz = {};
+      }
 
-      return CustomElement;
-    }( /*#__PURE__*/_wrapNativeSuper(HTMLElement));
+    }
 
     customElements.define(config.name, CustomElement);
     return CustomElement;
@@ -1680,23 +2014,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n    <content>\n";
-},{}],"service/router/pages.config.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.pages = void 0;
-var pages;
-
-(function (pages) {
-  pages["main"] = "/";
-  pages["chats"] = "/";
-  pages["auth"] = "/auth";
-  pages["profile"] = "/profile";
-  pages["default"] = "default";
-})(pages = exports.pages || (exports.pages = {}));
+exports.template = `
+    <content>
+`;
 },{}],"pages/main/page-main.tmpl.ts":[function(require,module,exports) {
 "use strict";
 
@@ -1704,7 +2024,18 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n    <p>\u0441\u0442\u0440\u0430\u043D\u0438\u0447\u043A\u0430 \u0441 \u0447\u0430\u0442\u0430\u043C\u0438</p>\n    <button @click={{navigateToAuth()}}>\n        \u041F\u0435\u0440\u0435\u0439\u0442\u0438 \u043A \u0441\u0442\u0440\u0430\u043D\u0438\u0447\u043A\u0435 \u0430\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u0438\n    </button>\n    <button @click={{navigateToProfile()}} hidden={{$hidden}}>\n        \u041F\u0435\u0440\u0435\u0439\u0442\u0438 \u043A \u0441\u0442\u0440\u0430\u043D\u0438\u0447\u043A\u0435 \u043F\u0440\u043E\u0444\u0438\u043B\u044F\n    </button>\n\n    <p>{{text}}</p>\n    <p>\u0428\u0430\u0431\u043B\u043E\u043D\u0438\u0437\u0430\u0442\u043E\u0440 \u0443\u043C\u0435\u0435\u0442 \u043F\u043E\u0434\u043F\u0438\u0441\u044B\u0432\u0430\u0442\u044C\u0441\u044F \u043D\u0430 observeble</p>\n    <p>\u0422\u0435\u043A\u0443\u0449\u0430\u044F \u0434\u0430\u0442\u0430: {{$data}}</p>\n";
+exports.template = `
+    <p>страничка с чатами</p>
+    <button @click={{navigateToAuth()}}>
+        Перейти к страничке авторизации
+    </button>
+    <button @click={{navigateToProfile()}}>
+        Перейти к страничке профиля
+    </button>
+    <button @click={{logout()}}>
+        Выйти из аккаунта
+    </button>
+`;
 },{}],"../node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
 var bundleURL = null;
 
@@ -1777,1337 +2108,23 @@ var reloadCSS = require('_css_loader');
 
 module.hot.dispose(reloadCSS);
 module.hot.accept(reloadCSS);
-},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"pages/main/page-main.ts":[function(require,module,exports) {
-"use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
-  var c = arguments.length,
-      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
-      d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.PageMain = void 0;
-
-var component_1 = require("../../utils/component");
-
-var router_service_1 = require("../../service/router/router.service");
-
-var pages_config_1 = require("../../service/router/pages.config");
-
-var page_main_tmpl_1 = require("./page-main.tmpl");
-
-require("./page-main.less");
-
-var subject_1 = require("../../utils/observeble/subject");
-
-var PageMain = /*#__PURE__*/function () {
-  function PageMain() {
-    _classCallCheck(this, PageMain);
-
-    this.s = new subject_1.Subject(new Date());
-    this.hidden = new subject_1.Subject(false);
-    this.text = 'Шаблонизатор умеет получать значения из класса';
-    this.routerService = new router_service_1.RouterService();
-  }
-
-  _createClass(PageMain, [{
-    key: "onInit",
-    value: function onInit() {
-      var _this = this;
-
-      setInterval(function () {
-        return _this.s.next(new Date());
-      }, 1000);
-      var f = 0;
-      setInterval(function () {
-        return _this.hidden.next(f++ % 2 === 0);
-      }, 1000);
-    }
-  }, {
-    key: "$data",
-    get: function get() {
-      return this.s.asObserveble();
-    }
-  }, {
-    key: "$hidden",
-    get: function get() {
-      return this.hidden.asObserveble();
-    }
-  }, {
-    key: "navigateToAuth",
-    value: function navigateToAuth() {
-      this.routerService.navigateTo(pages_config_1.pages.auth);
-    }
-  }, {
-    key: "navigateToProfile",
-    value: function navigateToProfile() {
-      this.routerService.navigateTo(pages_config_1.pages.profile);
-    }
-  }]);
-
-  return PageMain;
-}();
-
-PageMain = __decorate([component_1.component({
-  name: 'page-main',
-  template: page_main_tmpl_1.template
-})], PageMain);
-exports.PageMain = PageMain;
-},{"../../utils/component":"utils/component.ts","../../service/router/router.service":"service/router/router.service.ts","../../service/router/pages.config":"service/router/pages.config.ts","./page-main.tmpl":"pages/main/page-main.tmpl.ts","./page-main.less":"pages/main/page-main.less","../../utils/observeble/subject":"utils/observeble/subject.ts"}],"pages/auth/page-auth.tmpl.ts":[function(require,module,exports) {
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"service/router/pages.config.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.template = void 0;
-exports.template = "\n    <main>\n        <h1>\n            {{$title}}\n        </h1>\n\n        <app-form name=\"authorization\" hidden={{$isRegistration}} formGroup=[[authForm]]>\n            <app-input slot=\"field\" formControl=[[authForm.controls.login]]>\n                <span slot=\"label\">\u041B\u043E\u0433\u0438\u043D</span>\n            </app-input>\n            <app-input slot=\"field\" formControl=[[authForm.controls.password]]>\n                <span slot=\"label\">\u041F\u0430\u0440\u043E\u043B\u044C</span>\n            </app-input>\n\n            <app-button slot=\"submit\" class=\"space-top_8\" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance=\"primary\">\n                <span slot=\"label\">\n                    \u0410\u0432\u0442\u043E\u0440\u0438\u0437\u0430\u0446\u0438\u044F\n                </span>\n            </app-button>\n        </app-form>\n\n        <app-form name=\"registration\" hidden={{$isAuthorization}} formGroup=[[registrationForm]]>\n            <app-input slot=\"field\" formControl=[[registrationForm.controls.first_name]]>\n                <span slot=\"label\">\u0418\u043C\u044F</span>\n            </app-input>\n            <app-input slot=\"field\" formControl=[[registrationForm.controls.second_name]]>\n                <span slot=\"label\">\u0424\u0430\u043C\u0438\u043B\u0438\u044F</span>    \n            </app-input>\n            <app-input slot=\"field\" formControl=[[registrationForm.controls.login]]>\n                <span slot=\"label\">\u041B\u043E\u0433\u0438\u043D</span>\n            </app-input>\n            <app-input slot=\"field\" formControl=[[registrationForm.controls.email]]>\n                <span slot=\"label\">\u041F\u043E\u0447\u0442\u0430</span>    \n            </app-input>\n            <app-input slot=\"field\" formControl=[[registrationForm.controls.password]]>\n                <span slot=\"label\">\u041F\u0430\u0440\u043E\u043B\u044C</span>    \n            </app-input>\n            <app-input slot=\"field\" formControl=[[registrationForm.controls.phone]]>\n                <span slot=\"label\">\u0422\u0435\u043B\u0435\u0444\u043E\u043D</span> \n            </app-input>\n\n            <app-button slot=\"submit\" class=\"space-top_8\" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance=\"primary\">\n                <span slot=\"label\">\n                    \u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044F\n                </span>\n            </app-button>\n        </app-form>\n\n        <app-button @click={{navigateToAuthorization()}} appearance=\"secondary\" hidden={{$isRegistration}}>\n            <span slot=\"label\">\n                \u0412\u043E\u0439\u0442\u0438\n            </span>\n        </app-button>\n\n        <app-button @click={{navigateToRegistration()}} appearance=\"secondary\" hidden={{$isAuthorization}}>\n            <span slot=\"label\">\n                \u041D\u0435\u0442 \u0430\u043A\u0430\u0443\u043D\u0442\u0430?\n            </span>\n    </app-button>\n    </main>\n";
-},{}],"utils/animation/animation-utils/transform.functions.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.transform = void 0;
-exports.transform = {
-  rotate: function rotate(deg) {
-    return "rotate(".concat(deg, "deg)");
-  },
-  scale: function scale(size) {
-    return "scale(".concat(size, ")");
-  }
-};
-},{}],"utils/animation/animations/shaking-animation.ts":[function(require,module,exports) {
-"use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ShakingAnimation = void 0;
-
-var transform_functions_1 = require("../animation-utils/transform.functions");
-
-var ShakingAnimation = function ShakingAnimation() {
-  _classCallCheck(this, ShakingAnimation);
-
-  this.keyFrames = [{
-    transform: transform_functions_1.transform.rotate(0)
-  }, {
-    transform: transform_functions_1.transform.rotate(1)
-  }, {
-    transform: transform_functions_1.transform.rotate(-1)
-  }, {
-    transform: transform_functions_1.transform.rotate(0)
-  }];
-  this.keyframeAnimationOptions = {
-    duration: 70,
-    iterations: 10
-  };
-};
-
-exports.ShakingAnimation = ShakingAnimation;
-},{"../animation-utils/transform.functions":"utils/animation/animation-utils/transform.functions.ts"}],"utils/form/form-control.ts":[function(require,module,exports) {
-"use strict";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _toArray(arr) { return _arrayWithHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.FormControl = exports.FormStatusType = void 0;
-
-var observeble_1 = require("../observeble/observeble");
-
-var subject_1 = require("../observeble/subject");
-
-var FormStatusType;
-
-(function (FormStatusType) {
-  FormStatusType["valid"] = "VALID";
-  FormStatusType["invalid"] = "INVALID";
-})(FormStatusType = exports.FormStatusType || (exports.FormStatusType = {}));
-
-var FormControl = /*#__PURE__*/function () {
-  function FormControl(config) {
-    _classCallCheck(this, FormControl);
-
-    this.touched = new subject_1.Subject(false);
-    this.hasFocus = new subject_1.Subject(false);
-    this.disabled = new subject_1.Subject(false);
-    this.animations = new subject_1.Subject();
-    this.$value = new subject_1.Subject(config.value || '');
-    this._value = config.value;
-    this.name = config.name;
-    this.validators = config.validators || [];
-    this.asyncValidators = config.asyncValidators || [];
-  }
-
-  _createClass(FormControl, [{
-    key: "value",
-    get: function get() {
-      return this._value;
-    }
-  }, {
-    key: "$valueChanged",
-    get: function get() {
-      return this.$value.asObserveble();
-    }
-  }, {
-    key: "$statusChanged",
-    get: function get() {
-      var _this = this;
-
-      return observeble_1.Observable.all([this.$valueChanged].concat(_toConsumableArray(this.asyncValidators.map(function (validate) {
-        return validate(_this.$valueChanged);
-      })))).map(function (_ref) {
-        var _ref2 = _toArray(_ref),
-            value = _ref2[0],
-            asyncValidatorsResults = _ref2.slice(1);
-
-        return _this.mapValueToStatus(value, asyncValidatorsResults);
-      }).uniqueNext(true, function (last, next) {
-        return FormControl.hasDiffInStatuses(last, next);
-      });
-    }
-  }, {
-    key: "$touched",
-    get: function get() {
-      return this.touched.asObserveble();
-    }
-  }, {
-    key: "$changeFocus",
-    get: function get() {
-      return this.hasFocus.asObserveble().uniqueNext();
-    }
-  }, {
-    key: "$isValid",
-    get: function get() {
-      return this.$statusChanged.map(function (status) {
-        return status.status === FormStatusType.valid;
-      }).uniqueNext();
-    }
-  }, {
-    key: "$disabled",
-    get: function get() {
-      return this.disabled.asObserveble().uniqueNext();
-    }
-  }, {
-    key: "$animations",
-    get: function get() {
-      return this.animations.asObserveble();
-    }
-  }, {
-    key: "next",
-    value: function next(value) {
-      this._value = value;
-      this.$value.next(value || '');
-    }
-  }, {
-    key: "touch",
-    value: function touch() {
-      this.touched.next(true);
-    }
-  }, {
-    key: "disable",
-    value: function disable(disabled) {
-      this.disabled.next(disabled);
-    }
-  }, {
-    key: "changeFocus",
-    value: function changeFocus(hasFocus) {
-      this.hasFocus.next(hasFocus);
-    }
-  }, {
-    key: "animate",
-    value: function animate(animations) {
-      this.animations.next(animations);
-    }
-  }, {
-    key: "mapValueToStatus",
-    value: function mapValueToStatus(value, asyncValidatorsResults) {
-      var errors = [];
-
-      var _iterator = _createForOfIteratorHelper(this.validators),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var validator = _step.value;
-          var error = validator(value);
-
-          if (error) {
-            errors.push(error);
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-
-      errors = errors.concat(asyncValidatorsResults.filter(function (error) {
-        return Boolean(error);
-      }));
-
-      if (errors.length === 0) {
-        return {
-          status: FormStatusType.valid
-        };
-      }
-
-      return {
-        status: FormStatusType.invalid,
-        errors: errors
-      };
-    }
-  }], [{
-    key: "hasDiffInStatuses",
-    value: function hasDiffInStatuses(last, next) {
-      var hasStatusDiff = last.status !== next.status;
-      return hasStatusDiff || FormControl.hasErrorsDiff(last.errors, next.errors);
-    }
-  }, {
-    key: "hasErrorsDiff",
-    value: function hasErrorsDiff(last, next) {
-      if (last && !next || !last && next) {
-        return true;
-      }
-
-      if (last === undefined && next === undefined) {
-        return false;
-      }
-
-      if (last.length !== next.length) {
-        return true;
-      }
-
-      for (var index = 0; index < last.length; index++) {
-        if (!last[index].equals(next[index])) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-  }]);
-
-  return FormControl;
-}();
-
-exports.FormControl = FormControl;
-},{"../observeble/observeble":"utils/observeble/observeble.ts","../observeble/subject":"utils/observeble/subject.ts"}],"utils/form/form-group.ts":[function(require,module,exports) {
-"use strict";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e2) { throw _e2; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e3) { didErr = true; err = _e3; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.FormGroup = void 0;
-
-var shaking_animation_1 = require("../animation/animations/shaking-animation");
-
-var observeble_1 = require("../observeble/observeble");
-
-var subject_1 = require("../observeble/subject");
-
-var form_control_1 = require("./form-control");
-
-var FormGroup = /*#__PURE__*/function () {
-  function FormGroup(config) {
-    _classCallCheck(this, FormGroup);
-
-    this._$submit = new subject_1.Subject();
-    var controls = {};
-
-    if (config.controls) {
-      for (var _i = 0, _Object$entries = Object.entries(config.controls); _i < _Object$entries.length; _i++) {
-        var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
-            name = _Object$entries$_i[0],
-            formConfig = _Object$entries$_i[1];
-
-        controls[name] = this.initFormControl(name, formConfig, config);
-      }
-    }
-
-    this.controls = controls;
-  }
-
-  _createClass(FormGroup, [{
-    key: "value",
-    get: function get() {
-      return Object.values(this.controls).reduce(function (out, control) {
-        out[control.name] = String(control.value);
-        return out;
-      }, {});
-    }
-  }, {
-    key: "$submit",
-    get: function get() {
-      return this._$submit.asObserveble();
-    }
-  }, {
-    key: "$valueChanged",
-    get: function get() {
-      return observeble_1.Observable.concat(Object.values(this.controls).map(function (control) {
-        return control.$valueChanged.map(function (value) {
-          return {
-            value: value,
-            name: control.name
-          };
-        });
-      })).map(function (entrys) {
-        return entrys.reduce(function (out, entry) {
-          if (entry) {
-            out[entry.name] = String(entry.value);
-          }
-
-          return out;
-        }, {});
-      });
-    }
-  }, {
-    key: "$statusChanged",
-    get: function get() {
-      return observeble_1.Observable.concat(Object.values(this.controls).map(function (control) {
-        return control.$statusChanged.map(function (status) {
-          return Object.assign(Object.assign({}, status), {
-            name: control.name
-          });
-        });
-      })).map(function (statuses) {
-        var isValid = statuses.every(function (status) {
-          return status.status === form_control_1.FormStatusType.valid;
-        });
-
-        if (isValid) {
-          return {
-            status: form_control_1.FormStatusType.valid
-          };
-        }
-
-        var errors = statuses.reduce(function (out, status) {
-          if (status && status.errors) {
-            out[status.name] = status.errors;
-          }
-
-          return out;
-        }, {});
-        return {
-          status: form_control_1.FormStatusType.invalid,
-          errors: errors
-        };
-      });
-    }
-  }, {
-    key: "$isValid",
-    get: function get() {
-      return observeble_1.Observable.concat(Object.values(this.controls).map(function (control) {
-        return control.$isValid;
-      })).map(function (isValidFieldsArray) {
-        return isValidFieldsArray.every(function (isValid) {
-          return isValid;
-        });
-      });
-    }
-  }, {
-    key: "touch",
-    value: function touch() {
-      for (var _i2 = 0, _Object$values = Object.values(this.controls); _i2 < _Object$values.length; _i2++) {
-        var control = _Object$values[_i2];
-        control.touch();
-      }
-    }
-  }, {
-    key: "disable",
-    value: function disable(disabled) {
-      for (var _i3 = 0, _Object$values2 = Object.values(this.controls); _i3 < _Object$values2.length; _i3++) {
-        var control = _Object$values2[_i3];
-        control.disable(disabled);
-      }
-    }
-  }, {
-    key: "submit",
-    value: function submit(value) {
-      this._$submit.next(value);
-    }
-  }, {
-    key: "next",
-    value: function next(formValue) {
-      for (var _i4 = 0, _Object$entries2 = Object.entries(formValue); _i4 < _Object$entries2.length; _i4++) {
-        var _Object$entries2$_i = _slicedToArray(_Object$entries2[_i4], 2),
-            key = _Object$entries2$_i[0],
-            value = _Object$entries2$_i[1];
-
-        if (this.controls[key]) {
-          this.controls[key].next(value);
-        }
-      }
-    }
-  }, {
-    key: "shakingFirstInvalidField",
-    value: function shakingFirstInvalidField() {
-      var _this = this;
-
-      observeble_1.Observable.all(Object.values(this.controls).map(function (control) {
-        return control.$isValid.map(function (isValid) {
-          return {
-            isValid: isValid,
-            name: control.name
-          };
-        });
-      })).only(1).subscribe(function (isValidObjArray) {
-        var _a;
-
-        var firstInvalidControlsName = (_a = isValidObjArray.find(function (isValidObj) {
-          return !isValidObj.isValid;
-        })) === null || _a === void 0 ? void 0 : _a.name;
-
-        if (firstInvalidControlsName) {
-          _this.controls[firstInvalidControlsName].animate(new shaking_animation_1.ShakingAnimation());
-        }
-      });
-    }
-  }, {
-    key: "initFormControl",
-    value: function initFormControl(name, formConfig, config) {
-      var _this2 = this;
-
-      if (config.fieldValidators) {
-        var formFieldValidators = config.fieldValidators.filter(function (fieldValidator) {
-          return fieldValidator.targets.includes(name);
-        }).map(function (fieldValidator) {
-          return fieldValidator.validators;
-        }).reduce(function (out, validators) {
-          return out.concat(validators);
-        }, []);
-
-        if (formFieldValidators.length !== 0) {
-          var asyncValidators = [];
-
-          var _iterator = _createForOfIteratorHelper(formFieldValidators),
-              _step;
-
-          try {
-            var _loop = function _loop() {
-              var validator = _step.value;
-              asyncValidators.push(function () {
-                return _this2.$valueChanged.map(validator);
-              });
-            };
-
-            for (_iterator.s(); !(_step = _iterator.n()).done;) {
-              _loop();
-            }
-          } catch (err) {
-            _iterator.e(err);
-          } finally {
-            _iterator.f();
-          }
-
-          formConfig.asyncValidators = (formConfig.asyncValidators || []).concat(asyncValidators);
-        }
-      }
-
-      return new form_control_1.FormControl(Object.assign({
-        name: name
-      }, formConfig));
-    }
-  }]);
-
-  return FormGroup;
-}();
-
-exports.FormGroup = FormGroup;
-},{"../animation/animations/shaking-animation":"utils/animation/animations/shaking-animation.ts","../observeble/observeble":"utils/observeble/observeble.ts","../observeble/subject":"utils/observeble/subject.ts","./form-control":"utils/form/form-control.ts"}],"utils/form/validator-error.ts":[function(require,module,exports) {
-"use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _wrapNativeSuper(Class) { var _cache = typeof Map === "function" ? new Map() : undefined; _wrapNativeSuper = function _wrapNativeSuper(Class) { if (Class === null || !_isNativeFunction(Class)) return Class; if (typeof Class !== "function") { throw new TypeError("Super expression must either be null or a function"); } if (typeof _cache !== "undefined") { if (_cache.has(Class)) return _cache.get(Class); _cache.set(Class, Wrapper); } function Wrapper() { return _construct(Class, arguments, _getPrototypeOf(this).constructor); } Wrapper.prototype = Object.create(Class.prototype, { constructor: { value: Wrapper, enumerable: false, writable: true, configurable: true } }); return _setPrototypeOf(Wrapper, Class); }; return _wrapNativeSuper(Class); }
-
-function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct; } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _isNativeFunction(fn) { return Function.toString.call(fn).indexOf("[native code]") !== -1; }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ValidatorError = exports.ValidationErrorType = void 0;
-var ValidationErrorType;
-
-(function (ValidationErrorType) {
-  ValidationErrorType["shown"] = "SHOWN";
-  ValidationErrorType["hidden"] = "HIDDEN";
-})(ValidationErrorType = exports.ValidationErrorType || (exports.ValidationErrorType = {}));
-
-var ValidatorError = /*#__PURE__*/function (_Error) {
-  _inherits(ValidatorError, _Error);
-
-  var _super = _createSuper(ValidatorError);
-
-  function ValidatorError(message) {
-    var _this;
-
-    var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : ValidationErrorType.shown;
-
-    _classCallCheck(this, ValidatorError);
-
-    _this = _super.call(this, message);
-    _this.type = type;
-    return _this;
-  }
-
-  _createClass(ValidatorError, [{
-    key: "equals",
-    value: function equals(other) {
-      return other.type === this.type && other.message === this.message;
-    }
-  }]);
-
-  return ValidatorError;
-}( /*#__PURE__*/_wrapNativeSuper(Error));
-
-exports.ValidatorError = ValidatorError;
-},{}],"utils/form/validators.ts":[function(require,module,exports) {
-"use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Validators = void 0;
-
-var validator_error_1 = require("./validator-error");
-
-var EMAIL = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-var defaultMessages = {
-  empty: 'Поле должно быть заполнено',
-  required: 'Поле заполнено неверно',
-  maxLength: function maxLength(length) {
-    return "\u0414\u043B\u0438\u043D\u043D\u0430 \u043F\u043E\u043B\u044F \u043D\u0435 \u0434\u043E\u043B\u0436\u043D\u0430 \u0431\u044B\u0442\u044C \u0431\u043E\u043B\u044C\u0448\u0435 ".concat(length);
-  },
-  minLength: function minLength(length) {
-    return "\u0414\u043B\u0438\u043D\u043D\u0430 \u043F\u043E\u043B\u044F \u043D\u0435 \u0434\u043E\u043B\u0436\u043D\u0430 \u0431\u044B\u0442\u044C \u043C\u0435\u043D\u044C\u0448\u0435 ".concat(length);
-  },
-  noSpaces: 'В поле не должно быть пробелов',
-  email: 'Почта должна быть в формате my-email@domen.ru'
-};
-
-var Validators = /*#__PURE__*/function () {
-  function Validators() {
-    _classCallCheck(this, Validators);
-  }
-
-  _createClass(Validators, null, [{
-    key: "empty",
-    value: function empty(error) {
-      return function (value) {
-        return value ? null : error || new validator_error_1.ValidatorError(defaultMessages.empty);
-      };
-    }
-  }, {
-    key: "required",
-    value: function required(regExp, error) {
-      return function (value) {
-        return regExp.test(Validators.nonNullable(value)) ? null : error || new validator_error_1.ValidatorError(defaultMessages.required);
-      };
-    }
-  }, {
-    key: "maxLength",
-    value: function maxLength(length, error) {
-      return function (value) {
-        return Validators.toString(value).length > length ? error || new validator_error_1.ValidatorError(defaultMessages.maxLength(length)) : null;
-      };
-    }
-  }, {
-    key: "minLength",
-    value: function minLength(length, error) {
-      return function (value) {
-        return Validators.toString(value).length < length ? error || new validator_error_1.ValidatorError(defaultMessages.minLength(length)) : null;
-      };
-    }
-  }, {
-    key: "noSpaces",
-    value: function noSpaces(error) {
-      return function (value) {
-        return /\s/g.test(Validators.toString(value).trim()) ? error || new validator_error_1.ValidatorError(defaultMessages.noSpaces) : null;
-      };
-    }
-  }, {
-    key: "email",
-    value: function email(error) {
-      return function (value) {
-        return EMAIL.test(Validators.toString(value).toLowerCase()) ? null : error || new validator_error_1.ValidatorError(defaultMessages.email);
-      };
-    }
-  }, {
-    key: "nonNullable",
-    value: function nonNullable(value) {
-      return value === undefined || value === null ? '' : value;
-    }
-  }, {
-    key: "toString",
-    value: function toString(value) {
-      return String(Validators.nonNullable(value));
-    }
-  }]);
-
-  return Validators;
-}();
-
-exports.Validators = Validators;
-},{"./validator-error":"utils/form/validator-error.ts"}],"const/form-validators.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.formValidators = void 0;
-
-var validator_error_1 = require("../utils/form/validator-error");
-
-var validators_1 = require("../utils/form/validators");
-
-var defaultValidators = [validators_1.Validators.noSpaces(), validators_1.Validators.maxLength(50), validators_1.Validators.empty()];
-exports.formValidators = {
-  password: [].concat(defaultValidators, [validators_1.Validators.minLength(6)]),
-  login: [].concat(defaultValidators, [validators_1.Validators.minLength(4)]),
-  first_name: [].concat(defaultValidators),
-  second_name: [].concat(defaultValidators),
-  email: [].concat(defaultValidators, [validators_1.Validators.email()]),
-  phone: [].concat(defaultValidators, [validators_1.Validators.required(/^\+?\d+$/, new validator_error_1.ValidatorError('Телефон может содержать только цифры и "+" в начале'))]),
-  display_name: [].concat(defaultValidators, [validators_1.Validators.minLength(4)])
-};
-},{"../utils/form/validator-error":"utils/form/validator-error.ts","../utils/form/validators":"utils/form/validators.ts"}],"components/input/app-input.tmpl.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.template = void 0;
-exports.template = "\n    <label for={{name}} status={{$inputStatus}}>\n        <slot name=\"label\" instead-of-text={{$labelIsInsteadOfText}}></slot>\n    </label>\n    <input type=\"text\" name={{name}} id={{name}} disabled={{$disabled}} @focus={{onFocus}} @blur={{onBlur}} @input={{onInput}}>\n    <div underline={{$inputStatus}}></div>\n    <p transparent={{$needHiddenErrors}} class=\"error\">\n        {{$errorMessage}}\n    </p>\n";
-},{}],"components/input/app-input.less":[function(require,module,exports) {
-var reloadCSS = require('_css_loader');
-
-module.hot.dispose(reloadCSS);
-module.hot.accept(reloadCSS);
-},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"utils/animation/animation-utils/play-animation.ts":[function(require,module,exports) {
-"use strict";
-
-function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it.return != null) it.return(); } finally { if (didErr) throw err; } } }; }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.playAnimation = void 0;
-
-function playAnimation(element, animation) {
-  return new Promise(function (resolve) {
-    if (animation.onStart) {
-      var _iterator = _createForOfIteratorHelper(animation.onStart),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var onStartFunction = _step.value;
-          onStartFunction(element);
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-    }
-
-    resolve();
-  }).then(function () {
-    return element.animate(animation.keyFrames, animation.keyframeAnimationOptions).finished;
-  }).then(function () {
-    if (animation.onFinish) {
-      var _iterator2 = _createForOfIteratorHelper(animation.onFinish),
-          _step2;
-
-      try {
-        for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-          var onFinishFunction = _step2.value;
-          onFinishFunction(element);
-        }
-      } catch (err) {
-        _iterator2.e(err);
-      } finally {
-        _iterator2.f();
-      }
-    }
-  });
-}
-
-exports.playAnimation = playAnimation;
-},{}],"components/input/app-input.ts":[function(require,module,exports) {
-"use strict";
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
-  var c = arguments.length,
-      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
-      d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.AppInput = void 0;
-
-var component_1 = require("../../utils/component");
-
-var app_input_tmpl_1 = require("./app-input.tmpl");
-
-require("./app-input.less");
-
-var form_control_1 = require("../../utils/form/form-control");
-
-var observeble_1 = require("../../utils/observeble/observeble");
-
-var validator_error_1 = require("../../utils/form/validator-error");
-
-var play_animation_1 = require("../../utils/animation/animation-utils/play-animation");
-
-var AppInput = /*#__PURE__*/function () {
-  function AppInput() {
-    _classCallCheck(this, AppInput);
-  }
-
-  _createClass(AppInput, [{
-    key: "onInit",
-    value: function onInit() {
-      this.name = this.formControl ? this.formControl.name : false;
-    } // TODO: Разбить на методы
-
-  }, {
-    key: "onRendered",
-    value: function onRendered(element) {
-      var _this = this;
-
-      this.input = element.querySelector('input');
-
-      if (this.formControl) {
-        this.formControl.$valueChanged.subscribe(function (value) {
-          _this.input.value = value || '';
-        });
-      } else {
-        this.formControl = new form_control_1.FormControl({
-          name: ''
-        });
-      }
-
-      observeble_1.Observable.event(element, 'click').subscribe(function () {
-        return _this.setFocusForInput();
-      });
-      this.formControl.$animations.subscribe(function (animation) {
-        return play_animation_1.playAnimation(element, animation);
-      });
-    }
-  }, {
-    key: "$hasFocus",
-    get: function get() {
-      return this.formControl.$changeFocus;
-    }
-  }, {
-    key: "$hasErrors",
-    get: function get() {
-      return this.formControl.$statusChanged.map(function (status) {
-        return Boolean(status === null || status === void 0 ? void 0 : status.errors) && status.errors.some(function (error) {
-          return error.type === validator_error_1.ValidationErrorType.shown;
-        });
-      });
-    }
-  }, {
-    key: "$disabled",
-    get: function get() {
-      return this.formControl.$disabled;
-    }
-  }, {
-    key: "$errorMessage",
-    get: function get() {
-      return this.formControl.$statusChanged.map(function (status) {
-        var _a, _b;
-
-        return ((_b = (_a = status.errors) === null || _a === void 0 ? void 0 : _a.find(function (error) {
-          return error.type === validator_error_1.ValidationErrorType.shown;
-        })) === null || _b === void 0 ? void 0 : _b.message) || '';
-      }) // WARNING: Благодаря этому, текст ошибки не исчезает мгновенно,
-      // а становится прозрачным c анимацией.
-      .filter(function (message) {
-        return Boolean(message);
-      });
-    }
-  }, {
-    key: "$needHiddenErrors",
-    get: function get() {
-      return observeble_1.Observable.all([this.$hasErrors, this.formControl.$touched, this.formControl.$disabled]).map(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 3),
-            hasErrors = _ref2[0],
-            touched = _ref2[1],
-            disabled = _ref2[2];
-
-        return !hasErrors || !touched || disabled;
-      });
-    }
-  }, {
-    key: "$inputStatus",
-    get: function get() {
-      return observeble_1.Observable.all([this.$hasErrors, this.formControl.$changeFocus, this.formControl.$touched, this.formControl.$disabled]).map(function (_ref3) {
-        var _ref4 = _slicedToArray(_ref3, 4),
-            hasErrors = _ref4[0],
-            hasFocus = _ref4[1],
-            touched = _ref4[2],
-            disabled = _ref4[3];
-
-        if (disabled) {
-          return 'disabled';
-        }
-
-        if (!touched) {
-          return hasFocus ? 'focus' : '';
-        }
-
-        if (hasErrors) {
-          return 'error';
-        }
-
-        if (hasFocus) {
-          return 'focus';
-        }
-
-        return 'valid';
-      }).uniqueNext();
-    }
-  }, {
-    key: "$labelIsInsteadOfText",
-    get: function get() {
-      return observeble_1.Observable.all([this.formControl.$changeFocus, this.formControl.$valueChanged.map(function (value) {
-        return Boolean(value);
-      })]).map(function (_ref5) {
-        var _ref6 = _slicedToArray(_ref5, 2),
-            hasFocus = _ref6[0],
-            hasValue = _ref6[1];
-
-        return !hasFocus && !hasValue;
-      });
-    }
-  }, {
-    key: "onFocus",
-    value: function onFocus() {
-      this.formControl.changeFocus(true);
-    }
-  }, {
-    key: "onBlur",
-    value: function onBlur() {
-      this.formControl.changeFocus(false);
-      this.formControl.touch();
-    }
-  }, {
-    key: "onInput",
-    value: function onInput(event) {
-      this.formControl.next(event.target.value);
-    }
-  }, {
-    key: "setFocusForInput",
-    value: function setFocusForInput() {
-      this.input.focus();
-    }
-  }]);
-
-  return AppInput;
-}();
-
-AppInput = __decorate([component_1.component({
-  name: 'app-input',
-  template: app_input_tmpl_1.template
-})], AppInput);
-exports.AppInput = AppInput;
-},{"../../utils/component":"utils/component.ts","./app-input.tmpl":"components/input/app-input.tmpl.ts","./app-input.less":"components/input/app-input.less","../../utils/form/form-control":"utils/form/form-control.ts","../../utils/observeble/observeble":"utils/observeble/observeble.ts","../../utils/form/validator-error":"utils/form/validator-error.ts","../../utils/animation/animation-utils/play-animation":"utils/animation/animation-utils/play-animation.ts"}],"components/form/app-form.tmpl.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.template = void 0;
-exports.template = "\n    <form name={{name}} @submit={{onSubmit}}>\n        <slot name=\"field\"></slot>\n        <slot name=\"submit\"></slot>\n    </form>\n";
-},{}],"components/form/app-form.less":[function(require,module,exports) {
-var reloadCSS = require('_css_loader');
-
-module.hot.dispose(reloadCSS);
-module.hot.accept(reloadCSS);
-},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/form/app-form.ts":[function(require,module,exports) {
-"use strict";
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
-  var c = arguments.length,
-      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
-      d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.AppForm = void 0;
-
-var component_1 = require("../../utils/component");
-
-var app_form_tmpl_1 = require("./app-form.tmpl");
-
-require("./app-form.less");
-
-var observeble_1 = require("../../utils/observeble/observeble");
-
-var AppForm = /*#__PURE__*/function () {
-  function AppForm() {
-    _classCallCheck(this, AppForm);
-  }
-
-  _createClass(AppForm, [{
-    key: "onSubmit",
-    value: function onSubmit(event) {
-      var _this = this;
-
-      event.preventDefault();
-
-      if (!this.formGroup) {
-        return;
-      }
-
-      observeble_1.Observable.all([this.formGroup.$isValid, this.formGroup.$valueChanged]).only(1).filter(function (_ref) {
-        var _ref2 = _slicedToArray(_ref, 2),
-            isValid = _ref2[0],
-            _value = _ref2[1];
-
-        return Boolean(isValid);
-      }).on(function (_ref3) {
-        var _ref4 = _slicedToArray(_ref3, 2),
-            _isValid = _ref4[0],
-            value = _ref4[1];
-
-        var _a;
-
-        return (_a = _this.formGroup) === null || _a === void 0 ? void 0 : _a.submit(value);
-      });
-    }
-  }, {
-    key: "onAttributeChanged",
-    value: function onAttributeChanged(name, _oldValue, newValue) {
-      switch (name) {
-        case 'name':
-          if (newValue) {
-            this.name = newValue;
-          }
-
-          break;
-
-        default:
-          break;
-      }
-
-      return false;
-    }
-  }]);
-
-  return AppForm;
-}();
-
-AppForm = __decorate([component_1.component({
-  name: 'app-form',
-  template: app_form_tmpl_1.template,
-  observedAttributes: ['name']
-})], AppForm);
-exports.AppForm = AppForm;
-},{"../../utils/component":"utils/component.ts","./app-form.tmpl":"components/form/app-form.tmpl.ts","./app-form.less":"components/form/app-form.less","../../utils/observeble/observeble":"utils/observeble/observeble.ts"}],"components/button/app-button.tmpl.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.template = void 0;
-exports.template = "\n    <button button-disabled={{$disabled}}>\n        <slot name=\"label\"></slot>\n    </button>\n";
-},{}],"components/button/app-button.less":[function(require,module,exports) {
-var reloadCSS = require('_css_loader');
-
-module.hot.dispose(reloadCSS);
-module.hot.accept(reloadCSS);
-},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/button/app-button.ts":[function(require,module,exports) {
-"use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
-  var c = arguments.length,
-      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
-      d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
-  return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.AppButton = void 0;
-
-var component_1 = require("../../utils/component");
-
-var app_button_tmpl_1 = require("./app-button.tmpl");
-
-require("./app-button.less");
-
-var subject_1 = require("../../utils/observeble/subject");
-
-var AppButton = /*#__PURE__*/function () {
-  function AppButton() {
-    _classCallCheck(this, AppButton);
-
-    this.disabled = new subject_1.Subject(false);
-    this._disabled = false;
-  }
-
-  _createClass(AppButton, [{
-    key: "$disabled",
-    get: function get() {
-      return this.disabled.asObserveble();
-    }
-  }, {
-    key: "onRendered",
-    value: function onRendered(element) {
-      var _this = this;
-
-      element.querySelector('button').addEventListener('click', function (event) {
-        if (_this._disabled) {
-          event.stopPropagation();
-          element.dispatchEvent(new CustomEvent('disabledclick'));
-        }
-      });
-    }
-  }, {
-    key: "onAttributeChanged",
-    value: function onAttributeChanged(name, _, newValue) {
-      switch (name) {
-        case 'disabled':
-          this._disabled = newValue !== null;
-          this.disabled.next(newValue !== null);
-          return true;
-
-        default:
-          return false;
-      }
-    }
-  }]);
-
-  return AppButton;
-}();
-
-AppButton = __decorate([component_1.component({
-  name: 'app-button',
-  template: app_button_tmpl_1.template,
-  observedAttributes: ['disabled']
-})], AppButton);
-exports.AppButton = AppButton;
-},{"../../utils/component":"utils/component.ts","./app-button.tmpl":"components/button/app-button.tmpl.ts","./app-button.less":"components/button/app-button.less","../../utils/observeble/subject":"utils/observeble/subject.ts"}],"pages/auth/page-auth.less":[function(require,module,exports) {
-var reloadCSS = require('_css_loader');
-
-module.hot.dispose(reloadCSS);
-module.hot.accept(reloadCSS);
-},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"store/enums/user-data.enum.ts":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.userDataActionType = void 0;
-var userDataActionType;
-
-(function (userDataActionType) {
-  userDataActionType["upload"] = "userData__upload";
-  userDataActionType["uploaded"] = "userData__uploaded";
-  userDataActionType["uploadError"] = "userData__uploadError";
-})(userDataActionType = exports.userDataActionType || (exports.userDataActionType = {}));
-},{}],"store/actions/user-data.actions.ts":[function(require,module,exports) {
-"use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.UploadErrorUserDataAction = exports.UploadedUserDataAction = exports.UploadUserDataAction = void 0;
-
-var user_data_enum_1 = require("../enums/user-data.enum");
-
-var UploadUserDataAction = function UploadUserDataAction() {
-  _classCallCheck(this, UploadUserDataAction);
-
-  this.type = user_data_enum_1.userDataActionType.upload;
-};
-
-exports.UploadUserDataAction = UploadUserDataAction;
-
-var UploadedUserDataAction = function UploadedUserDataAction(data) {
-  _classCallCheck(this, UploadedUserDataAction);
-
-  this.type = user_data_enum_1.userDataActionType.uploaded;
-  this.payload = data;
-};
-
-exports.UploadedUserDataAction = UploadedUserDataAction;
-
-var UploadErrorUserDataAction = function UploadErrorUserDataAction(error) {
-  _classCallCheck(this, UploadErrorUserDataAction);
-
-  this.type = user_data_enum_1.userDataActionType.uploadError;
-  this.payload = error;
-};
-
-exports.UploadErrorUserDataAction = UploadErrorUserDataAction;
-},{"../enums/user-data.enum":"store/enums/user-data.enum.ts"}],"store/enums/data-status.enum.ts":[function(require,module,exports) {
+exports.pages = void 0;
+var pages;
+
+(function (pages) {
+  pages["main"] = "/";
+  pages["chats"] = "/";
+  pages["auth"] = "/auth";
+  pages["profile"] = "/profile";
+  pages["default"] = "default";
+})(pages = exports.pages || (exports.pages = {}));
+},{}],"store/enums/data-status.enum.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3123,7 +2140,55 @@ var dataStatus;
   dataStatus["error"] = "error";
   dataStatus["default"] = "default";
 })(dataStatus = exports.dataStatus || (exports.dataStatus = {}));
-},{}],"store/functions/get-default-data.ts":[function(require,module,exports) {
+},{}],"store/selectors/data/select-status.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.selectDataStatus = void 0;
+
+function selectDataStatus(data) {
+  return data.status;
+}
+
+exports.selectDataStatus = selectDataStatus;
+},{}],"store/selectors/authorization/select-auth-token.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.selectAuthToken = void 0;
+
+function selectAuthToken(state) {
+  return state.authorization.authToken;
+}
+
+exports.selectAuthToken = selectAuthToken;
+},{}],"store/selectors/authorization/select-is-authorized.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.selectIsAuthorized = void 0;
+
+const data_status_enum_1 = require("../../enums/data-status.enum");
+
+const select_status_1 = require("../data/select-status");
+
+const select_auth_token_1 = require("./select-auth-token");
+
+function selectIsAuthorized(state) {
+  const authTokenStatus = select_status_1.selectDataStatus(select_auth_token_1.selectAuthToken(state)); // По дефолту считаем что мы авторизированы,
+  // поскольку нет валидных способов узнать есть ли токен в куках(
+
+  return authTokenStatus === data_status_enum_1.dataStatus.valid || authTokenStatus === data_status_enum_1.dataStatus.default;
+}
+
+exports.selectIsAuthorized = selectIsAuthorized;
+},{"../../enums/data-status.enum":"store/enums/data-status.enum.ts","../data/select-status":"store/selectors/data/select-status.ts","./select-auth-token":"store/selectors/authorization/select-auth-token.ts"}],"store/functions/get-default-data.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3131,7 +2196,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getDefaultData = void 0;
 
-var data_status_enum_1 = require("../enums/data-status.enum");
+const data_status_enum_1 = require("../enums/data-status.enum");
 
 function getDefaultData() {
   return {
@@ -3151,27 +2216,47 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.defaultState = void 0;
 
-var get_default_data_1 = require("../functions/get-default-data");
+const get_default_data_1 = require("../functions/get-default-data");
 
 exports.defaultState = {
-  userData: get_default_data_1.getDefaultData()
+  authorization: {
+    authToken: get_default_data_1.getDefaultData(),
+    logout: get_default_data_1.getDefaultData(),
+    userData: get_default_data_1.getDefaultData()
+  },
+  user: {
+    changePassword: get_default_data_1.getDefaultData(),
+    changeUserData: get_default_data_1.getDefaultData()
+  },
+  chats: {
+    list: get_default_data_1.getDefaultData(),
+    createChat: get_default_data_1.getDefaultData(),
+    deleteChat: get_default_data_1.getDefaultData(),
+    tokens: {},
+    deleteChatUsers: get_default_data_1.getDefaultData(),
+    addChatUsers: get_default_data_1.getDefaultData()
+  },
+  activeChats: {
+    managers: {},
+    chatsReadyStates: {}
+  }
 };
-},{"../functions/get-default-data":"store/functions/get-default-data.ts"}],"store/functions/reduser-adaptor.ts":[function(require,module,exports) {
+},{"../functions/get-default-data":"store/functions/get-default-data.ts"}],"store/enums/active-chats-actions.ts":[function(require,module,exports) {
 "use strict";
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.activeChatsActionType = void 0;
+var activeChatsActionType;
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+(function (activeChatsActionType) {
+  activeChatsActionType["addActiveChat"] = "activeChats-addActiveChat";
+  activeChatsActionType["removeActiveChat"] = "activeChats-removeActiveChat";
+  activeChatsActionType["changeChatReadyState"] = "activeChats-changeReadyState";
+})(activeChatsActionType = exports.activeChatsActionType || (exports.activeChatsActionType = {}));
+},{}],"store/functions/reduser-adaptor.ts":[function(require,module,exports) {
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
@@ -3179,64 +2264,370 @@ Object.defineProperty(exports, "__esModule", {
 exports.reducerAdapt = void 0;
 
 function reducerAdapt(reducers, selector) {
-  var globalReducers = {};
+  const globalReducers = {};
 
-  var _loop = function _loop() {
-    var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
-        actionType = _Object$entries$_i[0],
-        reducer = _Object$entries$_i[1];
-
-    //@ts-ignore
+  for (const [actionType, reducer] of Object.entries(reducers)) {
+    // @ts-ignore
     globalReducers[actionType] = function (state, action) {
-      return Object.assign(Object.assign({}, state), _defineProperty({}, selector, reducer(state[selector], action)));
+      return Object.assign(Object.assign({}, state), {
+        [selector]: reducer(state[selector], action)
+      });
     };
-  };
-
-  for (var _i = 0, _Object$entries = Object.entries(reducers); _i < _Object$entries.length; _i++) {
-    _loop();
   }
 
   return globalReducers;
 }
 
 exports.reducerAdapt = reducerAdapt;
-},{}],"store/reducers/user-data-reducers.ts":[function(require,module,exports) {
+},{}],"store/reducers/active-chats-state.reducers.ts":[function(require,module,exports) {
 "use strict";
-
-var _userDataReducers2;
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.userDataReducers = void 0;
+exports.activeChatsReducers = void 0;
 
-var data_status_enum_1 = require("../enums/data-status.enum");
+const active_chats_actions_1 = require("../enums/active-chats-actions");
 
-var user_data_enum_1 = require("../enums/user-data.enum");
+const reduser_adaptor_1 = require("../functions/reduser-adaptor");
 
-var reduser_adaptor_1 = require("../functions/reduser-adaptor");
+const _activeChatsReducers = {
+  [active_chats_actions_1.activeChatsActionType.addActiveChat]: (state, action) => Object.assign(Object.assign({}, state), {
+    managers: Object.assign(Object.assign({}, state.managers), {
+      [action.payload.chatId]: {
+        controller: action.payload.controller,
+        listener: action.payload.listener
+      }
+    })
+  }),
+  [active_chats_actions_1.activeChatsActionType.removeActiveChat]: (state, action) => {
+    const controllers = Object.assign({}, state.managers);
+    delete controllers[action.payload];
+    return Object.assign(Object.assign({}, state), {
+      controllers
+    });
+  },
+  [active_chats_actions_1.activeChatsActionType.changeChatReadyState]: (state, action) => Object.assign(Object.assign({}, state), {
+    chatsReadyStates: Object.assign(Object.assign({}, state.chatsReadyStates), {
+      [action.payload.chatId]: action.payload.readyState
+    })
+  })
+};
+exports.activeChatsReducers = reduser_adaptor_1.reducerAdapt(_activeChatsReducers, 'activeChats');
+},{"../enums/active-chats-actions":"store/enums/active-chats-actions.ts","../functions/reduser-adaptor":"store/functions/reduser-adaptor.ts"}],"store/enums/authorization-action-type.enum.ts":[function(require,module,exports) {
+"use strict";
 
-var _userDataReducers = (_userDataReducers2 = {}, _defineProperty(_userDataReducers2, user_data_enum_1.userDataActionType.upload, function (state) {
-  return Object.assign(Object.assign({}, state), {
-    status: data_status_enum_1.dataStatus.loading
-  });
-}), _defineProperty(_userDataReducers2, user_data_enum_1.userDataActionType.uploaded, function (state, action) {
-  return Object.assign(Object.assign({}, state), {
-    status: data_status_enum_1.dataStatus.valid,
-    data: action.payload,
-    time: Date.now()
-  });
-}), _defineProperty(_userDataReducers2, user_data_enum_1.userDataActionType.uploadError, function (state, action) {
-  return Object.assign(Object.assign({}, state), {
-    status: data_status_enum_1.dataStatus.error,
-    error: action.payload
-  });
-}), _userDataReducers2);
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.authorizationActionType = void 0;
+var authorizationActionType;
 
-exports.userDataReducers = reduser_adaptor_1.reducerAdapt(_userDataReducers, 'userData');
-},{"../enums/data-status.enum":"store/enums/data-status.enum.ts","../enums/user-data.enum":"store/enums/user-data.enum.ts","../functions/reduser-adaptor":"store/functions/reduser-adaptor.ts"}],"store/reducers/reducer.ts":[function(require,module,exports) {
+(function (authorizationActionType) {
+  authorizationActionType["authTokenUpload"] = "authorization-authToken__upload";
+  authorizationActionType["authTokenUploaded"] = "authorization-authToken__uploaded";
+  authorizationActionType["authTokenUploadError"] = "authorization-authToken__uploadError";
+  authorizationActionType["logoutUpload"] = "authorization-logout__upload";
+  authorizationActionType["logoutUploaded"] = "authorization-logout__uploaded";
+  authorizationActionType["logoutUploadError"] = "authorization-logout__uploadError";
+  authorizationActionType["userDataUpload"] = "authorization-userData__upload";
+  authorizationActionType["userDataUploaded"] = "authorization-userData__uploaded";
+  authorizationActionType["userDataUploadError"] = "authorization-userData__uploadError";
+})(authorizationActionType = exports.authorizationActionType || (exports.authorizationActionType = {}));
+},{}],"store/reducers/authorization-reducers.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.authorizationReducers = void 0;
+
+const data_status_enum_1 = require("../enums/data-status.enum");
+
+const authorization_action_type_enum_1 = require("../enums/authorization-action-type.enum");
+
+const reduser_adaptor_1 = require("../functions/reduser-adaptor"); // TODO: кажется, нужно создавать редьюсеры для изменения состояния Data в одном месте,
+// иначе изменить интерфейс Data потом будет нереально
+
+
+const _authorizationReducers = {
+  [authorization_action_type_enum_1.authorizationActionType.authTokenUpload]: state => Object.assign(Object.assign({}, state), {
+    authToken: Object.assign(Object.assign({}, state.authToken), {
+      status: data_status_enum_1.dataStatus.loading
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.authTokenUploaded]: (state, action) => Object.assign(Object.assign({}, state), {
+    authToken: Object.assign(Object.assign({}, state.authToken), {
+      error: undefined,
+      status: data_status_enum_1.dataStatus.valid,
+      value: action.payload,
+      time: Date.now()
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.authTokenUploadError]: (state, action) => Object.assign(Object.assign({}, state), {
+    authToken: Object.assign(Object.assign({}, state.authToken), {
+      status: data_status_enum_1.dataStatus.error,
+      error: action.payload
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.logoutUpload]: state => Object.assign(Object.assign({}, state), {
+    authToken: Object.assign(Object.assign({}, state.authToken), {
+      status: data_status_enum_1.dataStatus.loading
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.logoutUploaded]: (state, action) => Object.assign(Object.assign({}, state), {
+    logout: Object.assign(Object.assign({}, state.logout), {
+      error: undefined,
+      status: data_status_enum_1.dataStatus.valid,
+      value: action.payload,
+      time: Date.now()
+    }),
+    authToken: Object.assign(Object.assign({}, state.authToken), {
+      status: data_status_enum_1.dataStatus.invalid
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.logoutUploadError]: (state, action) => Object.assign(Object.assign({}, state), {
+    logout: Object.assign(Object.assign({}, state.logout), {
+      status: data_status_enum_1.dataStatus.error,
+      error: action.payload
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.userDataUpload]: state => Object.assign(Object.assign({}, state), {
+    logout: Object.assign(Object.assign({}, state.logout), {
+      status: data_status_enum_1.dataStatus.loading
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.userDataUploaded]: (state, action) => Object.assign(Object.assign({}, state), {
+    userData: Object.assign(Object.assign({}, state.userData), {
+      error: undefined,
+      status: data_status_enum_1.dataStatus.valid,
+      value: action.payload,
+      time: Date.now()
+    })
+  }),
+  [authorization_action_type_enum_1.authorizationActionType.userDataUploadError]: (state, action) => Object.assign(Object.assign({}, state), {
+    userData: Object.assign(Object.assign({}, state.userData), {
+      status: data_status_enum_1.dataStatus.error,
+      error: action.payload
+    })
+  })
+};
+exports.authorizationReducers = reduser_adaptor_1.reducerAdapt(_authorizationReducers, 'authorization');
+},{"../enums/data-status.enum":"store/enums/data-status.enum.ts","../enums/authorization-action-type.enum":"store/enums/authorization-action-type.enum.ts","../functions/reduser-adaptor":"store/functions/reduser-adaptor.ts"}],"utils/data-reducers-helper.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.DataReducersHelper = void 0;
+
+const data_status_enum_1 = require("../store/enums/data-status.enum");
+
+class DataReducersHelper {
+  static createUploadReducer(field) {
+    return state => Object.assign(Object.assign({}, state), {
+      [field]: Object.assign(Object.assign({}, state[field]), {
+        status: data_status_enum_1.dataStatus.loading
+      })
+    });
+  }
+
+  static createUploadedReducer(field) {
+    return (state, action) => Object.assign(Object.assign({}, state), {
+      [field]: Object.assign(Object.assign({}, state[field]), {
+        error: undefined,
+        status: data_status_enum_1.dataStatus.valid,
+        value: action.payload,
+        time: Date.now()
+      })
+    });
+  }
+
+  static createUploadErrorReducer(field) {
+    return (state, action) => Object.assign(Object.assign({}, state), {
+      [field]: Object.assign(Object.assign({}, state[field]), {
+        status: data_status_enum_1.dataStatus.error,
+        error: action.payload
+      })
+    });
+  }
+
+}
+
+exports.DataReducersHelper = DataReducersHelper;
+},{"../store/enums/data-status.enum":"store/enums/data-status.enum.ts"}],"store/enums/chats-action-type.enum.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.chatsActionType = void 0;
+var chatsActionType;
+
+(function (chatsActionType) {
+  chatsActionType["chatListUpload"] = "chats-chatList__upload";
+  chatsActionType["chatListUploaded"] = "chats-chatList__uploaded";
+  chatsActionType["chatListUploadError"] = "chats-chatList__uploadError";
+  chatsActionType["createChatUpload"] = "chats-createChat__upload";
+  chatsActionType["createChatUploaded"] = "chats-createChat__uploaded";
+  chatsActionType["createChatUploadError"] = "chats-createChat__uploadError";
+  chatsActionType["deleteChatUpload"] = "chats-deleteChat__upload";
+  chatsActionType["deleteChatUploaded"] = "chats-deleteChat__uploaded";
+  chatsActionType["deleteChatUploadError"] = "chats-deleteChat__uploadError";
+  chatsActionType["chatTokenUpload"] = "chats-chatToken__upload";
+  chatsActionType["chatTokenUploaded"] = "chats-chatToken__uploaded";
+  chatsActionType["chatTokenUploadError"] = "chats-chatToken__uploadError";
+  chatsActionType["deleteChatUsersUpload"] = "chats-deleteChatUsers__upload";
+  chatsActionType["deleteChatUsersUploaded"] = "chats-deleteChatUsers__uploaded";
+  chatsActionType["deleteChatUsersUploadError"] = "chats-deleteChatUsers__uploadError";
+  chatsActionType["addChatUsersUpload"] = "chats-addChatUsers__upload";
+  chatsActionType["addChatUsersUploaded"] = "chats-addChatUsers__uploaded";
+  chatsActionType["addChatUsersUploadError"] = "chats-addChatUsers__uploadError";
+})(chatsActionType = exports.chatsActionType || (exports.chatsActionType = {}));
+},{}],"store/reducers/chats-reducers.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.chatsReducers = void 0;
+
+const data_reducers_helper_1 = require("../../utils/data-reducers-helper");
+
+const chats_action_type_enum_1 = require("../enums/chats-action-type.enum");
+
+const data_status_enum_1 = require("../enums/data-status.enum");
+
+const reduser_adaptor_1 = require("../functions/reduser-adaptor");
+
+const _chatsReducers = {
+  [chats_action_type_enum_1.chatsActionType.chatListUpload]: data_reducers_helper_1.DataReducersHelper.createUploadReducer('list'),
+  [chats_action_type_enum_1.chatsActionType.chatListUploaded]: data_reducers_helper_1.DataReducersHelper.createUploadedReducer('list'),
+  [chats_action_type_enum_1.chatsActionType.chatListUploadError]: data_reducers_helper_1.DataReducersHelper.createUploadErrorReducer('list'),
+  [chats_action_type_enum_1.chatsActionType.createChatUpload]: data_reducers_helper_1.DataReducersHelper.createUploadReducer('createChat'),
+  [chats_action_type_enum_1.chatsActionType.createChatUploaded]: data_reducers_helper_1.DataReducersHelper.createUploadedReducer('createChat'),
+  [chats_action_type_enum_1.chatsActionType.createChatUploadError]: data_reducers_helper_1.DataReducersHelper.createUploadErrorReducer('createChat'),
+  [chats_action_type_enum_1.chatsActionType.deleteChatUpload]: data_reducers_helper_1.DataReducersHelper.createUploadReducer('deleteChat'),
+  [chats_action_type_enum_1.chatsActionType.deleteChatUploaded]: data_reducers_helper_1.DataReducersHelper.createUploadedReducer('deleteChat'),
+  [chats_action_type_enum_1.chatsActionType.deleteChatUploadError]: data_reducers_helper_1.DataReducersHelper.createUploadErrorReducer('deleteChat'),
+  [chats_action_type_enum_1.chatsActionType.deleteChatUsersUpload]: data_reducers_helper_1.DataReducersHelper.createUploadReducer('deleteChatUsers'),
+  [chats_action_type_enum_1.chatsActionType.deleteChatUsersUploaded]: data_reducers_helper_1.DataReducersHelper.createUploadedReducer('deleteChatUsers'),
+  [chats_action_type_enum_1.chatsActionType.deleteChatUsersUploadError]: data_reducers_helper_1.DataReducersHelper.createUploadErrorReducer('deleteChatUsers'),
+  [chats_action_type_enum_1.chatsActionType.addChatUsersUpload]: data_reducers_helper_1.DataReducersHelper.createUploadReducer('addChatUsers'),
+  [chats_action_type_enum_1.chatsActionType.addChatUsersUploaded]: data_reducers_helper_1.DataReducersHelper.createUploadedReducer('addChatUsers'),
+  [chats_action_type_enum_1.chatsActionType.addChatUsersUploadError]: data_reducers_helper_1.DataReducersHelper.createUploadErrorReducer('addChatUsers'),
+  [chats_action_type_enum_1.chatsActionType.chatTokenUpload]: (state, action) => Object.assign(Object.assign({}, state), {
+    tokens: Object.assign(Object.assign({}, state.tokens), {
+      [action.payload]: Object.assign(Object.assign({}, state.tokens[action.payload]), {
+        status: data_status_enum_1.dataStatus.loading
+      })
+    })
+  }),
+  [chats_action_type_enum_1.chatsActionType.chatTokenUploaded]: (state, action) => Object.assign(Object.assign({}, state), {
+    tokens: Object.assign(Object.assign({}, state.tokens), {
+      [action.payload.chatId]: Object.assign(Object.assign({}, state.tokens[action.payload.chatId]), {
+        error: undefined,
+        status: data_status_enum_1.dataStatus.valid,
+        value: action.payload.chatToken,
+        time: Date.now()
+      })
+    })
+  }),
+  [chats_action_type_enum_1.chatsActionType.chatTokenUploadError]: (state, action) => Object.assign(Object.assign({}, state), {
+    tokens: Object.assign(Object.assign({}, state.tokens), {
+      [action.payload.chatId]: Object.assign(Object.assign({}, state.tokens[action.payload.chatId]), {
+        status: data_status_enum_1.dataStatus.error,
+        error: action.payload.error
+      })
+    })
+  })
+};
+exports.chatsReducers = reduser_adaptor_1.reducerAdapt(_chatsReducers, 'chats');
+},{"../../utils/data-reducers-helper":"utils/data-reducers-helper.ts","../enums/chats-action-type.enum":"store/enums/chats-action-type.enum.ts","../enums/data-status.enum":"store/enums/data-status.enum.ts","../functions/reduser-adaptor":"store/functions/reduser-adaptor.ts"}],"store/enums/user-action-type.enum.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.userActionType = void 0;
+var userActionType;
+
+(function (userActionType) {
+  userActionType["changePasswordUpload"] = "user-changePassword__upload";
+  userActionType["changePasswordUploaded"] = "user-changePassword__uploaded";
+  userActionType["changePasswordUploadError"] = "user-changePassword__uploadError";
+  userActionType["changeUserDataUpload"] = "user-changeUserData__upload";
+  userActionType["changeUserDataUploaded"] = "user-changeUserData__uploaded";
+  userActionType["changeUserDataUploadError"] = "user-changeUserData__uploadError";
+})(userActionType = exports.userActionType || (exports.userActionType = {}));
+},{}],"store/reducers/user-reducers.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.userReducers = void 0;
+
+const data_status_enum_1 = require("../enums/data-status.enum");
+
+const user_action_type_enum_1 = require("../enums/user-action-type.enum");
+
+const reduser_adaptor_1 = require("../functions/reduser-adaptor");
+
+const _userReducers = {
+  [user_action_type_enum_1.userActionType.changePasswordUpload]: state => Object.assign(Object.assign({}, state), {
+    changePassword: Object.assign(Object.assign({}, state.changePassword), {
+      status: data_status_enum_1.dataStatus.loading
+    })
+  }),
+  [user_action_type_enum_1.userActionType.changePasswordUploaded]: (state, action) => Object.assign(Object.assign({}, state), {
+    changePassword: Object.assign(Object.assign({}, state.changePassword), {
+      error: undefined,
+      status: data_status_enum_1.dataStatus.valid,
+      value: action.payload,
+      time: Date.now()
+    })
+  }),
+  [user_action_type_enum_1.userActionType.changePasswordUploadError]: (state, action) => Object.assign(Object.assign({}, state), {
+    changePassword: Object.assign(Object.assign({}, state.changePassword), {
+      status: data_status_enum_1.dataStatus.error,
+      error: action.payload
+    })
+  }),
+  [user_action_type_enum_1.userActionType.changeUserDataUpload]: state => Object.assign(Object.assign({}, state), {
+    changeUserData: Object.assign(Object.assign({}, state.changeUserData), {
+      status: data_status_enum_1.dataStatus.loading
+    })
+  }),
+  [user_action_type_enum_1.userActionType.changeUserDataUploadError]: (state, action) => Object.assign(Object.assign({}, state), {
+    changeUserData: Object.assign(Object.assign({}, state.changeUserData), {
+      status: data_status_enum_1.dataStatus.error,
+      error: action.payload
+    })
+  })
+};
+const _globalUserReducers = {
+  [user_action_type_enum_1.userActionType.changeUserDataUploaded]: (state, action) => Object.assign(Object.assign({}, state), {
+    user: Object.assign(Object.assign({}, state.user), {
+      changeUserData: Object.assign(Object.assign({}, state.user.changeUserData), {
+        error: undefined,
+        status: data_status_enum_1.dataStatus.valid,
+        value: undefined,
+        time: Date.now()
+      })
+    }),
+    authorization: Object.assign(Object.assign({}, state.authorization), {
+      userData: Object.assign(Object.assign({}, state.authorization.userData), {
+        error: undefined,
+        status: data_status_enum_1.dataStatus.valid,
+        value: action.payload,
+        time: Date.now()
+      })
+    })
+  })
+};
+exports.userReducers = Object.assign(reduser_adaptor_1.reducerAdapt(_userReducers, 'user'), _globalUserReducers);
+},{"../enums/data-status.enum":"store/enums/data-status.enum.ts","../enums/user-action-type.enum":"store/enums/user-action-type.enum.ts","../functions/reduser-adaptor":"store/functions/reduser-adaptor.ts"}],"store/reducers/reducer.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3244,74 +2635,238 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.getReducer = void 0;
 
-var user_data_reducers_1 = require("./user-data-reducers");
+const active_chats_state_reducers_1 = require("./active-chats-state.reducers");
+
+const authorization_reducers_1 = require("./authorization-reducers");
+
+const chats_reducers_1 = require("./chats-reducers");
+
+const user_reducers_1 = require("./user-reducers");
 
 function getReducer() {
-  var reducers = Object.assign({}, user_data_reducers_1.userDataReducers);
+  const reducers = Object.assign(Object.assign(Object.assign(Object.assign({}, authorization_reducers_1.authorizationReducers), user_reducers_1.userReducers), chats_reducers_1.chatsReducers), active_chats_state_reducers_1.activeChatsReducers);
   return function (state, action) {
     return reducers[action.type](state, action);
   };
 }
 
 exports.getReducer = getReducer;
-},{"./user-data-reducers":"store/reducers/user-data-reducers.ts"}],"store/store.ts":[function(require,module,exports) {
+},{"./active-chats-state.reducers":"store/reducers/active-chats-state.reducers.ts","./authorization-reducers":"store/reducers/authorization-reducers.ts","./chats-reducers":"store/reducers/chats-reducers.ts","./user-reducers":"store/reducers/user-reducers.ts"}],"store/store.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Store = void 0;
 
-var subject_1 = require("../utils/observeble/subject");
+const subject_1 = require("../utils/observeble/subject");
 
-var default_state_const_1 = require("./consts/default-state.const");
+const default_state_const_1 = require("./consts/default-state.const");
 
-var reducer_1 = require("./reducers/reducer");
+const reducer_1 = require("./reducers/reducer");
 
-var instance;
+let instance;
 
-var Store = /*#__PURE__*/function () {
-  function Store() {
-    _classCallCheck(this, Store);
-
+class Store {
+  constructor() {
     this._state = default_state_const_1.defaultState;
     this._$state = new subject_1.Subject(this._state);
     this.reduser = reducer_1.getReducer();
-    if (instance) return instance;
+
+    if (instance) {
+      return instance;
+    }
+
     instance = this;
   }
 
-  _createClass(Store, [{
-    key: "$state",
-    get: function get() {
-      return this._$state.asObserveble();
-    }
-  }, {
-    key: "state",
-    get: function get() {
-      return this._state;
-    }
-  }, {
-    key: "dispatch",
-    value: function dispatch(action) {
-      var nextState = this.reduser(this._state, action);
-      this._state = nextState;
+  get $state() {
+    return this._$state.asObserveble();
+  }
 
-      this._$state.next(nextState);
-    }
-  }]);
+  get state() {
+    return this._state;
+  }
 
-  return Store;
-}();
+  dispatch(action) {
+    const nextState = this.reduser(this._state, action);
+    this._state = nextState;
+
+    this._$state.next(nextState);
+  }
+
+}
 
 exports.Store = Store;
-},{"../utils/observeble/subject":"utils/observeble/subject.ts","./consts/default-state.const":"store/consts/default-state.const.ts","./reducers/reducer":"store/reducers/reducer.ts"}],"utils/api/http-method.ts":[function(require,module,exports) {
+},{"../utils/observeble/subject":"utils/observeble/subject.ts","./consts/default-state.const":"store/consts/default-state.const.ts","./reducers/reducer":"store/reducers/reducer.ts"}],"guards/auth-guard.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AuthGuard = void 0;
+
+const pages_config_1 = require("../service/router/pages.config");
+
+const router_service_1 = require("../service/router/router.service");
+
+const select_is_authorized_1 = require("../store/selectors/authorization/select-is-authorized");
+
+const store_1 = require("../store/store");
+
+class AuthGuard {
+  constructor() {
+    this.store = new store_1.Store();
+    this.routerService = new router_service_1.RouterService();
+  }
+
+  canOpen() {
+    return select_is_authorized_1.selectIsAuthorized(this.store.state);
+  }
+
+  onOpenError() {
+    this.routerService.navigateTo(pages_config_1.pages.auth);
+  }
+
+}
+
+exports.AuthGuard = AuthGuard;
+},{"../service/router/pages.config":"service/router/pages.config.ts","../service/router/router.service":"service/router/router.service.ts","../store/selectors/authorization/select-is-authorized":"store/selectors/authorization/select-is-authorized.ts","../store/store":"store/store.ts"}],"store/actions/authorization.actions.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.UploadErrorUserDataAction = exports.UploadedUserDataAction = exports.UploadUserDataAction = exports.UploadErrorLogoutAction = exports.UploadedLogoutAction = exports.UploadLogoutAction = exports.UploadErrorAuthTokenAction = exports.UploadedAuthTokenAction = exports.UploadAuthTokenAction = void 0;
+
+const authorization_action_type_enum_1 = require("../enums/authorization-action-type.enum");
+
+class UploadAuthTokenAction {
+  constructor() {
+    this.type = authorization_action_type_enum_1.authorizationActionType.authTokenUpload;
+  }
+
+}
+
+exports.UploadAuthTokenAction = UploadAuthTokenAction;
+
+class UploadedAuthTokenAction {
+  constructor() {
+    this.type = authorization_action_type_enum_1.authorizationActionType.authTokenUploaded;
+    this.payload = undefined;
+  }
+
+}
+
+exports.UploadedAuthTokenAction = UploadedAuthTokenAction;
+
+class UploadErrorAuthTokenAction {
+  constructor(error) {
+    this.type = authorization_action_type_enum_1.authorizationActionType.userDataUploadError;
+    this.payload = error;
+  }
+
+}
+
+exports.UploadErrorAuthTokenAction = UploadErrorAuthTokenAction;
+
+class UploadLogoutAction {
+  constructor() {
+    this.type = authorization_action_type_enum_1.authorizationActionType.logoutUpload;
+  }
+
+}
+
+exports.UploadLogoutAction = UploadLogoutAction;
+
+class UploadedLogoutAction {
+  constructor() {
+    this.type = authorization_action_type_enum_1.authorizationActionType.logoutUploaded;
+    this.payload = undefined;
+  }
+
+}
+
+exports.UploadedLogoutAction = UploadedLogoutAction;
+
+class UploadErrorLogoutAction {
+  constructor(error) {
+    this.type = authorization_action_type_enum_1.authorizationActionType.logoutUploadError;
+    this.payload = error;
+  }
+
+}
+
+exports.UploadErrorLogoutAction = UploadErrorLogoutAction;
+
+class UploadUserDataAction {
+  constructor() {
+    this.type = authorization_action_type_enum_1.authorizationActionType.userDataUpload;
+  }
+
+}
+
+exports.UploadUserDataAction = UploadUserDataAction;
+
+class UploadedUserDataAction {
+  constructor(data) {
+    this.type = authorization_action_type_enum_1.authorizationActionType.userDataUploaded;
+    this.payload = data;
+  }
+
+}
+
+exports.UploadedUserDataAction = UploadedUserDataAction;
+
+class UploadErrorUserDataAction {
+  constructor(error) {
+    this.type = authorization_action_type_enum_1.authorizationActionType.userDataUploadError;
+    this.payload = error;
+  }
+
+}
+
+exports.UploadErrorUserDataAction = UploadErrorUserDataAction;
+},{"../enums/authorization-action-type.enum":"store/enums/authorization-action-type.enum.ts"}],"store/selectors/authorization/select-user-data.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.selectUserData = void 0;
+
+function selectUserData(state) {
+  return state.authorization.userData;
+}
+
+exports.selectUserData = selectUserData;
+},{}],"interceptor/auth-interceptor.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AuthInterceptor = void 0;
+
+const pages_config_1 = require("../service/router/pages.config");
+
+const router_service_1 = require("../service/router/router.service");
+
+class AuthInterceptor {
+  constructor() {
+    this.routerService = new router_service_1.RouterService();
+  }
+
+  interceptRequest(request) {
+    if (request.status === 401) {
+      this.routerService.navigateTo(pages_config_1.pages.auth);
+    }
+  }
+
+}
+
+exports.AuthInterceptor = AuthInterceptor;
+},{"../service/router/pages.config":"service/router/pages.config.ts","../service/router/router.service":"service/router/router.service.ts"}],"utils/api/http-method.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3329,431 +2884,1483 @@ var HTTPMethod;
 },{}],"utils/api/http-client.ts":[function(require,module,exports) {
 "use strict";
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _iterableToArrayLimit(arr, i) { var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]; if (_i == null) return; var _arr = []; var _n = true; var _d = false; var _s, _e; try { for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.HTTPClient = void 0;
 
-var HTTPClient = /*#__PURE__*/function () {
-  function HTTPClient(origin) {
-    _classCallCheck(this, HTTPClient);
-
+class HTTPClient {
+  constructor(origin, interseptors) {
     this.origin = origin;
+    this.interseptors = interseptors;
   }
 
-  _createClass(HTTPClient, [{
-    key: "upload",
-    value: function upload(appRequest) {
-      var request = Object.create(appRequest);
-      request.origin = this.origin || window.location.origin;
-      return HTTPClient.upload(request);
+  upload(appRequest) {
+    const request = Object.create(appRequest);
+    request.origin = this.origin || window.location.origin;
+    return this._upload(request);
+  }
+
+  static queryStringify(query) {
+    if (!query || typeof query !== 'object' || Object.keys(query).length === 0) {
+      return '';
     }
-  }], [{
-    key: "queryStringify",
-    value: function queryStringify(query) {
-      if (!query || _typeof(query) !== 'object' || Object.keys(query).length === 0) {
-        return '';
+
+    return `?${Object.keys(query).map(key => `${key}=${query[key]}`).join('&')}`;
+  }
+
+  static mapXMLHttpRequestToResponse(xhr) {
+    return {
+      status: xhr.status,
+      statusText: xhr.statusText,
+      body: xhr.response
+    };
+  }
+
+  _upload(request) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+
+      if (request.timeout) {
+        xhr.timeout = request.timeout;
       }
 
-      return "?".concat(Object.keys(query).map(function (key) {
-        return "".concat(key, "=").concat(query[key]);
-      }).join('&'));
-    }
-  }, {
-    key: "upload",
-    value: function upload(request) {
-      var _this = this;
+      xhr.responseType = 'json';
+      xhr.withCredentials = true;
+      xhr.onabort = this.getXMLHttpRequestHandler(resolve, reject);
+      xhr.onerror = this.getXMLHttpRequestHandler(resolve, reject);
+      xhr.ontimeout = this.getXMLHttpRequestHandler(resolve, reject);
+      xhr.onload = this.getXMLHttpRequestHandler(resolve, reject);
+      xhr.open(request.method, `${request.origin}/${request.pathname.join('/')}${HTTPClient.queryStringify(request.queryParams)}`);
 
-      return new Promise(function (resolve, reject) {
-        var xhr = new XMLHttpRequest();
-
-        if (request.timeout) {
-          xhr.timeout = request.timeout;
+      if (request.headers) {
+        for (const [key, value] of Object.entries(request.headers)) {
+          xhr.setRequestHeader(key, value);
         }
+      }
 
-        xhr.responseType = "json";
-        xhr.onabort = _this.getXMLHttpRequestHandler(resolve, reject);
-        xhr.onerror = _this.getXMLHttpRequestHandler(resolve, reject);
-        xhr.ontimeout = _this.getXMLHttpRequestHandler(resolve, reject);
-        xhr.onload = _this.getXMLHttpRequestHandler(resolve, reject);
-        xhr.open(request.method, "".concat(request.origin, "/").concat(request.pathname.join('/')).concat(HTTPClient.queryStringify(request.queryParams)));
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      const body = typeof request.body === 'object' ? JSON.stringify(request.body) : request.body;
+      xhr.send(body);
+    });
+  }
 
-        if (request.headers) {
-          for (var _i = 0, _Object$entries = Object.entries(request.headers); _i < _Object$entries.length; _i++) {
-            var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
-                key = _Object$entries$_i[0],
-                value = _Object$entries$_i[1];
-
-            xhr.setRequestHeader(key, value);
-          }
+  getXMLHttpRequestHandler(resolve, reject) {
+    const {
+      interseptors
+    } = this;
+    return function (_event) {
+      if (interseptors) {
+        for (const interseptor of interseptors) {
+          interseptor.interceptRequest(this, _event);
         }
+      }
 
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.setRequestHeader('Referer', 'https://ya-praktikum.tech');
-        var body = _typeof(request.body) === 'object' ? JSON.stringify(request.body) : request.body;
-        xhr.send(body);
-      });
-    }
-  }, {
-    key: "getXMLHttpRequestHandler",
-    value: function getXMLHttpRequestHandler(resolve, reject) {
-      return function (_event) {
-        if (this.status >= 200 && this.status < 300) {
-          resolve(HTTPClient.mapXMLHttpRequestToResponse(this));
-        } else {
-          reject(HTTPClient.mapXMLHttpRequestToResponse(this));
-        }
-      };
-    }
-  }, {
-    key: "mapXMLHttpRequestToResponse",
-    value: function mapXMLHttpRequestToResponse(xhr) {
-      return {
-        status: xhr.status,
-        statusText: xhr.statusText,
-        body: xhr.response
-      };
-    }
-  }]);
+      if (this.status >= 200 && this.status < 300) {
+        resolve(HTTPClient.mapXMLHttpRequestToResponse(this));
+      } else {
+        reject(HTTPClient.mapXMLHttpRequestToResponse(this));
+      }
+    };
+  }
 
-  return HTTPClient;
-}();
+}
 
 exports.HTTPClient = HTTPClient;
 },{}],"utils/api/http-client-module.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.HTTPClientModule = void 0;
 
-var http_client_1 = require("./http-client");
+const http_client_1 = require("./http-client");
 
-var HTTPClientModule = /*#__PURE__*/function () {
-  function HTTPClientModule(origin) {
-    var mutualPathname = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-
-    _classCallCheck(this, HTTPClientModule);
-
-    this.httpClient = new http_client_1.HTTPClient(origin);
+class HTTPClientModule {
+  constructor(origin, mutualPathname = [], interceptors = []) {
+    this.httpClient = new http_client_1.HTTPClient(origin, interceptors);
     this.mutualPathname = mutualPathname;
   }
 
-  _createClass(HTTPClientModule, [{
-    key: "upload",
-    value: function upload(request) {
-      var moduleRequest = Object.assign({}, request);
-      moduleRequest.pathname = this.mutualPathname.concat(moduleRequest.pathname);
-      return this.httpClient.upload(moduleRequest);
-    }
-  }]);
+  upload(request) {
+    const moduleRequest = Object.assign({}, request);
+    moduleRequest.pathname = this.mutualPathname.concat(moduleRequest.pathname);
+    return this.httpClient.upload(moduleRequest);
+  }
 
-  return HTTPClientModule;
-}();
+}
 
 exports.HTTPClientModule = HTTPClientModule;
 },{"./http-client":"utils/api/http-client.ts"}],"service/api/modules/auth-http-client-module.ts":[function(require,module,exports) {
 "use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.AuthHTTPClientModule = void 0;
 
-var http_method_1 = require("../../../utils/api/http-method");
+const http_method_1 = require("../../../utils/api/http-method");
 
-var http_client_module_1 = require("../../../utils/api/http-client-module");
+const http_client_module_1 = require("../../../utils/api/http-client-module");
 
-var AuthHTTPClientModule = /*#__PURE__*/function (_http_client_module_) {
-  _inherits(AuthHTTPClientModule, _http_client_module_);
-
-  var _super = _createSuper(AuthHTTPClientModule);
-
-  function AuthHTTPClientModule(origin, mutualPathname) {
-    _classCallCheck(this, AuthHTTPClientModule);
-
-    return _super.call(this, origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname));
+class AuthHTTPClientModule extends http_client_module_1.HTTPClientModule {
+  constructor(origin, mutualPathname, interseptors = []) {
+    super(origin, mutualPathname.concat(AuthHTTPClientModule.moduleMutualPathname), interseptors);
   }
 
-  _createClass(AuthHTTPClientModule, [{
-    key: "registration",
-    value: function registration(body) {
-      return this.upload({
-        method: http_method_1.HTTPMethod.POST,
-        pathname: ['signup'],
-        body: body
-      });
-    }
-  }, {
-    key: "authorization",
-    value: function authorization(body) {
-      return this.upload({
-        method: http_method_1.HTTPMethod.POST,
-        pathname: ['signin'],
-        body: body
-      });
-    }
-  }, {
-    key: "logoout",
-    value: function logoout() {
-      return this.upload({
-        method: http_method_1.HTTPMethod.POST,
-        pathname: ['logoout']
-      });
-    }
-  }, {
-    key: "getUserData",
-    value: function getUserData() {
-      return this.upload({
-        method: http_method_1.HTTPMethod.GET,
-        pathname: ['user']
-      });
-    }
-  }]);
+  registration(body) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.POST,
+      pathname: ['signup'],
+      body
+    });
+  }
 
-  return AuthHTTPClientModule;
-}(http_client_module_1.HTTPClientModule);
+  authorization(body) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.POST,
+      pathname: ['signin'],
+      body
+    });
+  }
+
+  logout() {
+    return this.upload({
+      method: http_method_1.HTTPMethod.POST,
+      pathname: ['logout']
+    });
+  }
+
+  getUserData() {
+    return this.upload({
+      method: http_method_1.HTTPMethod.GET,
+      pathname: ['user']
+    });
+  }
+
+}
 
 exports.AuthHTTPClientModule = AuthHTTPClientModule;
 AuthHTTPClientModule.moduleMutualPathname = ['auth'];
-},{"../../../utils/api/http-method":"utils/api/http-method.ts","../../../utils/api/http-client-module":"utils/api/http-client-module.ts"}],"service/api/http-client.facade.ts":[function(require,module,exports) {
+},{"../../../utils/api/http-method":"utils/api/http-method.ts","../../../utils/api/http-client-module":"utils/api/http-client-module.ts"}],"service/api/modules/chats-http-client-module.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.HTTPClientFacade = void 0;
+exports.ChatsHttpClientModule = void 0;
 
-var auth_http_client_module_1 = require("./modules/auth-http-client-module");
+const http_client_module_1 = require("../../../utils/api/http-client-module");
 
-var instance;
+const http_method_1 = require("../../../utils/api/http-method");
 
-var HTTPClientFacade = function HTTPClientFacade() {
-  _classCallCheck(this, HTTPClientFacade);
+const DEFAULT_CHATS_LIMIT = 30;
 
-  this.mutualPathname = ['api', 'v2'];
-  this.origin = ' https://ya-praktikum.tech';
-
-  if (instance) {
-    return instance;
+class ChatsHttpClientModule extends http_client_module_1.HTTPClientModule {
+  constructor(origin, mutualPathname, interseptors = []) {
+    super(origin, mutualPathname.concat(ChatsHttpClientModule.moduleMutualPathname), interseptors);
   }
 
-  instance = this;
-  this.auth = new auth_http_client_module_1.AuthHTTPClientModule(this.origin, this.mutualPathname);
-};
+  uploadChats(queryParams = {
+    limit: DEFAULT_CHATS_LIMIT
+  }) {
+    if (!queryParams.limit) {
+      queryParams.limit = DEFAULT_CHATS_LIMIT;
+    }
 
-exports.HTTPClientFacade = HTTPClientFacade;
-},{"./modules/auth-http-client-module":"service/api/modules/auth-http-client-module.ts"}],"service/auth.service.ts":[function(require,module,exports) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.GET,
+      pathname: [],
+      queryParams
+    });
+  }
+
+  createChat(title) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.POST,
+      pathname: [],
+      body: {
+        title
+      }
+    });
+  }
+
+  deleteChat(chatId) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.DELETE,
+      pathname: [],
+      body: {
+        chatId
+      }
+    });
+  }
+
+  getTokenForChat(chatId) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.POST,
+      pathname: ['token', String(chatId)]
+    });
+  }
+
+  deleteUsersFormChat(usersIds, chatId) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.DELETE,
+      pathname: ['users'],
+      body: {
+        usersIds,
+        chatId
+      }
+    });
+  }
+
+  addUsersToChat(usersIds, chatId) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.PUT,
+      pathname: ['users'],
+      body: {
+        usersIds,
+        chatId
+      }
+    });
+  }
+
+}
+
+exports.ChatsHttpClientModule = ChatsHttpClientModule;
+ChatsHttpClientModule.moduleMutualPathname = ['chats'];
+},{"../../../utils/api/http-client-module":"utils/api/http-client-module.ts","../../../utils/api/http-method":"utils/api/http-method.ts"}],"service/api/modules/user-http-client-module.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.UserHTTPClientModule = void 0;
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+const http_client_module_1 = require("../../../utils/api/http-client-module");
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+const http_method_1 = require("../../../utils/api/http-method");
+
+class UserHTTPClientModule extends http_client_module_1.HTTPClientModule {
+  constructor(origin, mutualPathname, interseptors = []) {
+    super(origin, mutualPathname.concat(UserHTTPClientModule.moduleMutualPathname), interseptors);
+  }
+
+  changeData(body) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.PUT,
+      pathname: ['profile'],
+      body
+    });
+  }
+
+  changePassword(body) {
+    return this.upload({
+      method: http_method_1.HTTPMethod.PUT,
+      pathname: ['password'],
+      body
+    });
+  }
+
+}
+
+exports.UserHTTPClientModule = UserHTTPClientModule;
+UserHTTPClientModule.moduleMutualPathname = ['user'];
+},{"../../../utils/api/http-client-module":"utils/api/http-client-module.ts","../../../utils/api/http-method":"utils/api/http-method.ts"}],"service/api/http-client.facade.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.HTTPClientFacade = exports.API_SERVER = void 0;
+
+const auth_interceptor_1 = require("../../interceptor/auth-interceptor");
+
+const auth_http_client_module_1 = require("./modules/auth-http-client-module");
+
+const chats_http_client_module_1 = require("./modules/chats-http-client-module");
+
+const user_http_client_module_1 = require("./modules/user-http-client-module");
+
+let instance;
+exports.API_SERVER = 'ya-praktikum.tech';
+
+class HTTPClientFacade {
+  constructor() {
+    this.mutualPathname = ['api', 'v2'];
+    this.origin = `https://${exports.API_SERVER}`;
+    this.interseptors = [new auth_interceptor_1.AuthInterceptor()];
+
+    if (instance) {
+      return instance;
+    }
+
+    instance = this;
+    this.auth = new auth_http_client_module_1.AuthHTTPClientModule(this.origin, this.mutualPathname, this.interseptors);
+    this.user = new user_http_client_module_1.UserHTTPClientModule(this.origin, this.mutualPathname, this.interseptors);
+    this.chats = new chats_http_client_module_1.ChatsHttpClientModule(this.origin, this.mutualPathname, this.interseptors);
+  }
+
+}
+
+exports.HTTPClientFacade = HTTPClientFacade;
+},{"../../interceptor/auth-interceptor":"interceptor/auth-interceptor.ts","./modules/auth-http-client-module":"service/api/modules/auth-http-client-module.ts","./modules/chats-http-client-module":"service/api/modules/chats-http-client-module.ts","./modules/user-http-client-module":"service/api/modules/user-http-client-module.ts"}],"service/auth.service.ts":[function(require,module,exports) {
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.AuthService = void 0;
 
-var user_data_actions_1 = require("../store/actions/user-data.actions");
+const authorization_actions_1 = require("../store/actions/authorization.actions");
 
-var store_1 = require("../store/store");
+const data_status_enum_1 = require("../store/enums/data-status.enum");
 
-var http_client_facade_1 = require("./api/http-client.facade");
+const select_is_authorized_1 = require("../store/selectors/authorization/select-is-authorized");
 
-var instance;
+const select_user_data_1 = require("../store/selectors/authorization/select-user-data");
 
-var AuthService = /*#__PURE__*/function () {
-  function AuthService() {
-    _classCallCheck(this, AuthService);
+const select_status_1 = require("../store/selectors/data/select-status");
 
-    if (instance) return instance;
+const store_1 = require("../store/store");
+
+const http_client_facade_1 = require("./api/http-client.facade");
+
+let instance;
+
+class AuthService {
+  constructor() {
+    if (instance) {
+      return instance;
+    }
+
     instance = this;
     this.httpClientFacade = new http_client_facade_1.HTTPClientFacade();
     this.store = new store_1.Store();
   }
 
-  _createClass(AuthService, [{
-    key: "authorization",
-    value: function authorization(authData) {
-      var _this = this;
+  authorization(authData) {
+    return (select_is_authorized_1.selectIsAuthorized(this.store.state) ? this.logout().catch() : Promise.resolve()).then(() => this.store.dispatch(new authorization_actions_1.UploadAuthTokenAction())).then(() => this.httpClientFacade.auth.authorization(authData)).then(() => this.store.dispatch(new authorization_actions_1.UploadedAuthTokenAction())).catch(error => {
+      this.store.dispatch(new authorization_actions_1.UploadErrorAuthTokenAction(error));
+      throw error;
+    });
+  }
 
-      this.store.dispatch(new user_data_actions_1.UploadUserDataAction());
-      this.httpClientFacade.auth.authorization(authData).then(function () {
-        return _this.httpClientFacade.auth.getUserData();
-      }).then(function (response) {
-        return _this.store.dispatch(new user_data_actions_1.UploadedUserDataAction(response.body));
-      }).catch(function (error) {
-        return _this.store.dispatch(new user_data_actions_1.UploadErrorUserDataAction(error));
-      });
-    }
-  }, {
-    key: "registration",
-    value: function registration(registrationData) {
-      var _this2 = this;
+  registration(registrationData) {
+    return (select_is_authorized_1.selectIsAuthorized(this.store.state) ? this.logout().catch() : Promise.resolve()).then(() => this.store.dispatch(new authorization_actions_1.UploadAuthTokenAction())).then(() => this.httpClientFacade.auth.registration(registrationData)).then(() => this.store.dispatch(new authorization_actions_1.UploadedAuthTokenAction())).catch(error => {
+      this.store.dispatch(new authorization_actions_1.UploadErrorAuthTokenAction(error));
+      throw error;
+    });
+  }
 
-      this.store.dispatch(new user_data_actions_1.UploadUserDataAction());
-      this.httpClientFacade.auth.registration(registrationData).then(function () {
-        return _this2.httpClientFacade.auth.getUserData();
-      }).then(function (response) {
-        return _this2.store.dispatch(new user_data_actions_1.UploadedUserDataAction(response.body));
-      }).catch(function (error) {
-        return _this2.store.dispatch(new user_data_actions_1.UploadErrorUserDataAction(error));
-      });
-    }
-  }, {
-    key: "logoout",
-    value: function logoout() {}
-  }]);
+  logout() {
+    this.store.dispatch(new authorization_actions_1.UploadLogoutAction());
+    return this.httpClientFacade.auth.logout().then(() => this.store.dispatch(new authorization_actions_1.UploadedLogoutAction())).catch(error => {
+      this.store.dispatch(new authorization_actions_1.UploadErrorLogoutAction(error));
+      throw error;
+    });
+  }
 
-  return AuthService;
-}();
+  uploadUserData() {
+    this.store.dispatch(new authorization_actions_1.UploadUserDataAction());
+    return this.httpClientFacade.auth.getUserData().then(response => this.store.dispatch(new authorization_actions_1.UploadedUserDataAction(response.body))).catch(error => {
+      this.store.dispatch(new authorization_actions_1.UploadErrorUserDataAction(error));
+      throw error;
+    });
+  }
+
+  uploadUserDataIfNot() {
+    return select_status_1.selectDataStatus(select_user_data_1.selectUserData(this.store.state)) === data_status_enum_1.dataStatus.valid ? Promise.resolve() : this.uploadUserData();
+  }
+
+}
 
 exports.AuthService = AuthService;
-},{"../store/actions/user-data.actions":"store/actions/user-data.actions.ts","../store/store":"store/store.ts","./api/http-client.facade":"service/api/http-client.facade.ts"}],"pages/auth/services/auth-page-manager.ts":[function(require,module,exports) {
+},{"../store/actions/authorization.actions":"store/actions/authorization.actions.ts","../store/enums/data-status.enum":"store/enums/data-status.enum.ts","../store/selectors/authorization/select-is-authorized":"store/selectors/authorization/select-is-authorized.ts","../store/selectors/authorization/select-user-data":"store/selectors/authorization/select-user-data.ts","../store/selectors/data/select-status":"store/selectors/data/select-status.ts","../store/store":"store/store.ts","./api/http-client.facade":"service/api/http-client.facade.ts"}],"pages/main/service/main-page-manager.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MainPageManager = void 0;
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+const auth_service_1 = require("../../../service/auth.service");
 
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+const pages_config_1 = require("../../../service/router/pages.config");
+
+const router_service_1 = require("../../../service/router/router.service");
+
+let instance;
+
+class MainPageManager {
+  // Private readonly activeChatsService: ActiveChatsService;
+  constructor() {
+    if (instance) {
+      return instance;
+    }
+
+    instance = this;
+    this.routerService = new router_service_1.RouterService();
+    this.authService = new auth_service_1.AuthService(); // This.activeChatsService = new ActiveChatsService();
+  }
+
+  navigateToAuth() {
+    this.routerService.navigateTo(pages_config_1.pages.auth);
+  }
+
+  navigateToProfile() {
+    this.routerService.navigateTo(pages_config_1.pages.profile);
+  }
+
+  logout() {
+    this.authService.logout().catch().then(() => this.navigateToAuth());
+  }
+
+}
+
+exports.MainPageManager = MainPageManager;
+},{"../../../service/auth.service":"service/auth.service.ts","../../../service/router/pages.config":"service/router/pages.config.ts","../../../service/router/router.service":"service/router/router.service.ts"}],"pages/main/page-main.ts":[function(require,module,exports) {
+"use strict";
+
+var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.PageMain = void 0;
+
+const component_1 = require("../../utils/component");
+
+const page_main_tmpl_1 = require("./page-main.tmpl");
+
+require("./page-main.less");
+
+const auth_guard_1 = require("../../guards/auth-guard");
+
+const main_page_manager_1 = require("./service/main-page-manager");
+
+let PageMain = class PageMain {
+  constructor() {
+    this.mainPageManager = new main_page_manager_1.MainPageManager();
+  }
+
+  onInit() {}
+
+  navigateToAuth() {
+    this.mainPageManager.navigateToAuth();
+  }
+
+  navigateToProfile() {
+    this.mainPageManager.navigateToProfile();
+  }
+
+  logout() {
+    this.mainPageManager.logout();
+  }
+
+};
+PageMain = __decorate([component_1.component({
+  name: 'page-main',
+  template: page_main_tmpl_1.template,
+  guards: [auth_guard_1.AuthGuard]
+})], PageMain);
+exports.PageMain = PageMain;
+},{"../../utils/component":"utils/component.ts","./page-main.tmpl":"pages/main/page-main.tmpl.ts","./page-main.less":"pages/main/page-main.less","../../guards/auth-guard":"guards/auth-guard.ts","./service/main-page-manager":"pages/main/service/main-page-manager.ts"}],"pages/auth/page-auth.tmpl.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.template = void 0;
+exports.template = `
+    <main>
+        <h1>
+            {{$title}}
+        </h1>
+
+        <app-form name="authorization" hidden={{$isRegistration}} formGroup=[[authForm]]>
+            <app-input slot="field" formControl=[[authForm.controls.login]]>
+                <span slot="label">Логин</span>
+            </app-input>
+            <app-input slot="field" formControl=[[authForm.controls.password]]>
+                <span slot="label">Пароль</span>
+            </app-input>
+
+            <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormAuthorization()}} disabled={{$isDisabledAuthorizationForm}} appearance="primary">
+                <span slot="label">
+                    Авторизироваться
+                </span>
+            </app-button>
+        </app-form>
+
+        <app-form name="registration" hidden={{$isAuthorization}} formGroup=[[registrationForm]]>
+            <app-input slot="field" formControl=[[registrationForm.controls.first_name]]>
+                <span slot="label">Имя</span>
+            </app-input>
+            <app-input slot="field" formControl=[[registrationForm.controls.second_name]]>
+                <span slot="label">Фамилия</span>    
+            </app-input>
+            <app-input slot="field" formControl=[[registrationForm.controls.login]]>
+                <span slot="label">Логин</span>
+            </app-input>
+            <app-input slot="field" formControl=[[registrationForm.controls.email]]>
+                <span slot="label">Почта</span>    
+            </app-input>
+            <app-input slot="field" formControl=[[registrationForm.controls.password]]>
+                <span slot="label">Пароль</span>    
+            </app-input>
+            <app-input slot="field" formControl=[[registrationForm.controls.phone]]>
+                <span slot="label">Телефон</span> 
+            </app-input>
+
+            <app-button slot="submit" class="space-top_8" @disabledclick={{onDisabledClickFormRegistration()}} disabled={{$isDisabledRegistrationForm}} appearance="primary">
+                <span slot="label">
+                    Регистрация
+                </span>
+            </app-button>
+        </app-form>
+
+        <app-button @click={{navigateToAuthorization()}} appearance="secondary" hidden={{$isRegistration}}>
+            <span slot="label">
+                Войти
+            </span>
+        </app-button>
+
+        <app-button @click={{navigateToRegistration()}} appearance="secondary" hidden={{$isAuthorization}}>
+            <span slot="label">
+                Нет акаунта?
+            </span>
+    </app-button>
+    </main>
+`;
+},{}],"utils/animation/animation-utils/transform.functions.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.transform = void 0;
+exports.transform = {
+  rotate(deg) {
+    return `rotate(${deg}deg)`;
+  },
+
+  scale(size) {
+    return `scale(${size})`;
+  }
+
+};
+},{}],"utils/animation/animations/shaking-animation.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ShakingAnimation = void 0;
+
+const transform_functions_1 = require("../animation-utils/transform.functions");
+
+class ShakingAnimation {
+  constructor() {
+    this.keyFrames = [{
+      transform: transform_functions_1.transform.rotate(0)
+    }, {
+      transform: transform_functions_1.transform.rotate(1)
+    }, {
+      transform: transform_functions_1.transform.rotate(-1)
+    }, {
+      transform: transform_functions_1.transform.rotate(0)
+    }];
+    this.keyframeAnimationOptions = {
+      duration: 70,
+      iterations: 10
+    };
+  }
+
+}
+
+exports.ShakingAnimation = ShakingAnimation;
+},{"../animation-utils/transform.functions":"utils/animation/animation-utils/transform.functions.ts"}],"utils/form/form-control.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.FormControl = exports.FormStatusType = void 0;
+
+const observeble_1 = require("../observeble/observeble");
+
+const subject_1 = require("../observeble/subject");
+
+var FormStatusType;
+
+(function (FormStatusType) {
+  FormStatusType["valid"] = "VALID";
+  FormStatusType["invalid"] = "INVALID";
+})(FormStatusType = exports.FormStatusType || (exports.FormStatusType = {}));
+
+class FormControl {
+  constructor(config) {
+    this.touched = new subject_1.Subject(false);
+    this.hasFocus = new subject_1.Subject(false);
+    this.disabled = new subject_1.Subject(false);
+    this.animations = new subject_1.Subject();
+    this.$value = new subject_1.Subject(config.value || '');
+    this._value = config.value;
+    this.name = config.name;
+    this.validators = config.validators || [];
+    this.asyncValidators = config.asyncValidators || [];
+  }
+
+  get value() {
+    return this._value;
+  }
+
+  get $valueChanged() {
+    return this.$value.asObserveble();
+  }
+
+  get $statusChanged() {
+    return observeble_1.Observable.all([this.$valueChanged, ...this.asyncValidators.map(validate => validate(this.$valueChanged))]).map(([value, ...asyncValidatorsResults]) => this.mapValueToStatus(value, asyncValidatorsResults)).uniqueNext(true, (last, next) => FormControl.hasDiffInStatuses(last, next));
+  }
+
+  get $touched() {
+    return this.touched.asObserveble();
+  }
+
+  get $changeFocus() {
+    return this.hasFocus.asObserveble().uniqueNext();
+  }
+
+  get $isValid() {
+    return this.$statusChanged.map(status => status.status === FormStatusType.valid).uniqueNext();
+  }
+
+  get $disabled() {
+    return this.disabled.asObserveble().uniqueNext();
+  }
+
+  get $animations() {
+    return this.animations.asObserveble();
+  }
+
+  next(value) {
+    this._value = value;
+    this.$value.next(value || '');
+  }
+
+  touch() {
+    this.touched.next(true);
+  }
+
+  disable(disabled) {
+    this.disabled.next(disabled);
+  }
+
+  changeFocus(hasFocus) {
+    this.hasFocus.next(hasFocus);
+  }
+
+  animate(animations) {
+    this.animations.next(animations);
+  }
+
+  static hasDiffInStatuses(last, next) {
+    const hasStatusDiff = last.status !== next.status;
+    return hasStatusDiff || FormControl.hasErrorsDiff(last.errors, next.errors);
+  }
+
+  static hasErrorsDiff(last, next) {
+    if (last && !next || !last && next) {
+      return true;
+    }
+
+    if (last === undefined && next === undefined) {
+      return false;
+    }
+
+    if (last.length !== next.length) {
+      return true;
+    }
+
+    for (let index = 0; index < last.length; index++) {
+      if (!last[index].equals(next[index])) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  mapValueToStatus(value, asyncValidatorsResults) {
+    let errors = [];
+
+    for (const validator of this.validators) {
+      const error = validator(value);
+
+      if (error) {
+        errors.push(error);
+      }
+    }
+
+    errors = errors.concat(asyncValidatorsResults.filter(error => Boolean(error)));
+
+    if (errors.length === 0) {
+      return {
+        status: FormStatusType.valid
+      };
+    }
+
+    return {
+      status: FormStatusType.invalid,
+      errors
+    };
+  }
+
+}
+
+exports.FormControl = FormControl;
+},{"../observeble/observeble":"utils/observeble/observeble.ts","../observeble/subject":"utils/observeble/subject.ts"}],"utils/form/form-group.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.FormGroup = void 0;
+
+const shaking_animation_1 = require("../animation/animations/shaking-animation");
+
+const observeble_1 = require("../observeble/observeble");
+
+const subject_1 = require("../observeble/subject");
+
+const form_control_1 = require("./form-control");
+
+class FormGroup {
+  constructor(config) {
+    this._$submit = new subject_1.Subject();
+    const controls = {};
+
+    if (config.controls) {
+      for (const [name, formConfig] of Object.entries(config.controls)) {
+        controls[name] = this.initFormControl(name, formConfig, config);
+      }
+    }
+
+    this.controls = controls;
+  }
+
+  get value() {
+    return Object.values(this.controls).reduce((out, control) => {
+      out[control.name] = String(control.value);
+      return out;
+    }, {});
+  }
+
+  get $submit() {
+    return this._$submit.asObserveble();
+  }
+
+  get $valueChanged() {
+    return observeble_1.Observable.concat(Object.values(this.controls).map(control => control.$valueChanged.map(value => ({
+      value,
+      name: control.name
+    })))).map(entrys => entrys.reduce((out, entry) => {
+      if (entry) {
+        out[entry.name] = String(entry.value);
+      }
+
+      return out;
+    }, {}));
+  }
+
+  get $statusChanged() {
+    return observeble_1.Observable.concat(Object.values(this.controls).map(control => control.$statusChanged.map(status => Object.assign(Object.assign({}, status), {
+      name: control.name
+    })))).map(statuses => {
+      const isValid = statuses.every(status => status.status === form_control_1.FormStatusType.valid);
+
+      if (isValid) {
+        return {
+          status: form_control_1.FormStatusType.valid
+        };
+      }
+
+      const errors = statuses.reduce((out, status) => {
+        if (status && status.errors) {
+          out[status.name] = status.errors;
+        }
+
+        return out;
+      }, {});
+      return {
+        status: form_control_1.FormStatusType.invalid,
+        errors
+      };
+    });
+  }
+
+  get $isValid() {
+    return observeble_1.Observable.concat(Object.values(this.controls).map(control => control.$isValid)).map(isValidFieldsArray => isValidFieldsArray.every(isValid => isValid));
+  }
+
+  touch() {
+    for (const control of Object.values(this.controls)) {
+      control.touch();
+    }
+  }
+
+  disable(disabled) {
+    for (const control of Object.values(this.controls)) {
+      control.disable(disabled);
+    }
+  }
+
+  submit(value) {
+    this._$submit.next(value);
+  }
+
+  next(formValue) {
+    for (const [key, value] of Object.entries(formValue)) {
+      if (this.controls[key]) {
+        this.controls[key].next(value);
+      }
+    }
+  }
+
+  shakingFirstInvalidField() {
+    observeble_1.Observable.all(Object.values(this.controls).map(control => control.$isValid.map(isValid => ({
+      isValid,
+      name: control.name
+    })))).only(1).subscribe(isValidObjArray => {
+      var _a;
+
+      const firstInvalidControlsName = (_a = isValidObjArray.find(isValidObj => !isValidObj.isValid)) === null || _a === void 0 ? void 0 : _a.name;
+
+      if (firstInvalidControlsName) {
+        this.controls[firstInvalidControlsName].animate(new shaking_animation_1.ShakingAnimation());
+      }
+    });
+  }
+
+  initFormControl(name, formConfig, config) {
+    if (config.fieldValidators) {
+      const formFieldValidators = config.fieldValidators.filter(fieldValidator => fieldValidator.targets.includes(name)).map(fieldValidator => fieldValidator.validators).reduce((out, validators) => out.concat(validators), []);
+
+      if (formFieldValidators.length !== 0) {
+        const asyncValidators = [];
+
+        for (const validator of formFieldValidators) {
+          asyncValidators.push(() => this.$valueChanged.map(validator));
+        }
+
+        formConfig.asyncValidators = (formConfig.asyncValidators || []).concat(asyncValidators);
+      }
+    }
+
+    return new form_control_1.FormControl(Object.assign({
+      name
+    }, formConfig));
+  }
+
+}
+
+exports.FormGroup = FormGroup;
+},{"../animation/animations/shaking-animation":"utils/animation/animations/shaking-animation.ts","../observeble/observeble":"utils/observeble/observeble.ts","../observeble/subject":"utils/observeble/subject.ts","./form-control":"utils/form/form-control.ts"}],"utils/form/validator-error.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ValidatorError = exports.ValidationErrorType = void 0;
+var ValidationErrorType;
+
+(function (ValidationErrorType) {
+  ValidationErrorType["shown"] = "SHOWN";
+  ValidationErrorType["hidden"] = "HIDDEN";
+})(ValidationErrorType = exports.ValidationErrorType || (exports.ValidationErrorType = {}));
+
+class ValidatorError extends Error {
+  constructor(message, type = ValidationErrorType.shown) {
+    super(message);
+    this.type = type;
+  }
+
+  equals(other) {
+    return other.type === this.type && other.message === this.message;
+  }
+
+}
+
+exports.ValidatorError = ValidatorError;
+},{}],"utils/form/validators.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Validators = void 0;
+
+const validator_error_1 = require("./validator-error");
+
+const EMAIL = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+const defaultMessages = {
+  empty: 'Поле должно быть заполнено',
+  required: 'Поле заполнено неверно',
+  maxLength: length => `Длинна поля не должна быть больше ${length}`,
+  minLength: length => `Длинна поля не должна быть меньше ${length}`,
+  noSpaces: 'В поле не должно быть пробелов',
+  email: 'Почта должна быть в формате my-email@domen.ru'
+};
+
+class Validators {
+  static empty(error) {
+    return function (value) {
+      return value ? null : error || new validator_error_1.ValidatorError(defaultMessages.empty);
+    };
+  }
+
+  static required(regExp, error) {
+    return function (value) {
+      return regExp.test(Validators.nonNullable(value)) ? null : error || new validator_error_1.ValidatorError(defaultMessages.required);
+    };
+  }
+
+  static maxLength(length, error) {
+    return function (value) {
+      return Validators.toString(value).length > length ? error || new validator_error_1.ValidatorError(defaultMessages.maxLength(length)) : null;
+    };
+  }
+
+  static minLength(length, error) {
+    return function (value) {
+      return Validators.toString(value).length < length ? error || new validator_error_1.ValidatorError(defaultMessages.minLength(length)) : null;
+    };
+  }
+
+  static noSpaces(error) {
+    return function (value) {
+      return /\s/g.test(Validators.toString(value).trim()) ? error || new validator_error_1.ValidatorError(defaultMessages.noSpaces) : null;
+    };
+  }
+
+  static email(error) {
+    return function (value) {
+      return EMAIL.test(Validators.toString(value).toLowerCase()) ? null : error || new validator_error_1.ValidatorError(defaultMessages.email);
+    };
+  }
+
+  static nonNullable(value) {
+    return value === undefined || value === null ? '' : value;
+  }
+
+  static toString(value) {
+    return String(Validators.nonNullable(value));
+  }
+
+}
+
+exports.Validators = Validators;
+},{"./validator-error":"utils/form/validator-error.ts"}],"const/form-validators.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.formValidators = void 0;
+
+const validator_error_1 = require("../utils/form/validator-error");
+
+const validators_1 = require("../utils/form/validators");
+
+const defaultValidators = [validators_1.Validators.noSpaces(), validators_1.Validators.maxLength(50), validators_1.Validators.empty()];
+exports.formValidators = {
+  password: [...defaultValidators, validators_1.Validators.minLength(6)],
+  login: [...defaultValidators, validators_1.Validators.minLength(4)],
+  first_name: [...defaultValidators],
+  second_name: [...defaultValidators],
+  email: [...defaultValidators, validators_1.Validators.email()],
+  phone: [...defaultValidators, validators_1.Validators.required(/^\+?\d+$/, new validator_error_1.ValidatorError('Телефон может содержать только цифры и "+" в начале'))],
+  display_name: [...defaultValidators, validators_1.Validators.minLength(4)]
+};
+},{"../utils/form/validator-error":"utils/form/validator-error.ts","../utils/form/validators":"utils/form/validators.ts"}],"components/input/app-input.tmpl.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.template = void 0;
+exports.template = `
+    <label for={{$name}} status={{$inputStatus}}>
+        <slot name="label" instead-of-text={{$labelIsInsteadOfText}}></slot>
+    </label>
+    <input type="text" name={{$name}} id={{$name}} disabled={{$disabled}} @focus={{onFocus}} @blur={{onBlur}} @input={{onInput}}>
+    <div underline={{$inputStatus}}></div>
+    <p transparent={{$needHiddenErrors}} class="error">
+        {{$errorMessage}}
+    </p>
+`;
+},{}],"components/input/app-input.less":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"utils/animation/animation-utils/play-animation.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.playAnimation = void 0;
+
+function playAnimation(element, animation) {
+  return new Promise(resolve => {
+    if (animation.onStart) {
+      for (const onStartFunction of animation.onStart) {
+        onStartFunction(element);
+      }
+    }
+
+    resolve();
+  }).then(() => element.animate(animation.keyFrames, animation.keyframeAnimationOptions).finished).then(() => {
+    if (animation.onFinish) {
+      for (const onFinishFunction of animation.onFinish) {
+        onFinishFunction(element);
+      }
+    }
+  });
+}
+
+exports.playAnimation = playAnimation;
+},{}],"components/input/app-input.ts":[function(require,module,exports) {
+"use strict";
+
+var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AppInput = void 0;
+
+const component_1 = require("../../utils/component");
+
+const app_input_tmpl_1 = require("./app-input.tmpl");
+
+require("./app-input.less");
+
+const form_control_1 = require("../../utils/form/form-control");
+
+const observeble_1 = require("../../utils/observeble/observeble");
+
+const validator_error_1 = require("../../utils/form/validator-error");
+
+const play_animation_1 = require("../../utils/animation/animation-utils/play-animation");
+
+const subject_1 = require("../../utils/observeble/subject");
+
+let AppInput = class AppInput {
+  constructor() {
+    this._$name = new subject_1.Subject();
+  }
+
+  onInit() {
+    this._$name.next(this.formControl ? this.formControl.name : false);
+  }
+
+  get $name() {
+    return this._$name.asObserveble();
+  } // TODO: Разбить на методы
+
+
+  onRendered(element) {
+    this.input = element.querySelector('input');
+
+    if (this.formControl) {
+      this.formControl.$valueChanged.subscribe(value => {
+        this.input.value = value || '';
+      });
+    } else {
+      this.formControl = new form_control_1.FormControl({
+        name: ''
+      });
+    }
+
+    observeble_1.Observable.event(element, 'click').subscribe(() => this.setFocusForInput());
+    this.formControl.$animations.subscribe(animation => play_animation_1.playAnimation(element, animation));
+  }
+
+  get $hasFocus() {
+    return this.formControl.$changeFocus;
+  }
+
+  get $hasErrors() {
+    return this.formControl.$statusChanged.map(status => Boolean(status === null || status === void 0 ? void 0 : status.errors) && status.errors.some(error => error.type === validator_error_1.ValidationErrorType.shown));
+  }
+
+  get $disabled() {
+    return this.formControl.$disabled;
+  }
+
+  get $errorMessage() {
+    return this.formControl.$statusChanged.map(status => {
+      var _a, _b;
+
+      return ((_b = (_a = status.errors) === null || _a === void 0 ? void 0 : _a.find(error => error.type === validator_error_1.ValidationErrorType.shown)) === null || _b === void 0 ? void 0 : _b.message) || '';
+    }) // WARNING: Благодаря этому, текст ошибки не исчезает мгновенно,
+    // а становится прозрачным c анимацией.
+    .filter(message => Boolean(message));
+  }
+
+  get $needHiddenErrors() {
+    return observeble_1.Observable.all([this.$hasErrors, this.formControl.$touched, this.formControl.$disabled]).map(([hasErrors, touched, disabled]) => !hasErrors || !touched || disabled);
+  }
+
+  get $inputStatus() {
+    return observeble_1.Observable.all([this.$hasErrors, this.formControl.$changeFocus, this.formControl.$touched, this.formControl.$disabled]).map(([hasErrors, hasFocus, touched, disabled]) => {
+      if (disabled) {
+        return 'disabled';
+      }
+
+      if (!touched) {
+        return hasFocus ? 'focus' : '';
+      }
+
+      if (hasErrors) {
+        return 'error';
+      }
+
+      if (hasFocus) {
+        return 'focus';
+      }
+
+      return 'valid';
+    }).uniqueNext();
+  }
+
+  get $labelIsInsteadOfText() {
+    return observeble_1.Observable.all([this.formControl.$changeFocus, this.formControl.$valueChanged.map(value => Boolean(value))]).map(([hasFocus, hasValue]) => !hasFocus && !hasValue);
+  }
+
+  onFocus() {
+    this.formControl.changeFocus(true);
+  }
+
+  onBlur() {
+    this.formControl.changeFocus(false);
+    this.formControl.touch();
+  }
+
+  onInput(event) {
+    this.formControl.next(event.target.value);
+  }
+
+  setFocusForInput() {
+    this.input.focus();
+  }
+
+  onAttributeChanged(name, _oldValue, newValue) {
+    switch (name) {
+      case 'name':
+        if (newValue) {
+          this._$name.next(newValue);
+        } else {
+          this._$name.next(false);
+        }
+
+        break;
+
+      default:
+        break;
+    }
+
+    return false;
+  }
+
+};
+AppInput = __decorate([component_1.component({
+  name: 'app-input',
+  template: app_input_tmpl_1.template
+})], AppInput);
+exports.AppInput = AppInput;
+},{"../../utils/component":"utils/component.ts","./app-input.tmpl":"components/input/app-input.tmpl.ts","./app-input.less":"components/input/app-input.less","../../utils/form/form-control":"utils/form/form-control.ts","../../utils/observeble/observeble":"utils/observeble/observeble.ts","../../utils/form/validator-error":"utils/form/validator-error.ts","../../utils/animation/animation-utils/play-animation":"utils/animation/animation-utils/play-animation.ts","../../utils/observeble/subject":"utils/observeble/subject.ts"}],"components/form/app-form.tmpl.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.template = void 0;
+exports.template = `
+    <form name={{$name}} @submit={{onSubmit}}>
+        <slot name="field"></slot>
+        <slot name="submit"></slot>
+    </form>
+`;
+},{}],"components/form/app-form.less":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/form/app-form.ts":[function(require,module,exports) {
+"use strict";
+
+var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AppForm = void 0;
+
+const component_1 = require("../../utils/component");
+
+const app_form_tmpl_1 = require("./app-form.tmpl");
+
+require("./app-form.less");
+
+const observeble_1 = require("../../utils/observeble/observeble");
+
+const subject_1 = require("../../utils/observeble/subject");
+
+let AppForm = class AppForm {
+  constructor() {
+    this._$name = new subject_1.Subject();
+  }
+
+  get $name() {
+    return this._$name.asObserveble();
+  }
+
+  onSubmit(event) {
+    event.preventDefault();
+
+    if (!this.formGroup) {
+      return;
+    }
+
+    observeble_1.Observable.all([this.formGroup.$isValid, this.formGroup.$valueChanged]).only(1).filter(([isValid]) => Boolean(isValid)).on(args => {
+      var _a;
+
+      return (_a = this.formGroup) === null || _a === void 0 ? void 0 : _a.submit(args[1]);
+    });
+  }
+
+  onAttributeChanged(name, _oldValue, newValue) {
+    switch (name) {
+      case 'name':
+        if (newValue) {
+          this._$name.next(newValue);
+        } else {
+          this._$name.next(false);
+        }
+
+        break;
+
+      default:
+        break;
+    }
+
+    return false;
+  }
+
+};
+AppForm = __decorate([component_1.component({
+  name: 'app-form',
+  template: app_form_tmpl_1.template,
+  observedAttributes: ['name']
+})], AppForm);
+exports.AppForm = AppForm;
+},{"../../utils/component":"utils/component.ts","./app-form.tmpl":"components/form/app-form.tmpl.ts","./app-form.less":"components/form/app-form.less","../../utils/observeble/observeble":"utils/observeble/observeble.ts","../../utils/observeble/subject":"utils/observeble/subject.ts"}],"components/button/app-button.tmpl.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.template = void 0;
+exports.template = `
+    <button button-disabled={{$disabled}}>
+        <slot name="label"></slot>
+    </button>
+`;
+},{}],"components/button/app-button.less":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"components/button/app-button.ts":[function(require,module,exports) {
+"use strict";
+
+var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
+  var c = arguments.length,
+      r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
+      d;
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AppButton = void 0;
+
+const component_1 = require("../../utils/component");
+
+const app_button_tmpl_1 = require("./app-button.tmpl");
+
+require("./app-button.less");
+
+const subject_1 = require("../../utils/observeble/subject");
+
+let AppButton = class AppButton {
+  constructor() {
+    this.disabled = new subject_1.Subject(false);
+    this._disabled = false;
+  }
+
+  get $disabled() {
+    return this.disabled.asObserveble();
+  }
+
+  onRendered(element) {
+    element.querySelector('button').addEventListener('click', event => {
+      if (this._disabled) {
+        event.stopPropagation();
+        element.dispatchEvent(new CustomEvent('disabledclick'));
+      }
+    });
+  }
+
+  onAttributeChanged(name, _, newValue) {
+    switch (name) {
+      case 'disabled':
+        this._disabled = newValue !== null;
+        this.disabled.next(newValue !== null);
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+};
+AppButton = __decorate([component_1.component({
+  name: 'app-button',
+  template: app_button_tmpl_1.template,
+  observedAttributes: ['disabled']
+})], AppButton);
+exports.AppButton = AppButton;
+},{"../../utils/component":"utils/component.ts","./app-button.tmpl":"components/button/app-button.tmpl.ts","./app-button.less":"components/button/app-button.less","../../utils/observeble/subject":"utils/observeble/subject.ts"}],"pages/auth/page-auth.less":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"pages/auth/enums/auth-page-type.enum.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.authPageType = void 0;
+var authPageType;
+
+(function (authPageType) {
+  authPageType["registration"] = "registration";
+})(authPageType = exports.authPageType || (exports.authPageType = {}));
+},{}],"pages/auth/services/auth-page-manager.ts":[function(require,module,exports) {
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.AuthPageManager = void 0;
 
-var auth_service_1 = require("../../../service/auth.service");
+const auth_service_1 = require("../../../service/auth.service");
 
-var pages_config_1 = require("../../../service/router/pages.config");
+const pages_config_1 = require("../../../service/router/pages.config");
 
-var router_service_1 = require("../../../service/router/router.service");
+const router_service_1 = require("../../../service/router/router.service");
 
-var authPageType;
+const auth_page_type_enum_1 = require("../enums/auth-page-type.enum");
 
-(function (authPageType) {
-  authPageType["registration"] = "registration";
-})(authPageType || (authPageType = {}));
+let instance;
 
-var instance;
+class AuthPageManager {
+  constructor() {
+    if (instance) {
+      return instance;
+    }
 
-var AuthPageManager = /*#__PURE__*/function () {
-  function AuthPageManager() {
-    _classCallCheck(this, AuthPageManager);
-
-    if (instance) return instance;
     instance = this;
     this.routerService = new router_service_1.RouterService();
     this.authService = new auth_service_1.AuthService();
   }
 
-  _createClass(AuthPageManager, [{
-    key: "$isRegistration",
-    get: function get() {
-      return this.routerService.$queryParams.map(function (query) {
-        return query.type === authPageType.registration;
-      });
-    }
-  }, {
-    key: "navigateToAuthorization",
-    value: function navigateToAuthorization() {
-      this.routerService.navigateTo(pages_config_1.pages.auth, {
-        type: authPageType.registration
-      });
-    }
-  }, {
-    key: "navigateToRegistration",
-    value: function navigateToRegistration() {
-      this.routerService.navigateTo(pages_config_1.pages.auth);
-    }
-  }, {
-    key: "authorization",
-    value: function authorization(authData) {
-      this.authService.authorization(authData);
-    }
-  }, {
-    key: "registration",
-    value: function registration(registrationData) {
-      this.authService.registration(registrationData);
-    }
-  }]);
+  get $isRegistration() {
+    return this.routerService.$queryParams.map(query => query.type === auth_page_type_enum_1.authPageType.registration);
+  }
 
-  return AuthPageManager;
-}();
+  navigateToAuthorization() {
+    this.routerService.navigateTo(pages_config_1.pages.auth, {
+      type: auth_page_type_enum_1.authPageType.registration
+    });
+  }
+
+  navigateToRegistration() {
+    this.routerService.navigateTo(pages_config_1.pages.auth);
+  }
+
+  authorization(authData) {
+    this.authService.authorization(authData).then(() => this.navigateToChats());
+  }
+
+  registration(registrationData) {
+    this.authService.registration(registrationData).then(() => this.navigateToChats());
+  }
+
+  navigateToChats() {
+    this.routerService.navigateTo(pages_config_1.pages.chats);
+  }
+
+}
 
 exports.AuthPageManager = AuthPageManager;
-},{"../../../service/auth.service":"service/auth.service.ts","../../../service/router/pages.config":"service/router/pages.config.ts","../../../service/router/router.service":"service/router/router.service.ts"}],"pages/auth/page-auth.ts":[function(require,module,exports) {
+},{"../../../service/auth.service":"service/auth.service.ts","../../../service/router/pages.config":"service/router/pages.config.ts","../../../service/router/router.service":"service/router/router.service.ts","../enums/auth-page-type.enum":"pages/auth/enums/auth-page-type.enum.ts"}],"pages/auth/enums/form-title.enum.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.authPageFormTitle = void 0;
+var authPageFormTitle;
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+(function (authPageFormTitle) {
+  authPageFormTitle["registration"] = "\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044F";
+  authPageFormTitle["authorization"] = "\u0412\u0445\u043E\u0434";
+})(authPageFormTitle = exports.authPageFormTitle || (exports.authPageFormTitle = {}));
+},{}],"pages/auth/page-auth.ts":[function(require,module,exports) {
+"use strict";
 
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
@@ -3762,13 +4369,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PageAuth = void 0;
 
-var page_auth_tmpl_1 = require("./page-auth.tmpl");
+const page_auth_tmpl_1 = require("./page-auth.tmpl");
 
-var form_group_1 = require("../../utils/form/form-group");
+const form_group_1 = require("../../utils/form/form-group");
 
-var component_1 = require("../../utils/component");
+const component_1 = require("../../utils/component");
 
-var form_validators_1 = require("../../const/form-validators");
+const form_validators_1 = require("../../const/form-validators");
 
 require("../../components/input/app-input");
 
@@ -3778,17 +4385,12 @@ require("../../components/button/app-button");
 
 require("./page-auth.less");
 
-var auth_page_manager_1 = require("./services/auth-page-manager");
+const auth_page_manager_1 = require("./services/auth-page-manager");
 
-var FORM_TITLE = {
-  registration: 'Регистрация',
-  authorization: 'Вход'
-};
+const form_title_enum_1 = require("./enums/form-title.enum");
 
-var PageAuth = /*#__PURE__*/function () {
-  function PageAuth() {
-    _classCallCheck(this, PageAuth);
-
+let PageAuth = class PageAuth {
+  constructor() {
     this.authForm = new form_group_1.FormGroup({
       controls: {
         login: {
@@ -3824,107 +4426,94 @@ var PageAuth = /*#__PURE__*/function () {
     this.authPageManager = new auth_page_manager_1.AuthPageManager();
   }
 
-  _createClass(PageAuth, [{
-    key: "onInit",
-    value: function onInit() {
-      var _this = this;
+  onInit() {
+    this.authorizationSubscription = this.authForm.$submit.subscribe(formData => this.onAuthorization(formData));
+    this.registrationSubscription = this.registrationForm.$submit.subscribe(formData => this.onRegistration(formData));
+  }
 
-      this.authorizationSubscription = this.authForm.$submit.subscribe(function (formData) {
-        return _this.onAuthorization(formData);
-      });
-      this.registrationSubscription = this.registrationForm.$submit.subscribe(function (formData) {
-        return _this.onRegistration(formData);
-      });
+  onDestroy() {
+    if (this.authorizationSubscription) {
+      this.authorizationSubscription.unsubscribe();
     }
-  }, {
-    key: "onDestroy",
-    value: function onDestroy() {
-      if (this.authorizationSubscription) this.authorizationSubscription.unsubscribe();
-      if (this.registrationSubscription) this.registrationSubscription.unsubscribe();
-    }
-  }, {
-    key: "$title",
-    get: function get() {
-      return this.$isRegistration.map(function (isRegistration) {
-        return isRegistration ? FORM_TITLE.registration : FORM_TITLE.authorization;
-      });
-    }
-  }, {
-    key: "$isRegistration",
-    get: function get() {
-      return this.authPageManager.$isRegistration;
-    }
-  }, {
-    key: "$isAuthorization",
-    get: function get() {
-      return this.$isRegistration.map(function (isAuthorization) {
-        return !isAuthorization;
-      });
-    }
-  }, {
-    key: "$isDisabledAuthorizationForm",
-    get: function get() {
-      return this.authForm.$isValid.map(function (isValid) {
-        return !isValid;
-      });
-    }
-  }, {
-    key: "$isDisabledRegistrationForm",
-    get: function get() {
-      return this.registrationForm.$isValid.map(function (isValid) {
-        return !isValid;
-      });
-    }
-  }, {
-    key: "onDisabledClickFormAuthorization",
-    value: function onDisabledClickFormAuthorization() {
-      this.authForm.touch();
-      this.authForm.shakingFirstInvalidField();
-    }
-  }, {
-    key: "onDisabledClickFormRegistration",
-    value: function onDisabledClickFormRegistration() {
-      this.registrationForm.touch();
-      this.registrationForm.shakingFirstInvalidField();
-    }
-  }, {
-    key: "navigateToAuthorization",
-    value: function navigateToAuthorization() {
-      this.authPageManager.navigateToAuthorization();
-    }
-  }, {
-    key: "navigateToRegistration",
-    value: function navigateToRegistration() {
-      this.authPageManager.navigateToRegistration();
-    }
-  }, {
-    key: "onAuthorization",
-    value: function onAuthorization(authData) {
-      this.authPageManager.authorization(authData);
-    }
-  }, {
-    key: "onRegistration",
-    value: function onRegistration(registrationData) {
-      this.authPageManager.registration(registrationData);
-    }
-  }]);
 
-  return PageAuth;
-}();
+    if (this.registrationSubscription) {
+      this.registrationSubscription.unsubscribe();
+    }
+  }
 
+  get $title() {
+    return this.$isRegistration.map(isRegistration => isRegistration ? form_title_enum_1.authPageFormTitle.registration : form_title_enum_1.authPageFormTitle.authorization);
+  }
+
+  get $isRegistration() {
+    return this.authPageManager.$isRegistration;
+  }
+
+  get $isAuthorization() {
+    return this.$isRegistration.map(isAuthorization => !isAuthorization);
+  }
+
+  get $isDisabledAuthorizationForm() {
+    return this.authForm.$isValid.map(isValid => !isValid);
+  }
+
+  get $isDisabledRegistrationForm() {
+    return this.registrationForm.$isValid.map(isValid => !isValid);
+  }
+
+  onDisabledClickFormAuthorization() {
+    this.authForm.touch();
+    this.authForm.shakingFirstInvalidField();
+  }
+
+  onDisabledClickFormRegistration() {
+    this.registrationForm.touch();
+    this.registrationForm.shakingFirstInvalidField();
+  }
+
+  navigateToAuthorization() {
+    this.authPageManager.navigateToAuthorization();
+  }
+
+  navigateToRegistration() {
+    this.authPageManager.navigateToRegistration();
+  }
+
+  onAuthorization(authData) {
+    this.authPageManager.authorization(authData);
+  }
+
+  onRegistration(registrationData) {
+    this.authPageManager.registration(registrationData);
+  }
+
+};
 PageAuth = __decorate([component_1.component({
   name: 'page-auth',
   template: page_auth_tmpl_1.template
 })], PageAuth);
 exports.PageAuth = PageAuth;
-},{"./page-auth.tmpl":"pages/auth/page-auth.tmpl.ts","../../utils/form/form-group":"utils/form/form-group.ts","../../utils/component":"utils/component.ts","../../const/form-validators":"const/form-validators.ts","../../components/input/app-input":"components/input/app-input.ts","../../components/form/app-form":"components/form/app-form.ts","../../components/button/app-button":"components/button/app-button.ts","./page-auth.less":"pages/auth/page-auth.less","./services/auth-page-manager":"pages/auth/services/auth-page-manager.ts"}],"pages/profile/page-profile.tmpl.ts":[function(require,module,exports) {
+},{"./page-auth.tmpl":"pages/auth/page-auth.tmpl.ts","../../utils/form/form-group":"utils/form/form-group.ts","../../utils/component":"utils/component.ts","../../const/form-validators":"const/form-validators.ts","../../components/input/app-input":"components/input/app-input.ts","../../components/form/app-form":"components/form/app-form.ts","../../components/button/app-button":"components/button/app-button.ts","./page-auth.less":"pages/auth/page-auth.less","./services/auth-page-manager":"pages/auth/services/auth-page-manager.ts","./enums/form-title.enum":"pages/auth/enums/form-title.enum.ts"}],"pages/profile/page-profile.tmpl.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n    <main>\n        <section id=\"label\">\n            <img alt=\"avatar\" src={{userData.avatarUrl}}>\n            <h1>{{userData.login}}</h1>\n        </section>\n\n        <section class=\"content-wrapper\">\n            <user-data class=\"content\" hidden-with-animtion={{$hideDataList}}></user-data>\n            <form-user-data class=\"content\" hidden-with-animtion={{$hideFormUserData}}></form-user-data>\n            <form-password class=\"content\" hidden-with-animtion={{$hideFormPassword}}></form-password>\n        </section>\n    </main>\n";
+exports.template = `
+    <main>
+        <section id="label">
+            <img alt="avatar" src={{$avatar}}>
+            <h1>{{$userData.login}}</h1>
+        </section>
+
+        <section class="content-wrapper">
+            <user-data class="content" hidden-with-animtion={{$hideDataList}}></user-data>
+            <form-user-data class="content" hidden-with-animtion={{$hideFormUserData}}></form-user-data>
+            <form-password class="content" hidden-with-animtion={{$hideFormPassword}}></form-password>
+        </section>
+    </main>
+`;
 },{}],"pages/profile/components/user-data/user-data.tmpl.ts":[function(require,module,exports) {
 "use strict";
 
@@ -3932,7 +4521,57 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n<section id=\"data-list\">\n    <dl class=\"field-list\">\n        <dt class=\"text-primary\">\u041F\u043E\u0447\u0442\u0430</dt>\n        <dd class=\"text-secondary\">{{ userData.email }}</dd>\n\n        <dt class=\"text-primary\">\u041B\u043E\u0433\u0438\u043D</dt>\n        <dd class=\"text-secondary\">{{ userData.login }}</dd>\n\n        <dt class=\"text-primary\">\u0418\u043C\u044F</dt>\n        <dd class=\"text-secondary\">{{ userData.first_name }}</dd>\n\n        <dt class=\"text-primary\">\u0424\u0430\u043C\u0438\u043B\u0438\u044F</dt>\n        <dd class=\"text-secondary\">{{ userData.second_name }}</dd>\n\n        <dt class=\"text-primary\">\u0418\u043C\u044F \u0432 \u0447\u0430\u0442\u0435</dt>\n        <dd class=\"text-secondary\">{{ userData.display_name }}</dd>\n\n        <dt class=\"text-primary\">\u0422\u0435\u043B\u0435\u0444\u043E\u043D</dt>\n        <dd class=\"text-secondary\">{{ userData.phone }}</dd>\n    </dl>\n</section>\n\n<section id=\"footer-buttons\">\n    <div class=\"buttons\">\n        <ul class=\"field-list\">\n            <li>\n                <app-button @click={{onChangeData()}} appearance=\"secondary\">\n                    <span slot=\"label\">\n                        \u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435\n                    </span>\n                </app-button>\n            </li>\n            <li>\n                <app-button @click={{onChangePassword()}} appearance=\"secondary\">\n                    <span slot=\"label\">\n                        \u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u043F\u0430\u0440\u043E\u043B\u044C\n                    </span>\n                </app-button>\n            </li>\n            <li>\n                <app-button @click={{onExit()}} appearance=\"error\">\n                    <span slot=\"label\">\n                        \u0412\u044B\u0439\u0442\u0438\n                    </span>\n                </app-button>\n            </li>\n        </ul>\n    </div>\n</section>\n";
+exports.template = `
+<section id="data-list">
+    <dl class="field-list">
+        <dt class="text-primary">Почта</dt>
+        <dd class="text-secondary">{{ $userData.email }}</dd>
+
+        <dt class="text-primary">Логин</dt>
+        <dd class="text-secondary">{{ $userData.login }}</dd>
+
+        <dt class="text-primary">Имя</dt>
+        <dd class="text-secondary">{{ $userData.first_name }}</dd>
+
+        <dt class="text-primary">Фамилия</dt>
+        <dd class="text-secondary">{{ $userData.second_name }}</dd>
+
+        <dt class="text-primary">Имя в чате</dt>
+        <dd class="text-secondary">{{ $userData.display_name }}</dd>
+
+        <dt class="text-primary">Телефон</dt>
+        <dd class="text-secondary">{{ $userData.phone }}</dd>
+    </dl>
+</section>
+
+<section id="footer-buttons">
+    <div class="buttons">
+        <ul class="field-list">
+            <li>
+                <app-button @click={{onChangeData()}} appearance="secondary">
+                    <span slot="label">
+                        Изменить данные
+                    </span>
+                </app-button>
+            </li>
+            <li>
+                <app-button @click={{onChangePassword()}} appearance="secondary">
+                    <span slot="label">
+                        Изменить пароль
+                    </span>
+                </app-button>
+            </li>
+            <li>
+                <app-button @click={{onExit()}} appearance="error">
+                    <span slot="label">
+                        Выйти
+                    </span>
+                </app-button>
+            </li>
+        </ul>
+    </div>
+</section>
+`;
 },{}],"pages/profile/components/user-data/user-data.less":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
@@ -3971,88 +4610,80 @@ exports.VISIBILITY_CONFIG = {
 },{}],"utils/animation/animations/hide-animation.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.HideAnimation = void 0;
 
-var hide_element_1 = require("../../functions/hide-element");
+const hide_element_1 = require("../../functions/hide-element");
 
-var transform_functions_1 = require("../animation-utils/transform.functions");
+const transform_functions_1 = require("../animation-utils/transform.functions");
 
-var visibility_config_1 = require("../configs/visibility.config");
+const visibility_config_1 = require("../configs/visibility.config");
 
-var HideAnimation = function HideAnimation() {
-  _classCallCheck(this, HideAnimation);
+class HideAnimation {
+  constructor() {
+    this.keyFrames = [{
+      opacity: 0,
+      transform: transform_functions_1.transform.scale(1 - visibility_config_1.VISIBILITY_CONFIG.scaleChange)
+    }];
+    this.keyframeAnimationOptions = {
+      duration: visibility_config_1.VISIBILITY_CONFIG.duration
+    };
+    this.onFinish = [hide_element_1.hideElement];
+  }
 
-  this.keyFrames = [{
-    opacity: 0,
-    transform: transform_functions_1.transform.scale(1 - visibility_config_1.VISIBILITY_CONFIG.scaleChange)
-  }];
-  this.keyframeAnimationOptions = {
-    duration: visibility_config_1.VISIBILITY_CONFIG.duration
-  };
-  this.onFinish = [hide_element_1.hideElement];
-};
+}
 
 exports.HideAnimation = HideAnimation;
 },{"../../functions/hide-element":"utils/functions/hide-element.ts","../animation-utils/transform.functions":"utils/animation/animation-utils/transform.functions.ts","../configs/visibility.config":"utils/animation/configs/visibility.config.ts"}],"utils/animation/animations/show-animation.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.ShowAnimation = void 0;
 
-var hide_element_1 = require("../../functions/hide-element");
+const hide_element_1 = require("../../functions/hide-element");
 
-var transform_functions_1 = require("../animation-utils/transform.functions");
+const transform_functions_1 = require("../animation-utils/transform.functions");
 
-var visibility_config_1 = require("../configs/visibility.config");
+const visibility_config_1 = require("../configs/visibility.config");
 
-var ShowAnimation = function ShowAnimation() {
-  _classCallCheck(this, ShowAnimation);
+class ShowAnimation {
+  constructor() {
+    this.keyFrames = [{
+      opacity: 0,
+      transform: transform_functions_1.transform.scale(1 + visibility_config_1.VISIBILITY_CONFIG.scaleChange)
+    }, {
+      opacity: 1
+    }];
+    this.keyframeAnimationOptions = {
+      duration: visibility_config_1.VISIBILITY_CONFIG.duration
+    };
+    this.onStart = [hide_element_1.showElement];
+  }
 
-  this.keyFrames = [{
-    opacity: 0,
-    transform: transform_functions_1.transform.scale(1 + visibility_config_1.VISIBILITY_CONFIG.scaleChange)
-  }, {
-    opacity: 1
-  }];
-  this.keyframeAnimationOptions = {
-    duration: visibility_config_1.VISIBILITY_CONFIG.duration
-  };
-  this.onStart = [hide_element_1.showElement];
-};
+}
 
 exports.ShowAnimation = ShowAnimation;
 },{"../../functions/hide-element":"utils/functions/hide-element.ts","../animation-utils/transform.functions":"utils/animation/animation-utils/transform.functions.ts","../configs/visibility.config":"utils/animation/configs/visibility.config.ts"}],"pages/profile/elements/profile-content.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.ProfileContent = void 0;
 
-var play_animation_1 = require("../../../utils/animation/animation-utils/play-animation");
+const play_animation_1 = require("../../../utils/animation/animation-utils/play-animation");
 
-var hide_animation_1 = require("../../../utils/animation/animations/hide-animation");
+const hide_animation_1 = require("../../../utils/animation/animations/hide-animation");
 
-var show_animation_1 = require("../../../utils/animation/animations/show-animation");
+const show_animation_1 = require("../../../utils/animation/animations/show-animation");
 
-var hide_element_1 = require("../../../utils/functions/hide-element");
+const hide_element_1 = require("../../../utils/functions/hide-element");
 
-var page_profile_1 = require("../page-profile");
+const page_profile_1 = require("../page-profile");
 
 var profileContentAttributes;
 
@@ -4060,73 +4691,179 @@ var profileContentAttributes;
   profileContentAttributes["hiddenWithAnimtion"] = "hidden-with-animtion";
 })(profileContentAttributes || (profileContentAttributes = {}));
 
-var ProfileContent = /*#__PURE__*/function () {
-  function ProfileContent() {
-    _classCallCheck(this, ProfileContent);
-
+class ProfileContent {
+  constructor() {
     this.isInitHiddenStatus = true;
   }
 
-  _createClass(ProfileContent, [{
-    key: "onRendered",
-    value: function onRendered(element) {
-      this.element = element;
-    }
-  }, {
-    key: "onAttributeChanged",
-    value: function onAttributeChanged(name, _oldValue, newValue) {
-      switch (name) {
-        case profileContentAttributes.hiddenWithAnimtion:
-          if (_oldValue === newValue) {
-            return false;
-          }
+  onRendered(element) {
+    this.element = element;
+  }
 
-          if (this.isInitHiddenStatus) {
-            this.isInitHiddenStatus = false;
+  static get observedAttributes() {
+    return [profileContentAttributes.hiddenWithAnimtion];
+  }
 
-            if (newValue === page_profile_1.hiddenWithAnimtionValue.false) {
-              hide_element_1.showElement(this.element);
-            } else {
-              hide_element_1.hideElement(this.element);
-            }
+  onAttributeChanged(name, _oldValue, newValue) {
+    switch (name) {
+      case profileContentAttributes.hiddenWithAnimtion:
+        if (_oldValue === newValue) {
+          return false;
+        }
 
-            return false;
-          }
+        if (!this.element) {
+          return false;
+        }
+
+        if (this.isInitHiddenStatus) {
+          this.isInitHiddenStatus = false;
 
           if (newValue === page_profile_1.hiddenWithAnimtionValue.false) {
-            this.show();
+            hide_element_1.showElement(this.element);
           } else {
-            this.hide();
+            hide_element_1.hideElement(this.element);
           }
 
           return false;
+        }
 
-        default:
-          return false;
-      }
-    }
-  }, {
-    key: "hide",
-    value: function hide() {
-      play_animation_1.playAnimation(this.element, new hide_animation_1.HideAnimation());
-    }
-  }, {
-    key: "show",
-    value: function show() {
-      play_animation_1.playAnimation(this.element, new show_animation_1.ShowAnimation());
-    }
-  }], [{
-    key: "observedAttributes",
-    get: function get() {
-      return [profileContentAttributes.hiddenWithAnimtion];
-    }
-  }]);
+        if (newValue === page_profile_1.hiddenWithAnimtionValue.false) {
+          this.show(this.element);
+        } else {
+          this.hide(this.element);
+        }
 
-  return ProfileContent;
-}();
+        return false;
+
+      default:
+        return false;
+    }
+  }
+
+  hide(element) {
+    play_animation_1.playAnimation(element, new hide_animation_1.HideAnimation());
+  }
+
+  show(element) {
+    play_animation_1.playAnimation(element, new show_animation_1.ShowAnimation());
+  }
+
+}
 
 exports.ProfileContent = ProfileContent;
-},{"../../../utils/animation/animation-utils/play-animation":"utils/animation/animation-utils/play-animation.ts","../../../utils/animation/animations/hide-animation":"utils/animation/animations/hide-animation.ts","../../../utils/animation/animations/show-animation":"utils/animation/animations/show-animation.ts","../../../utils/functions/hide-element":"utils/functions/hide-element.ts","../page-profile":"pages/profile/page-profile.ts"}],"store/selectors/select-data.ts":[function(require,module,exports) {
+},{"../../../utils/animation/animation-utils/play-animation":"utils/animation/animation-utils/play-animation.ts","../../../utils/animation/animations/hide-animation":"utils/animation/animations/hide-animation.ts","../../../utils/animation/animations/show-animation":"utils/animation/animations/show-animation.ts","../../../utils/functions/hide-element":"utils/functions/hide-element.ts","../page-profile":"pages/profile/page-profile.ts"}],"store/actions/user.actions.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.UploadErrorChangePasswordAction = exports.UploadedChangePasswordAction = exports.UploadChangePasswordAction = exports.UploadErrorChangeUserDataAction = exports.UploadedChangeUserDataAction = exports.UploadChangeUserDataAction = void 0;
+
+const user_action_type_enum_1 = require("../enums/user-action-type.enum");
+
+class UploadChangeUserDataAction {
+  constructor() {
+    this.type = user_action_type_enum_1.userActionType.changeUserDataUpload;
+  }
+
+}
+
+exports.UploadChangeUserDataAction = UploadChangeUserDataAction;
+
+class UploadedChangeUserDataAction {
+  constructor(newUserData) {
+    this.type = user_action_type_enum_1.userActionType.changeUserDataUploaded;
+    this.payload = newUserData;
+  }
+
+}
+
+exports.UploadedChangeUserDataAction = UploadedChangeUserDataAction;
+
+class UploadErrorChangeUserDataAction {
+  constructor(error) {
+    this.type = user_action_type_enum_1.userActionType.changeUserDataUploadError;
+    this.payload = error;
+  }
+
+}
+
+exports.UploadErrorChangeUserDataAction = UploadErrorChangeUserDataAction;
+
+class UploadChangePasswordAction {
+  constructor() {
+    this.type = user_action_type_enum_1.userActionType.changePasswordUpload;
+  }
+
+}
+
+exports.UploadChangePasswordAction = UploadChangePasswordAction;
+
+class UploadedChangePasswordAction {
+  constructor() {
+    this.type = user_action_type_enum_1.userActionType.changePasswordUploaded;
+  }
+
+}
+
+exports.UploadedChangePasswordAction = UploadedChangePasswordAction;
+
+class UploadErrorChangePasswordAction {
+  constructor(error) {
+    this.type = user_action_type_enum_1.userActionType.changePasswordUploadError;
+    this.payload = error;
+  }
+
+}
+
+exports.UploadErrorChangePasswordAction = UploadErrorChangePasswordAction;
+},{"../enums/user-action-type.enum":"store/enums/user-action-type.enum.ts"}],"service/user.service.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.UserService = void 0;
+
+const user_actions_1 = require("../store/actions/user.actions");
+
+const store_1 = require("../store/store");
+
+const http_client_facade_1 = require("./api/http-client.facade");
+
+let instance;
+
+class UserService {
+  constructor() {
+    if (instance) {
+      return instance;
+    }
+
+    instance = this;
+    this.httpClientFacade = new http_client_facade_1.HTTPClientFacade();
+    this.store = new store_1.Store();
+  }
+
+  changeUserData(data) {
+    this.store.dispatch(new user_actions_1.UploadChangeUserDataAction());
+    return this.httpClientFacade.user.changeData(data).then(response => this.store.dispatch(new user_actions_1.UploadedChangeUserDataAction(response.body))).catch(error => {
+      this.store.dispatch(new user_actions_1.UploadErrorChangeUserDataAction(error));
+      throw error;
+    });
+  }
+
+  changePassword(data) {
+    this.store.dispatch(new user_actions_1.UploadChangePasswordAction());
+    return this.httpClientFacade.user.changePassword(data).then(() => this.store.dispatch(new user_actions_1.UploadedChangePasswordAction())).catch(error => {
+      this.store.dispatch(new user_actions_1.UploadErrorChangePasswordAction(error));
+      throw error;
+    });
+  }
+
+}
+
+exports.UserService = UserService;
+},{"../store/actions/user.actions":"store/actions/user.actions.ts","../store/store":"store/store.ts","./api/http-client.facade":"service/api/http-client.facade.ts"}],"store/selectors/data/select-data-value.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4139,45 +4876,55 @@ function selectDataValue(data) {
 }
 
 exports.selectDataValue = selectDataValue;
-},{}],"store/selectors/select-user-data.ts":[function(require,module,exports) {
+},{}],"pages/profile/enums/profile-page-form-type.enum.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.selectUserData = void 0;
+exports.profilePageFormType = void 0;
+var profilePageFormType;
 
-function selectUserData(state) {
-  return state.userData;
-}
-
-exports.selectUserData = selectUserData;
+(function (profilePageFormType) {
+  profilePageFormType["changeData"] = "changeData";
+  profilePageFormType["changePassword"] = "changePassword";
+})(profilePageFormType = exports.profilePageFormType || (exports.profilePageFormType = {}));
+},{}],"resources/img/default_avatar.png":[function(require,module,exports) {
+module.exports = "/default_avatar.bfcd01d6.png";
 },{}],"pages/profile/service/profile-page-manager.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ProfilePageManager = exports.profilePageContent = void 0;
+exports.ProfilePageManager = exports.profilePageContent = exports.DEFAULT_USER_AVATAR_URL = void 0;
 
-var pages_config_1 = require("../../../service/router/pages.config");
+const auth_service_1 = require("../../../service/auth.service");
 
-var router_service_1 = require("../../../service/router/router.service");
+const pages_config_1 = require("../../../service/router/pages.config");
 
-var user_data_actions_1 = require("../../../store/actions/user-data.actions");
+const router_service_1 = require("../../../service/router/router.service");
 
-var select_data_1 = require("../../../store/selectors/select-data");
+const user_service_1 = require("../../../service/user.service");
 
-var select_user_data_1 = require("../../../store/selectors/select-user-data");
+const select_user_data_1 = require("../../../store/selectors/authorization/select-user-data");
 
-var store_1 = require("../../../store/store");
+const select_data_value_1 = require("../../../store/selectors/data/select-data-value");
 
+const store_1 = require("../../../store/store");
+
+const profile_page_form_type_enum_1 = require("../enums/profile-page-form-type.enum"); // @ts-ignore
+
+
+const default_avatar_png_1 = __importDefault(require("../../../resources/img/default_avatar.png"));
+
+exports.DEFAULT_USER_AVATAR_URL = default_avatar_png_1.default;
 var profilePageContent;
 
 (function (profilePageContent) {
@@ -4186,129 +4933,83 @@ var profilePageContent;
   profilePageContent[profilePageContent["formPassword"] = 2] = "formPassword";
 })(profilePageContent = exports.profilePageContent || (exports.profilePageContent = {}));
 
-var profilePageFormType;
+let instance;
 
-(function (profilePageFormType) {
-  profilePageFormType["changeData"] = "changeData";
-  profilePageFormType["changePassword"] = "changePassword";
-})(profilePageFormType || (profilePageFormType = {}));
-
-var instance;
-
-var ProfilePageManager = /*#__PURE__*/function () {
-  function ProfilePageManager() {
-    _classCallCheck(this, ProfilePageManager);
-
+class ProfilePageManager {
+  constructor() {
     if (instance) {
       return instance;
     }
 
     instance = this;
+    this.authService = new auth_service_1.AuthService();
+    this.userService = new user_service_1.UserService();
     this.routerService = new router_service_1.RouterService();
     this.store = new store_1.Store();
-    this.store.dispatch(new user_data_actions_1.UploadedUserDataAction(this.userData));
   }
 
-  _createClass(ProfilePageManager, [{
-    key: "$userData",
-    get: function get() {
-      return this.store.$state.select(select_user_data_1.selectUserData).select(select_data_1.selectDataValue);
-    }
-  }, {
-    key: "$profilePageContent",
-    get: function get() {
-      return this.routerService.$queryParams.map(function (query) {
-        switch (query.form) {
-          case profilePageFormType.changeData:
-            return profilePageContent.formUserData;
+  get $userData() {
+    return this.store.$state.select(select_user_data_1.selectUserData).select(select_data_value_1.selectDataValue).filter(userData => Boolean(userData));
+  }
 
-          case profilePageFormType.changePassword:
-            return profilePageContent.formPassword;
+  get $profilePageContent() {
+    return this.routerService.$queryParams.map(query => {
+      switch (query.form) {
+        case profile_page_form_type_enum_1.profilePageFormType.changeData:
+          return profilePageContent.formUserData;
 
-          default:
-            return profilePageContent.userData;
-        }
-      }).uniqueNext();
-    }
-  }, {
-    key: "goToUserData",
-    value: function goToUserData() {
-      this.routerService.navigateTo(pages_config_1.pages.profile);
-    }
-  }, {
-    key: "goToFormData",
-    value: function goToFormData() {
-      this.routerService.navigateTo(pages_config_1.pages.profile, {
-        form: profilePageFormType.changeData
-      });
-    }
-  }, {
-    key: "goToFormPassword",
-    value: function goToFormPassword() {
-      this.routerService.navigateTo(pages_config_1.pages.profile, {
-        form: profilePageFormType.changePassword
-      });
-    }
-  }, {
-    key: "goToChats",
-    value: function goToChats() {
-      this.routerService.navigateTo(pages_config_1.pages.chats);
-    }
-  }, {
-    key: "userData",
-    get: function get() {
-      return {
-        first_name: 'Вадим',
-        second_name: 'Кошечкин',
-        display_name: 'Вадим',
-        avatarUrl: 'https://sun1-87.userapi.com/s/v1/if1/75kO7SiwUAoiofoYlkEX407eGBwbwRzlxVgqp-j8n_5kJZsBMSTOpA1BrMezYnl6lhaecWsP.jpg?size=400x0&quality=96&crop=6,335,1299,1299&ava=1',
-        email: 'Rizus912@yandex.ru',
-        login: 'rizus',
-        phone: '88005553535'
-      };
-    }
-  }]);
+        case profile_page_form_type_enum_1.profilePageFormType.changePassword:
+          return profilePageContent.formPassword;
 
-  return ProfilePageManager;
-}();
+        default:
+          return profilePageContent.userData;
+      }
+    }).uniqueNext();
+  }
+
+  uploadUserData() {
+    this.authService.uploadUserDataIfNot();
+  }
+
+  changeData(changeUserData) {
+    this.userService.changeUserData(changeUserData);
+  }
+
+  changePassword(passwordsData) {
+    this.userService.changePassword(passwordsData);
+  }
+
+  goToUserData() {
+    this.routerService.navigateTo(pages_config_1.pages.profile);
+  }
+
+  goToFormData() {
+    this.routerService.navigateTo(pages_config_1.pages.profile, {
+      form: profile_page_form_type_enum_1.profilePageFormType.changeData
+    });
+  }
+
+  goToFormPassword() {
+    this.routerService.navigateTo(pages_config_1.pages.profile, {
+      form: profile_page_form_type_enum_1.profilePageFormType.changePassword
+    });
+  }
+
+  goToChats() {
+    this.routerService.navigateTo(pages_config_1.pages.chats);
+  }
+
+}
 
 exports.ProfilePageManager = ProfilePageManager;
-},{"../../../service/router/pages.config":"service/router/pages.config.ts","../../../service/router/router.service":"service/router/router.service.ts","../../../store/actions/user-data.actions":"store/actions/user-data.actions.ts","../../../store/selectors/select-data":"store/selectors/select-data.ts","../../../store/selectors/select-user-data":"store/selectors/select-user-data.ts","../../../store/store":"store/store.ts"}],"pages/profile/components/user-data/user-data.ts":[function(require,module,exports) {
+},{"../../../service/auth.service":"service/auth.service.ts","../../../service/router/pages.config":"service/router/pages.config.ts","../../../service/router/router.service":"service/router/router.service.ts","../../../service/user.service":"service/user.service.ts","../../../store/selectors/authorization/select-user-data":"store/selectors/authorization/select-user-data.ts","../../../store/selectors/data/select-data-value":"store/selectors/data/select-data-value.ts","../../../store/store":"store/store.ts","../enums/profile-page-form-type.enum":"pages/profile/enums/profile-page-form-type.enum.ts","../../../resources/img/default_avatar.png":"resources/img/default_avatar.png"}],"pages/profile/components/user-data/user-data.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
-
-function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
@@ -4317,62 +5018,46 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.UserData = void 0;
 
-var component_1 = require("../../../../utils/component");
+const component_1 = require("../../../../utils/component");
 
-var user_data_tmpl_1 = require("./user-data.tmpl");
+const user_data_tmpl_1 = require("./user-data.tmpl");
 
 require("./user-data.less");
 
-var profile_content_1 = require("../../elements/profile-content");
+const profile_content_1 = require("../../elements/profile-content");
 
-var profile_page_manager_1 = require("../../service/profile-page-manager"); // @ts-ignore
+const profile_page_manager_1 = require("../../service/profile-page-manager"); // @ts-ignore
 
 
-var UserData = /*#__PURE__*/function (_profile_content_1$Pr) {
-  _inherits(UserData, _profile_content_1$Pr);
-
-  var _super = _createSuper(UserData);
-
-  function UserData() {
-    var _this;
-
-    _classCallCheck(this, UserData);
-
-    _this = _super.call(this);
-    _this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
-    return _this;
+let UserData = class UserData extends profile_content_1.ProfileContent {
+  constructor() {
+    super();
+    this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
   }
 
-  _createClass(UserData, [{
-    key: "onInit",
-    value: function onInit() {
-      this.userData = this.profilePageManager.userData;
-    }
-  }, {
-    key: "onChangeData",
-    value: function onChangeData() {
-      this.profilePageManager.goToFormData();
-    }
-  }, {
-    key: "onChangePassword",
-    value: function onChangePassword() {
-      this.profilePageManager.goToFormPassword();
-    }
-  }, {
-    key: "onExit",
-    value: function onExit() {
-      this.profilePageManager.goToChats();
-    }
-  }], [{
-    key: "observedAttributes",
-    get: function get() {
-      return _get(_getPrototypeOf(UserData), "observedAttributes", this);
-    }
-  }]);
+  static get observedAttributes() {
+    return super.observedAttributes;
+  }
 
-  return UserData;
-}(profile_content_1.ProfileContent);
+  onInit() {}
 
+  get $userData() {
+    return this.profilePageManager.$userData;
+  }
+
+  onChangeData() {
+    this.profilePageManager.goToFormData();
+  }
+
+  onChangePassword() {
+    this.profilePageManager.goToFormPassword();
+  }
+
+  onExit() {
+    this.profilePageManager.goToChats();
+  }
+
+};
 UserData = __decorate([component_1.component({
   name: 'user-data',
   template: user_data_tmpl_1.template
@@ -4385,7 +5070,51 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n<section>\n    <app-form name=\"user_data\">\n        <app-input slot=\"field\" formControl=[[form.controls.email]]>\n            <span slot=\"label\">\u041F\u043E\u0447\u0442\u0430</span>\n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.login]]>\n            <span slot=\"label\">\u041B\u043E\u0433\u0438\u043D</span>    \n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.first_name]]>\n            <span slot=\"label\">\u0418\u043C\u044F</span>\n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.second_name]]>\n            <span slot=\"label\">\u0424\u0430\u043C\u0438\u043B\u0438\u044F</span>\n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.display_name]]>\n            <span slot=\"label\">\u0418\u043C\u044F \u0432 \u0447\u0430\u0442\u0435</span>\n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.phone]]>\n            <span slot=\"label\">\u0422\u0435\u043B\u0435\u0444\u043E\u043D</span>\n        </app-input>\n    </app-form>\n</section>\n\n<section id=\"footer-buttons\">\n    <div class=\"buttons\">\n        <ul class=\"field-list\">\n            <li>\n                <app-button @click={{onChangeData()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} onDisabledClick appearance=\"primary\">\n                    <span slot=\"label\">\n                        \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C\n                    </span>\n                </app-button>\n            </li>\n            <li>\n                <app-button @click={{onBack()}} appearance=\"error\">\n                    <span slot=\"label\">\n                        \u041D\u0430\u0437\u0430\u0434\n                    </span>\n                </app-button>\n            </li>\n        </ul>\n    </div>\n</section>\n";
+exports.template = `
+<section>
+    <app-form name="user_data">
+        <app-input slot="field" formControl=[[form.controls.email]]>
+            <span slot="label">Почта</span>
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.login]]>
+            <span slot="label">Логин</span>    
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.first_name]]>
+            <span slot="label">Имя</span>
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.second_name]]>
+            <span slot="label">Фамилия</span>
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.display_name]]>
+            <span slot="label">Имя в чате</span>
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.phone]]>
+            <span slot="label">Телефон</span>
+        </app-input>
+    </app-form>
+</section>
+
+<section id="footer-buttons">
+    <div class="buttons">
+        <ul class="field-list">
+            <li>
+                <app-button @click={{onChangeData()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} onDisabledClick appearance="primary">
+                    <span slot="label">
+                        Сохранить
+                    </span>
+                </app-button>
+            </li>
+            <li>
+                <app-button @click={{onBack()}} appearance="error">
+                    <span slot="label">
+                        Назад
+                    </span>
+                </app-button>
+            </li>
+        </ul>
+    </div>
+</section>
+`;
 },{}],"pages/profile/components/form-user-data/form-user-data.less":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
@@ -4394,39 +5123,11 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"pages/profile/components/form-user-data/form-user-data.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
-
-function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
@@ -4435,9 +5136,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FormUserData = void 0;
 
-var component_1 = require("../../../../utils/component");
+const component_1 = require("../../../../utils/component");
 
-var form_user_data_tmpl_1 = require("./form-user-data.tmpl");
+const form_user_data_tmpl_1 = require("./form-user-data.tmpl");
 
 require("../../../../components/form/app-form");
 
@@ -4447,27 +5148,19 @@ require("../../../../components/button/app-button");
 
 require("./form-user-data.less");
 
-var form_group_1 = require("../../../../utils/form/form-group");
+const form_group_1 = require("../../../../utils/form/form-group");
 
-var form_validators_1 = require("../../../../const/form-validators");
+const form_validators_1 = require("../../../../const/form-validators");
 
-var profile_content_1 = require("../../elements/profile-content");
+const profile_content_1 = require("../../elements/profile-content");
 
-var profile_page_manager_1 = require("../../service/profile-page-manager"); // @ts-ignore
+const profile_page_manager_1 = require("../../service/profile-page-manager"); // @ts-ignore
 
 
-var FormUserData = /*#__PURE__*/function (_profile_content_1$Pr) {
-  _inherits(FormUserData, _profile_content_1$Pr);
-
-  var _super = _createSuper(FormUserData);
-
-  function FormUserData() {
-    var _this;
-
-    _classCallCheck(this, FormUserData);
-
-    _this = _super.call(this);
-    _this.form = new form_group_1.FormGroup({
+let FormUserData = class FormUserData extends profile_content_1.ProfileContent {
+  constructor() {
+    super();
+    this.form = new form_group_1.FormGroup({
       controls: {
         email: {
           validators: form_validators_1.formValidators.email
@@ -4489,48 +5182,39 @@ var FormUserData = /*#__PURE__*/function (_profile_content_1$Pr) {
         }
       }
     });
-    _this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
-    return _this;
+    this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
   }
 
-  _createClass(FormUserData, [{
-    key: "onInit",
-    value: function onInit() {
-      this.form.next(this.profilePageManager.userData);
-    }
-  }, {
-    key: "$isInvalidForm",
-    get: function get() {
-      return this.form.$isValid.map(function (isValid) {
-        return !isValid;
-      });
-    }
-  }, {
-    key: "onBack",
-    value: function onBack() {
-      this.profilePageManager.goToUserData();
-    }
-  }, {
-    key: "onChangeData",
-    value: function onChangeData() {
-      console.log(this.form.value);
-    }
-  }, {
-    key: "onDisabledClick",
-    value: function onDisabledClick() {
-      this.form.touch();
-      this.form.shakingFirstInvalidField();
-    }
-  }], [{
-    key: "observedAttributes",
-    get: function get() {
-      return _get(_getPrototypeOf(FormUserData), "observedAttributes", this);
-    }
-  }]);
+  onInit() {
+    this.userDataSubscription = this.profilePageManager.$userData.subscribe(userData => this.form.next(userData));
+  }
 
-  return FormUserData;
-}(profile_content_1.ProfileContent);
+  onDestroy() {
+    this.userDataSubscription.unsubscribe();
+  }
 
+  get $isInvalidForm() {
+    return this.form.$isValid.map(isValid => !isValid);
+  }
+
+  static get observedAttributes() {
+    return super.observedAttributes;
+  }
+
+  onBack() {
+    this.profilePageManager.goToUserData();
+  }
+
+  onChangeData() {
+    this.profilePageManager.changeData(this.form.value);
+  }
+
+  onDisabledClick() {
+    this.form.touch();
+    this.form.shakingFirstInvalidField();
+  }
+
+};
 FormUserData = __decorate([component_1.component({
   name: 'form-user-data',
   template: form_user_data_tmpl_1.template
@@ -4543,7 +5227,42 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n<section>\n    <app-form name=\"password\">\n        <app-input slot=\"field\" formControl=[[form.controls.last]]>\n            <span slot=\"label\">\u0421\u0442\u0430\u0440\u044B\u0439 \u043F\u0430\u0440\u043E\u043B\u044C</span>\n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.next]]>\n            <span slot=\"label\">\u041D\u043E\u0432\u044B\u0439 \u043F\u0430\u0440\u043E\u043B\u044C</span>    \n        </app-input>\n        <app-input slot=\"field\" formControl=[[form.controls.repeat]]>\n            <span slot=\"label\">\u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u043F\u0430\u0440\u043E\u043B\u044C</span>\n        </app-input>\n    </app-form>\n</section>\n\n<section id=\"footer-buttons\">\n    <div class=\"buttons\">\n        <ul class=\"field-list\">\n            <li>\n                <app-button @click={{onChangePassword()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} appearance=\"primary\">\n                    <span slot=\"label\">\n                        \u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C\n                    </span>\n                </app-button>\n            </li>\n            <li>\n                <app-button @click={{onBack()}} appearance=\"error\">\n                    <span slot=\"label\">\n                        \u041D\u0430\u0437\u0430\u0434\n                    </span>\n                </app-button>\n            </li>\n        </ul>\n    </div>\n</section>\n";
+exports.template = `
+<section>
+    <app-form name="password">
+        <app-input slot="field" formControl=[[form.controls.oldPassword]]>
+            <span slot="label">Старый пароль</span>
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.newPassword]]>
+            <span slot="label">Новый пароль</span>    
+        </app-input>
+        <app-input slot="field" formControl=[[form.controls.repeatPassword]]>
+            <span slot="label">Повторите пароль</span>
+        </app-input>
+    </app-form>
+</section>
+
+<section id="footer-buttons">
+    <div class="buttons">
+        <ul class="field-list">
+            <li>
+                <app-button @click={{onChangePassword()}} @disabledclick={{onDisabledClick()}} disabled={{$isInvalidForm}} appearance="primary">
+                    <span slot="label">
+                        Сохранить
+                    </span>
+                </app-button>
+            </li>
+            <li>
+                <app-button @click={{onBack()}} appearance="error">
+                    <span slot="label">
+                        Назад
+                    </span>
+                </app-button>
+            </li>
+        </ul>
+    </div>
+</section>
+`;
 },{}],"pages/profile/components/form-password/form-password.less":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
@@ -4552,39 +5271,11 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"pages/profile/components/form-password/form-password.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _get(target, property, receiver) { if (typeof Reflect !== "undefined" && Reflect.get) { _get = Reflect.get; } else { _get = function _get(target, property, receiver) { var base = _superPropBase(target, property); if (!base) return; var desc = Object.getOwnPropertyDescriptor(base, property); if (desc.get) { return desc.get.call(receiver); } return desc.value; }; } return _get(target, property, receiver || target); }
-
-function _superPropBase(object, property) { while (!Object.prototype.hasOwnProperty.call(object, property)) { object = _getPrototypeOf(object); if (object === null) break; } return object; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
@@ -4593,109 +5284,94 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.FormPassword = void 0;
 
-var form_group_1 = require("../../../../utils/form/form-group");
+const form_group_1 = require("../../../../utils/form/form-group");
 
-var component_1 = require("../../../../utils/component");
+const component_1 = require("../../../../utils/component");
 
-var form_validators_1 = require("../../../../const/form-validators");
+const form_validators_1 = require("../../../../const/form-validators");
 
-var form_password_tmpl_1 = require("./form-password.tmpl");
+const form_password_tmpl_1 = require("./form-password.tmpl");
 
 require("./form-password.less");
 
-var profile_content_1 = require("../../elements/profile-content");
+const profile_content_1 = require("../../elements/profile-content");
 
-var validator_error_1 = require("../../../../utils/form/validator-error");
+const validator_error_1 = require("../../../../utils/form/validator-error");
 
-var profile_page_manager_1 = require("../../service/profile-page-manager"); // @ts-ignore никак не могу написать типы для component (
+const profile_page_manager_1 = require("../../service/profile-page-manager"); // @ts-ignore никак не могу написать типы для component (
 
 
-var FormPassword = /*#__PURE__*/function (_profile_content_1$Pr) {
-  _inherits(FormPassword, _profile_content_1$Pr);
-
-  var _super = _createSuper(FormPassword);
-
-  function FormPassword() {
-    var _this;
-
-    _classCallCheck(this, FormPassword);
-
-    _this = _super.call(this);
-    _this.form = new form_group_1.FormGroup({
+let FormPassword = class FormPassword extends profile_content_1.ProfileContent {
+  constructor() {
+    super();
+    this.form = new form_group_1.FormGroup({
       controls: {
-        last: {
+        oldPassword: {
           validators: form_validators_1.formValidators.password
         },
-        next: {
+        newPassword: {
           validators: form_validators_1.formValidators.password
         },
-        repeat: {
+        repeatPassword: {
           validators: form_validators_1.formValidators.password
         }
       },
       fieldValidators: [{
-        targets: ['repeat'],
-        validators: [function (_ref) {
-          var next = _ref.next,
-              repeat = _ref.repeat;
-          return next === repeat ? null : new validator_error_1.ValidatorError('Пароли не совпадают');
-        }]
+        targets: ['repeatPassword'],
+        validators: [({
+          newPassword,
+          repeatPassword
+        }) => newPassword === repeatPassword ? null : new validator_error_1.ValidatorError('Пароли не совпадают')]
       }, {
-        targets: ['repeat'],
-        validators: [function (_ref2) {
-          var last = _ref2.last,
-              repeat = _ref2.repeat;
-          return last === repeat ? new validator_error_1.ValidatorError('Новый пароль не отличается от старого') : null;
-        }]
+        targets: ['repeatPassword'],
+        validators: [({
+          oldPassword,
+          repeatPassword
+        }) => oldPassword === repeatPassword ? new validator_error_1.ValidatorError('Новый пароль не отличается от старого') : null]
       }, {
-        targets: ['next'],
-        validators: [function (_ref3) {
-          var last = _ref3.last,
-              next = _ref3.next;
-          return last === next ? new validator_error_1.ValidatorError('Новый пароль не отличается от старого') : null;
-        }]
+        targets: ['newPassword'],
+        validators: [({
+          oldPassword,
+          newPassword
+        }) => oldPassword === newPassword ? new validator_error_1.ValidatorError('Новый пароль не отличается от старого') : null]
       }]
     });
-    _this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
-    return _this;
+    this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
   }
 
-  _createClass(FormPassword, [{
-    key: "$isInvalidForm",
-    get: function get() {
-      return this.form.$isValid.map(function (isValid) {
-        return !isValid;
-      });
-    }
-  }, {
-    key: "onInit",
-    value: function onInit() {}
-  }, {
-    key: "onBack",
-    value: function onBack() {
-      this.profilePageManager.goToUserData();
-    }
-  }, {
-    key: "onChangePassword",
-    value: function onChangePassword() {
-      console.log(this.form.value);
-    }
-  }, {
-    key: "onDisabledClick",
-    value: function onDisabledClick() {
-      this.form.touch();
-      this.form.shakingFirstInvalidField();
-    }
-  }], [{
-    key: "observedAttributes",
-    get: function get() {
-      return _get(_getPrototypeOf(FormPassword), "observedAttributes", this);
-    }
-  }]);
+  static get observedAttributes() {
+    return super.observedAttributes;
+  }
 
-  return FormPassword;
-}(profile_content_1.ProfileContent);
+  get $isInvalidForm() {
+    return this.form.$isValid.map(isValid => !isValid);
+  }
 
+  onBack() {
+    this.profilePageManager.goToUserData();
+  }
+
+  onChangePassword() {
+    this.profilePageManager.changePassword(this.getChangePasswordData());
+  }
+
+  onDisabledClick() {
+    this.form.touch();
+    this.form.shakingFirstInvalidField();
+  }
+
+  getChangePasswordData() {
+    const {
+      newPassword,
+      oldPassword
+    } = this.form.value;
+    return {
+      newPassword,
+      oldPassword
+    };
+  }
+
+};
 FormPassword = __decorate([component_1.component({
   name: 'form-password',
   template: form_password_tmpl_1.template
@@ -4709,21 +5385,11 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"pages/profile/page-profile.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
@@ -4732,9 +5398,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PageProfile = exports.hiddenWithAnimtionValue = void 0;
 
-var component_1 = require("../../utils/component");
+const component_1 = require("../../utils/component");
 
-var page_profile_tmpl_1 = require("./page-profile.tmpl");
+const page_profile_tmpl_1 = require("./page-profile.tmpl");
 
 require("../../components/button/app-button");
 
@@ -4746,7 +5412,9 @@ require("./components/form-password/form-password");
 
 require("./page-profile.less");
 
-var profile_page_manager_1 = require("./service/profile-page-manager");
+const profile_page_manager_1 = require("./service/profile-page-manager");
+
+const auth_guard_1 = require("../../guards/auth-guard");
 
 var hiddenWithAnimtionValue;
 
@@ -4755,58 +5423,71 @@ var hiddenWithAnimtionValue;
   hiddenWithAnimtionValue["false"] = "false";
 })(hiddenWithAnimtionValue = exports.hiddenWithAnimtionValue || (exports.hiddenWithAnimtionValue = {}));
 
-var PageProfile = /*#__PURE__*/function () {
-  function PageProfile() {
-    _classCallCheck(this, PageProfile);
-
+let PageProfile = class PageProfile {
+  constructor() {
     this.profilePageManager = new profile_page_manager_1.ProfilePageManager();
-    this.userData = this.profilePageManager.userData;
   }
 
-  _createClass(PageProfile, [{
-    key: "onInit",
-    value: function onInit() {} // Костыльно, но мы ограничены возможностями шаблонзатора
+  onInit() {
+    this.profilePageManager.uploadUserData();
+  }
 
-  }, {
-    key: "$hideDataList",
-    get: function get() {
-      return this.$getIsHideContent(profile_page_manager_1.profilePageContent.userData);
-    }
-  }, {
-    key: "$hideFormPassword",
-    get: function get() {
-      return this.$getIsHideContent(profile_page_manager_1.profilePageContent.formPassword);
-    }
-  }, {
-    key: "$hideFormUserData",
-    get: function get() {
-      return this.$getIsHideContent(profile_page_manager_1.profilePageContent.formUserData);
-    }
-  }, {
-    key: "$getIsHideContent",
-    value: function $getIsHideContent(content) {
-      return this.profilePageManager.$profilePageContent.map(function (pageContent) {
-        return pageContent === content ? hiddenWithAnimtionValue.false : hiddenWithAnimtionValue.true;
-      });
-    }
-  }]);
+  get $userData() {
+    return this.profilePageManager.$userData;
+  }
 
-  return PageProfile;
-}();
+  get $avatar() {
+    return this.$userData.map(userData => userData.avatarUrl || profile_page_manager_1.DEFAULT_USER_AVATAR_URL);
+  } // Костыльно, но мы ограничены возможностями шаблонзатора
 
+
+  get $hideDataList() {
+    return this.$getIsHideContent(profile_page_manager_1.profilePageContent.userData);
+  }
+
+  get $hideFormPassword() {
+    return this.$getIsHideContent(profile_page_manager_1.profilePageContent.formPassword);
+  }
+
+  get $hideFormUserData() {
+    return this.$getIsHideContent(profile_page_manager_1.profilePageContent.formUserData);
+  }
+
+  $getIsHideContent(content) {
+    return this.profilePageManager.$profilePageContent.map(pageContent => pageContent === content ? hiddenWithAnimtionValue.false : hiddenWithAnimtionValue.true);
+  }
+
+};
 PageProfile = __decorate([component_1.component({
   name: 'page-profile',
-  template: page_profile_tmpl_1.template
+  template: page_profile_tmpl_1.template,
+  guards: [auth_guard_1.AuthGuard]
 })], PageProfile);
 exports.PageProfile = PageProfile;
-},{"../../utils/component":"utils/component.ts","./page-profile.tmpl":"pages/profile/page-profile.tmpl.ts","../../components/button/app-button":"components/button/app-button.ts","./components/user-data/user-data":"pages/profile/components/user-data/user-data.ts","./components/form-user-data/form-user-data":"pages/profile/components/form-user-data/form-user-data.ts","./components/form-password/form-password":"pages/profile/components/form-password/form-password.ts","./page-profile.less":"pages/profile/page-profile.less","./service/profile-page-manager":"pages/profile/service/profile-page-manager.ts"}],"pages/default/page-default.tmpl.ts":[function(require,module,exports) {
+},{"../../utils/component":"utils/component.ts","./page-profile.tmpl":"pages/profile/page-profile.tmpl.ts","../../components/button/app-button":"components/button/app-button.ts","./components/user-data/user-data":"pages/profile/components/user-data/user-data.ts","./components/form-user-data/form-user-data":"pages/profile/components/form-user-data/form-user-data.ts","./components/form-password/form-password":"pages/profile/components/form-password/form-password.ts","./page-profile.less":"pages/profile/page-profile.less","./service/profile-page-manager":"pages/profile/service/profile-page-manager.ts","../../guards/auth-guard":"guards/auth-guard.ts"}],"pages/default/consts/default-description.const.ts":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.defaultDescription = void 0;
+exports.defaultDescription = 'Кажется, что-то пошло не так :(';
+},{}],"pages/default/page-default.tmpl.ts":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.template = void 0;
-exports.template = "\n    <main>\n        <h1>{{ code }}</h1>\n        <p>{{ description }}</p>\n        <app-button appearance=\"secondary\" @click={{navigateToChats()}}>\n            <span slot=\"label\">\u041D\u0430\u0437\u0430\u0434 \u043A \u0447\u0430\u0442\u0430\u043C</span>\n        </app-button>\n    </main>\n";
+exports.template = `
+    <main>
+        <h1 id="title">{{ code }}</h1>
+        <p id="description">{{ description }}</p>
+        <app-button id="back" appearance="secondary" @click={{navigateToChats()}}>
+            <span slot="label">Назад к чатам</span>
+        </app-button>
+    </main>
+`;
 },{}],"pages/default/page-default.less":[function(require,module,exports) {
 var reloadCSS = require('_css_loader');
 
@@ -4815,21 +5496,11 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"pages/default/page-default.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
@@ -4838,110 +5509,106 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.PageDefault = void 0;
 
-var component_1 = require("../../utils/component");
+const component_1 = require("../../utils/component");
 
-var router_service_1 = require("../../service/router/router.service");
+const router_service_1 = require("../../service/router/router.service");
+
+const default_description_const_1 = require("./consts/default-description.const");
 
 require("../../components/input/app-input");
 
 require("../../components/button/app-button");
 
-var pages_config_1 = require("../../service/router/pages.config");
+const pages_config_1 = require("../../service/router/pages.config");
 
-var page_default_tmpl_1 = require("./page-default.tmpl");
+const page_default_tmpl_1 = require("./page-default.tmpl");
 
 require("./page-default.less");
 
-var CODE_DESCRIPTION = {
-  404: 'Не туда попали',
-  500: 'Мы уже фиксим'
-};
-
-var PageDefault = /*#__PURE__*/function () {
-  function PageDefault() {
-    _classCallCheck(this, PageDefault);
-
+let PageDefault = class PageDefault {
+  constructor() {
     this.routerService = new router_service_1.RouterService();
   }
 
-  _createClass(PageDefault, [{
-    key: "onInit",
-    value: function onInit() {
-      this.code = this.routerService.urlParams.queryParams.code || '404';
-    }
-  }, {
-    key: "description",
-    get: function get() {
-      return CODE_DESCRIPTION[this.code] || CODE_DESCRIPTION["".concat(this.code[0], "00")] || 'Кажется, что-то пошло не так :(';
-    }
-  }, {
-    key: "navigateToChats",
-    value: function navigateToChats() {
-      this.routerService.navigateTo(pages_config_1.pages.chats);
-    }
-  }]);
+  onInit() {
+    this.code = Number(this.routerService.urlParams.queryParams.code) || 404;
+  }
 
-  return PageDefault;
-}();
+  get description() {
+    return this.getDescriptionByCode(this.code) || this.getDescriptionByCode(this.floorToHundreds(this.code)) || default_description_const_1.defaultDescription;
+  }
 
+  navigateToChats() {
+    this.routerService.navigateTo(pages_config_1.pages.chats);
+  }
+
+  getDescriptionByCode(code) {
+    switch (code) {
+      case 404:
+        return 'Не туда попали';
+
+      case 500:
+        return 'Мы уже фиксим';
+
+      default:
+        return undefined;
+    }
+  }
+
+  floorToHundreds(number) {
+    return Math.floor(number / 100) * 100;
+  }
+
+};
 PageDefault = __decorate([component_1.component({
   name: 'page-default',
   template: page_default_tmpl_1.template
 })], PageDefault);
 exports.PageDefault = PageDefault;
-},{"../../utils/component":"utils/component.ts","../../service/router/router.service":"service/router/router.service.ts","../../components/input/app-input":"components/input/app-input.ts","../../components/button/app-button":"components/button/app-button.ts","../../service/router/pages.config":"service/router/pages.config.ts","./page-default.tmpl":"pages/default/page-default.tmpl.ts","./page-default.less":"pages/default/page-default.less"}],"service/router/router.config.ts":[function(require,module,exports) {
+},{"../../utils/component":"utils/component.ts","../../service/router/router.service":"service/router/router.service.ts","./consts/default-description.const":"pages/default/consts/default-description.const.ts","../../components/input/app-input":"components/input/app-input.ts","../../components/button/app-button":"components/button/app-button.ts","../../service/router/pages.config":"service/router/pages.config.ts","./page-default.tmpl":"pages/default/page-default.tmpl.ts","./page-default.less":"pages/default/page-default.less"}],"service/router/router.config.ts":[function(require,module,exports) {
 "use strict";
-
-var _exports$routerConfig;
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.routerConfig = void 0;
 
-var page_main_1 = require("../../pages/main/page-main");
+const page_main_1 = require("../../pages/main/page-main");
 
-var page_auth_1 = require("../../pages/auth/page-auth");
+const page_auth_1 = require("../../pages/auth/page-auth");
 
-var page_profile_1 = require("../../pages/profile/page-profile");
+const page_profile_1 = require("../../pages/profile/page-profile");
 
-var page_default_1 = require("../../pages/default/page-default");
+const page_default_1 = require("../../pages/default/page-default");
 
-var pages_config_1 = require("./pages.config");
+const pages_config_1 = require("./pages.config");
 
-exports.routerConfig = (_exports$routerConfig = {}, _defineProperty(_exports$routerConfig, pages_config_1.pages.main, page_main_1.PageMain), _defineProperty(_exports$routerConfig, pages_config_1.pages.auth, page_auth_1.PageAuth), _defineProperty(_exports$routerConfig, pages_config_1.pages.profile, page_profile_1.PageProfile), _defineProperty(_exports$routerConfig, pages_config_1.pages.default, page_default_1.PageDefault), _exports$routerConfig);
+exports.routerConfig = {
+  [pages_config_1.pages.main]: page_main_1.PageMain,
+  [pages_config_1.pages.auth]: page_auth_1.PageAuth,
+  [pages_config_1.pages.profile]: page_profile_1.PageProfile,
+  [pages_config_1.pages.default]: page_default_1.PageDefault
+};
 },{"../../pages/main/page-main":"pages/main/page-main.ts","../../pages/auth/page-auth":"pages/auth/page-auth.ts","../../pages/profile/page-profile":"pages/profile/page-profile.ts","../../pages/default/page-default":"pages/default/page-default.ts","./pages.config":"service/router/pages.config.ts"}],"service/router/router.service.ts":[function(require,module,exports) {
 "use strict";
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.RouterService = void 0;
 
-var router_config_1 = require("./router.config");
+const router_config_1 = require("./router.config");
 
-var pages_config_1 = require("./pages.config");
+const pages_config_1 = require("./pages.config");
 
-var subject_1 = require("../../utils/observeble/subject");
+const subject_1 = require("../../utils/observeble/subject");
 
-var observeble_1 = require("../../utils/observeble/observeble");
+const observeble_1 = require("../../utils/observeble/observeble");
 
-var instance;
+let instance;
 
-var RouterService = /*#__PURE__*/function () {
-  function RouterService() {
-    var _this = this;
-
-    _classCallCheck(this, RouterService);
-
+class RouterService {
+  constructor() {
     this._popstate = new subject_1.Subject();
 
     if (instance) {
@@ -4949,155 +5616,124 @@ var RouterService = /*#__PURE__*/function () {
     }
 
     instance = this;
-    observeble_1.Observable.event(window, 'popstate').subscribe(function () {
-      return _this.onPopState();
+    observeble_1.Observable.event(window, 'popstate').subscribe(() => this.onPopState());
+  }
+
+  get config() {
+    return router_config_1.routerConfig;
+  }
+
+  get $popstate() {
+    return this._popstate.asObserveble();
+  }
+
+  get $path() {
+    return this.$popstate.map(urlParams => urlParams.pathname).startWith(this.urlParams.pathname).uniqueNext();
+  }
+
+  get $queryParams() {
+    return this.$popstate.map(urlParams => urlParams.queryParams).uniqueNext(false, this.hasQueryParamsDiff).startWith(this.urlParams.queryParams);
+  }
+
+  get urlParams() {
+    let {
+      hash,
+      pathname,
+      search
+    } = window.location;
+    const queryParams = (search.match(/[^?&]*/g) || []).filter(value => value).reduce((out, str) => {
+      const param = str.split('=');
+
+      if (param[1]) {
+        // @ts-ignore
+        out[param[0]] = param[1];
+      }
+
+      return out;
+    }, {});
+    hash = hash.replace('#', '');
+    return {
+      hash,
+      pathname,
+      queryParams
+    };
+  } // TODO нужно переходить на url не перезагружая страницу history.pushState
+
+
+  navigateTo(path = pages_config_1.pages.main, query = {}, hash = '') {
+    let queryStr = '';
+
+    if (path[0] !== '/') {
+      path = `/${path}`;
+    }
+
+    if (Object.keys(query).length !== 0) {
+      queryStr = '?' + Object.keys(query).map(key => `${key}=${query[key]}`).join('&');
+    }
+
+    if (hash && hash[0] !== '#') {
+      hash = `#${hash}`;
+    }
+
+    history.pushState({}, 'page', `${window.location.origin}${path}${queryStr}${hash}`);
+    this.emitUrl(path, query, hash);
+  }
+
+  getPageByPath(path = pages_config_1.pages.main) {
+    path = path.split('?')[0];
+
+    if (path[path.length - 1] === '/' && path.length > 1) {
+      path = path.slice(0, -1);
+    }
+
+    if (path[0] !== '/') {
+      path = `/${path}`;
+    }
+
+    return this.config[path] || this.config[pages_config_1.pages.default];
+  }
+
+  getPage() {
+    return this.getPageByPath(this.urlParams.pathname);
+  }
+
+  onPopState() {
+    this._popstate.next(this.urlParams);
+  }
+
+  emitUrl(pathname = pages_config_1.pages.main, queryParams = {}, hash = '') {
+    if (pathname[0] !== '/') {
+      pathname = `/${pathname}`;
+    }
+
+    hash = hash.replace('#', '');
+
+    this._popstate.next({
+      pathname,
+      queryParams,
+      hash
     });
   }
 
-  _createClass(RouterService, [{
-    key: "config",
-    get: function get() {
-      return router_config_1.routerConfig;
+  hasQueryParamsDiff(last, next) {
+    if (!last) {
+      return true;
     }
-  }, {
-    key: "$popstate",
-    get: function get() {
-      return this._popstate.asObserveble();
+
+    if (Object.keys(last).length !== Object.keys(next).length) {
+      return true;
     }
-  }, {
-    key: "$path",
-    get: function get() {
-      return this.$popstate.map(function (urlParams) {
-        return urlParams.pathname;
-      }).startWith(this.urlParams.pathname).uniqueNext();
-    }
-  }, {
-    key: "$queryParams",
-    get: function get() {
-      return this.$popstate.map(function (urlParams) {
-        return urlParams.queryParams;
-      }).uniqueNext(false, this.hasQueryParamsDiff).startWith(this.urlParams.queryParams);
-    }
-  }, {
-    key: "urlParams",
-    get: function get() {
-      var _window$location = window.location,
-          hash = _window$location.hash,
-          pathname = _window$location.pathname,
-          search = _window$location.search;
-      var queryParams = (search.match(/[^?&]*/g) || []).filter(function (value) {
-        return value;
-      }).reduce(function (out, str) {
-        var param = str.split('=');
 
-        if (param[1]) {
-          // @ts-ignore
-          out[param[0]] = param[1];
-        }
-
-        return out;
-      }, {});
-      hash = hash.replace('#', '');
-      return {
-        hash: hash,
-        pathname: pathname,
-        queryParams: queryParams
-      };
-    } // TODO нужно переходить на url не перезагружая страницу history.pushState
-
-  }, {
-    key: "navigateTo",
-    value: function navigateTo() {
-      var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : pages_config_1.pages.main;
-      var query = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var hash = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-      var queryStr = '';
-
-      if (path[0] !== '/') {
-        path = "/".concat(path);
-      }
-
-      if (Object.keys(query).length !== 0) {
-        queryStr = '?' + Object.keys(query).map(function (key) {
-          return "".concat(key, "=").concat(query[key]);
-        }).join('&');
-      }
-
-      if (hash && hash[0] !== '#') {
-        hash = "#".concat(hash);
-      }
-
-      history.pushState({}, 'page', "".concat(window.location.origin).concat(path).concat(queryStr).concat(hash));
-      this.emitUrl(path, query, hash);
-    }
-  }, {
-    key: "getPageByPath",
-    value: function getPageByPath() {
-      var path = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : pages_config_1.pages.main;
-      path = path.split('?')[0];
-
-      if (path[path.length - 1] === '/' && path.length > 1) {
-        path = path.slice(0, -1);
-      }
-
-      if (path[0] !== '/') {
-        path = "/".concat(path);
-      }
-
-      return this.config[path] || this.config[pages_config_1.pages.default];
-    }
-  }, {
-    key: "getPage",
-    value: function getPage() {
-      return this.getPageByPath(this.urlParams.pathname);
-    }
-  }, {
-    key: "onPopState",
-    value: function onPopState() {
-      this._popstate.next(this.urlParams);
-    }
-  }, {
-    key: "emitUrl",
-    value: function emitUrl() {
-      var pathname = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : pages_config_1.pages.main;
-      var queryParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var hash = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : '';
-
-      if (pathname[0] !== '/') {
-        pathname = "/".concat(pathname);
-      }
-
-      hash = hash.replace('#', '');
-
-      this._popstate.next({
-        pathname: pathname,
-        queryParams: queryParams,
-        hash: hash
-      });
-    }
-  }, {
-    key: "hasQueryParamsDiff",
-    value: function hasQueryParamsDiff(last, next) {
-      if (!last) {
+    for (const key in last) {
+      if (last[key] !== next[key]) {
         return true;
       }
-
-      if (Object.keys(last).length !== Object.keys(next).length) {
-        return true;
-      }
-
-      for (var key in last) {
-        if (last[key] !== next[key]) {
-          return true;
-        }
-      }
-
-      return false;
     }
-  }]);
 
-  return RouterService;
-}();
+    return false;
+  }
+
+}
 
 exports.RouterService = RouterService;
 },{"./router.config":"service/router/router.config.ts","./pages.config":"service/router/pages.config.ts","../../utils/observeble/subject":"utils/observeble/subject.ts","../../utils/observeble/observeble":"utils/observeble/observeble.ts"}],"app-root.less":[function(require,module,exports) {
@@ -5108,70 +5744,48 @@ module.hot.accept(reloadCSS);
 },{"_css_loader":"../node_modules/parcel-bundler/src/builtins/css-loader.js"}],"app-root.ts":[function(require,module,exports) {
 "use strict";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
 var __decorate = this && this.__decorate || function (decorators, target, key, desc) {
   var c = arguments.length,
       r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc,
       d;
-  if ((typeof Reflect === "undefined" ? "undefined" : _typeof(Reflect)) === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) {
-    if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-  }
+  if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
   return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.AppRoot = void 0;
+exports.AppRoot = void 0; // For async/await
 
-var component_1 = require("./utils/component");
+require("regenerator-runtime/runtime");
 
-var app_root_tmpl_1 = require("./app-root.tmpl");
+const component_1 = require("./utils/component");
 
-var router_service_1 = require("./service/router/router.service");
+const app_root_tmpl_1 = require("./app-root.tmpl");
+
+const router_service_1 = require("./service/router/router.service");
 
 require("./app-root.less");
 
-var AppRoot = /*#__PURE__*/function () {
-  function AppRoot() {
-    _classCallCheck(this, AppRoot);
-
+let AppRoot = class AppRoot {
+  constructor() {
     this.router = new router_service_1.RouterService();
   }
 
-  _createClass(AppRoot, [{
-    key: "onInit",
-    value: function onInit() {}
-  }, {
-    key: "content",
-    get: function get() {
-      var _this = this;
+  onInit() {}
 
-      return this.router.$path.map(function (pathname) {
-        return _this.router.getPageByPath(pathname);
-      }) // TODO: Проблема с типизацией. HTMLPage !== HTMLElement (
-      .map(function (constructor) {
-        return [new constructor()];
-      });
-    }
-  }]);
+  get content() {
+    return this.router.$path.map(pathname => this.router.getPageByPath(pathname)) // TODO: Проблема с типизацией. HTMLPage !== HTMLElement (
+    .map(constructor => [new constructor()]);
+  }
 
-  return AppRoot;
-}();
-
+};
 AppRoot = __decorate([component_1.component({
   name: 'app-root',
   template: app_root_tmpl_1.template
 })], AppRoot);
 exports.AppRoot = AppRoot;
-},{"./utils/component":"utils/component.ts","./app-root.tmpl":"app-root.tmpl.ts","./service/router/router.service":"service/router/router.service.ts","./app-root.less":"app-root.less"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"regenerator-runtime/runtime":"../node_modules/regenerator-runtime/runtime.js","./utils/component":"utils/component.ts","./app-root.tmpl":"app-root.tmpl.ts","./service/router/router.service":"service/router/router.service.ts","./app-root.less":"app-root.less"}],"../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -5199,7 +5813,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "37295" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "37941" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
